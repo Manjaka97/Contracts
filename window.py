@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 import resources_rc
-
+import sqlite3
 
 class UiMainWindow(object):
     def setup_ui(self, main_window):
@@ -156,13 +156,19 @@ class UiMainWindow(object):
         self.contracts_list.setGeometry(QtCore.QRect(40, 170, 510, 520))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
-        font.setPointSize(16)
+        font.setPointSize(9)
         font.setBold(True)
         font.setWeight(75)
         self.contracts_list.setFont(font)
         self.contracts_list.setStyleSheet("background-color: white;")
         self.contracts_list.setObjectName("contracts_list")
-        self.contracts_list.addItem('test')
+
+        connection = sqlite3.connect('test.db')
+        contracts_list_query = 'SELECT * FROM contracts WHERE deleted=0'
+        contracts_list_result = connection.execute(contracts_list_query)
+        for contract in contracts_list_result:
+            self.contracts_list.addItem(contract[1])
+        connection.close()
 
         # Contracts buttons layout
         self.layoutWidget = QtWidgets.QWidget(self.contracts_frame)
@@ -221,7 +227,7 @@ class UiMainWindow(object):
         self.tasks_tab.setGeometry(QtCore.QRect(640, 150, 811, 611))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
-        font.setPointSize(15)
+        font.setPointSize(11)
         font.setBold(True)
         font.setItalic(False)
         font.setWeight(75)
