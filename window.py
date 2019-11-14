@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from PyQt5.QtWidgets import QMessageBox
 import resources_rc
 import sqlite3
@@ -41,7 +41,7 @@ class UiMainWindow(object):
                                          "\n"
                                          "QFrame#tasks_frame\n"
                                          "{\n"
-                                         # "    background-image: url(:/images/images/task_bg.jpg);\n"                                        
+                                         "    background-image: url(:/images/images/task_bg.jpg);\n"                                        
                                          "    background-repeat:no-repeat;\n"
                                          "}\n"
                                          "\n"
@@ -234,6 +234,18 @@ class UiMainWindow(object):
         self.tasks_tab.setFont(font)
         self.tasks_tab.setObjectName("tasks_tab")
 
+        # Tasks model
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('test.db')
+        if not db.open():
+            print('Db not open')
+        self.task_model = QtSql.QSqlRelationalTableModel()
+        self.task_model.setTable('contracts')
+        q = QtSql.QSqlQuery()
+        q.exec_("SELECT name, priority FROM contracts WHERE deleted=0")
+        self.task_model.setQuery(q)
+        db.close()
+
         # Tasks upcoming tab
         self.upcoming_tab = QtWidgets.QWidget()
         self.upcoming_tab.setObjectName("upcoming_tab")
@@ -269,17 +281,20 @@ class UiMainWindow(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.upcoming_layout.addItem(spacerItem1)
 
-        # Tasks upcoming table
-        self.upcoming_table = QtWidgets.QTableView(self.upcoming_tab)
-        self.upcoming_table.setGeometry(QtCore.QRect(-10, 90, 820, 500))
+        # Tasks upcoming tree
+        self.upcoming_tree = QtWidgets.QTreeView(self.upcoming_tab)
+        self.upcoming_tree.setGeometry(QtCore.QRect(0, 90, 820, 500))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
         font.setPointSize(16)
         font.setBold(False)
         font.setWeight(50)
-        self.upcoming_table.setFont(font)
-        self.upcoming_table.setObjectName("upcoming_table")
+        self.upcoming_tree.setFont(font)
+        self.upcoming_tree.setObjectName("upcoming_tree")
         self.tasks_tab.addTab(self.upcoming_tab, "")
+
+        self.upcoming_tree.setModel(self.task_model)
+        self.upcoming_tree.setColumnWidth(0,400)
 
         # Tasks overdue tab
         self.overdue_tab = QtWidgets.QWidget()
@@ -316,14 +331,14 @@ class UiMainWindow(object):
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.overdue_layout.addItem(spacerItem3)
 
-        # Tasks overdue table
-        self.overdue_table = QtWidgets.QTableView(self.overdue_tab)
-        self.overdue_table.setGeometry(QtCore.QRect(-10, 90, 821, 501))
+        # Tasks overdue tree
+        self.overdue_tree = QtWidgets.QTreeView(self.overdue_tab)
+        self.overdue_tree.setGeometry(QtCore.QRect(0, 90, 821, 501))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
         font.setPointSize(16)
-        self.overdue_table.setFont(font)
-        self.overdue_table.setObjectName("overdue_table")
+        self.overdue_tree.setFont(font)
+        self.overdue_tree.setObjectName("overdue_tree")
         self.tasks_tab.addTab(self.overdue_tab, "")
 
         # Tasks complete tab
@@ -361,16 +376,14 @@ class UiMainWindow(object):
         spacerItem5 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.completed_layout.addItem(spacerItem5)
 
-        # Tasks completed table
-        self.completed_table = QtWidgets.QTableWidget(self.completed_tab)
-        self.completed_table.setGeometry(QtCore.QRect(-10, 90, 821, 501))
+        # Tasks completed tree
+        self.completed_tree = QtWidgets.QTreeView(self.completed_tab)
+        self.completed_tree.setGeometry(QtCore.QRect(0, 90, 821, 501))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
         font.setPointSize(16)
-        self.completed_table.setFont(font)
-        self.completed_table.setObjectName("completed_table")
-        self.completed_table.setColumnCount(0)
-        self.completed_table.setRowCount(0)
+        self.completed_tree.setFont(font)
+        self.completed_tree.setObjectName("completed_tree")
         self.tasks_tab.addTab(self.completed_tab, "")
 
         # Tasks completed frame
@@ -426,6 +439,7 @@ class UiMainWindow(object):
         self.tasks_line.raise_()
         self.tasks_tab.raise_()
         self.layoutWidget.raise_()
+        self.layoutWidget1.raise_()
 
         main_window.setCentralWidget(self.centralwidget)
 
