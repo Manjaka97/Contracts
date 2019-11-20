@@ -93,8 +93,8 @@ class UiMainWindow(object):
 
         # Contracts frame
         self.contracts_frame = QtWidgets.QFrame(self.centralwidget)
-        self.contracts_frame.setGeometry(QtCore.QRect(0, 70, 600, 900))
-        self.contracts_frame.setMinimumSize(QtCore.QSize(600, 900))
+        self.contracts_frame.setGeometry(QtCore.QRect(0, 70, 450, 900))
+        self.contracts_frame.setMinimumSize(QtCore.QSize(450, 900))
         self.contracts_frame.setStyleSheet("")
         self.contracts_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.contracts_frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -151,24 +151,32 @@ class UiMainWindow(object):
         self.contracts_filter.setStyleSheet("background-color: white;")
         self.contracts_filter.setObjectName("contracts_filter")
 
-        # Contracts list
-        self.contracts_list = QtWidgets.QListWidget(self.contracts_frame)
-        self.contracts_list.setGeometry(QtCore.QRect(40, 170, 510, 520))
+        # Contracts model
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.contract_model = QtSql.QSqlRelationalTableModel()
+        self.contract_model.setTable('contracts')
+        query = QtSql.QSqlQuery()
+        query.exec_("SELECT contracts.name, projects.name as project_name FROM contracts JOIN projects ON contracts.project_id = projects.id")
+        self.contract_model.setQuery(query)
+        db.close()
+
+        # Contracts tree
+        self.contracts_tree = QtWidgets.QTreeView(self.contracts_frame)
+        self.contracts_tree.setGeometry(QtCore.QRect(40, 170, 350, 520))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
         font.setPointSize(9)
         font.setBold(True)
         font.setWeight(75)
-        self.contracts_list.setFont(font)
-        self.contracts_list.setStyleSheet("background-color: white;")
-        self.contracts_list.setObjectName("contracts_list")
+        self.contracts_tree.setFont(font)
+        self.contracts_tree.setStyleSheet("background-color: white;")
+        self.contracts_tree.setObjectName("contracts_tree")
 
-        connection = sqlite3.connect('test.db')
-        contracts_list_query = 'SELECT * FROM contracts WHERE deleted=0'
-        contracts_list_result = connection.execute(contracts_list_query)
-        for contract in contracts_list_result:
-            self.contracts_list.addItem(contract[1])
-        connection.close()
+        self.contracts_tree.setModel(self.contract_model)
+        self.contracts_tree.setColumnWidth(0, 150)
 
         # Contracts buttons layout
         self.layoutWidget = QtWidgets.QWidget(self.contracts_frame)
@@ -198,7 +206,7 @@ class UiMainWindow(object):
 
         # Tasks label
         self.tasks_label = QtWidgets.QLabel(self.centralwidget)
-        self.tasks_label.setGeometry(QtCore.QRect(640, 70, 130, 70))
+        self.tasks_label.setGeometry(QtCore.QRect(560, 70, 130, 70))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
         font.setPointSize(16)
@@ -209,7 +217,7 @@ class UiMainWindow(object):
 
         # Tasks icon
         self.tasks_icon = QtWidgets.QLabel(self.centralwidget)
-        self.tasks_icon.setGeometry(QtCore.QRect(740, 80, 40, 40))
+        self.tasks_icon.setGeometry(QtCore.QRect(500, 80, 40, 40))
         self.tasks_icon.setText("")
         self.tasks_icon.setPixmap(QtGui.QPixmap(":/images/images/tasks_icon.svg"))
         self.tasks_icon.setScaledContents(True)
@@ -217,34 +225,22 @@ class UiMainWindow(object):
 
         # Tasks line
         self.tasks_line = QtWidgets.QFrame(self.centralwidget)
-        self.tasks_line.setGeometry(QtCore.QRect(640, 130, 140, 15))
+        self.tasks_line.setGeometry(QtCore.QRect(500, 130, 140, 15))
         self.tasks_line.setFrameShape(QtWidgets.QFrame.HLine)
         self.tasks_line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.tasks_line.setObjectName("tasks_line")
 
         # Tasks tabs
         self.tasks_tab = QtWidgets.QTabWidget(self.centralwidget)
-        self.tasks_tab.setGeometry(QtCore.QRect(640, 150, 811, 611))
+        self.tasks_tab.setGeometry(QtCore.QRect(500, 150, 950, 611))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
-        font.setPointSize(11)
+        font.setPointSize(12)
         font.setBold(True)
         font.setItalic(False)
         font.setWeight(75)
         self.tasks_tab.setFont(font)
         self.tasks_tab.setObjectName("tasks_tab")
-
-        # Tasks model
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('test.db')
-        if not db.open():
-            print('Db not open')
-        self.task_model = QtSql.QSqlRelationalTableModel()
-        self.task_model.setTable('contracts')
-        q = QtSql.QSqlQuery()
-        q.exec_("SELECT name, priority FROM contracts WHERE deleted=0")
-        self.task_model.setQuery(q)
-        db.close()
 
         # Tasks upcoming tab
         self.upcoming_tab = QtWidgets.QWidget()
@@ -252,7 +248,7 @@ class UiMainWindow(object):
 
         # Tasks upcoming frame
         self.upcoming_frame = QtWidgets.QFrame(self.upcoming_tab)
-        self.upcoming_frame.setGeometry(QtCore.QRect(0, 10, 811, 80))
+        self.upcoming_frame.setGeometry(QtCore.QRect(0, 10, 1050, 80))
         self.upcoming_frame.setStyleSheet("background-color: rgb(0, 67, 167);")
         self.upcoming_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.upcoming_frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -260,7 +256,7 @@ class UiMainWindow(object):
 
         # Tasks upcoming layout
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.upcoming_frame)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 811, 80))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 950, 80))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.upcoming_layout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.upcoming_layout.setContentsMargins(0, 0, 0, 0)
@@ -271,7 +267,7 @@ class UiMainWindow(object):
         # Tasks upcoming label
         self.upcoming_label = QtWidgets.QLabel(self.horizontalLayoutWidget)
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPointSize(13)
         font.setBold(True)
         font.setWeight(75)
         self.upcoming_label.setFont(font)
@@ -281,20 +277,33 @@ class UiMainWindow(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.upcoming_layout.addItem(spacerItem1)
 
+        # Tasks model
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.contract_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_("SELECT name, description, deadline FROM tasks")
+        self.contract_model.setQuery(query)
+        db.close()
+
         # Tasks upcoming tree
         self.upcoming_tree = QtWidgets.QTreeView(self.upcoming_tab)
-        self.upcoming_tree.setGeometry(QtCore.QRect(0, 90, 820, 500))
+        self.upcoming_tree.setGeometry(QtCore.QRect(0, 90, 950, 490))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
-        font.setPointSize(16)
+        font.setPointSize(11)
         font.setBold(False)
-        font.setWeight(50)
+        font.setWeight(30)
         self.upcoming_tree.setFont(font)
         self.upcoming_tree.setObjectName("upcoming_tree")
         self.tasks_tab.addTab(self.upcoming_tab, "")
 
-        self.upcoming_tree.setModel(self.task_model)
-        self.upcoming_tree.setColumnWidth(0,400)
+        self.upcoming_tree.setModel(self.contract_model)
+        self.upcoming_tree.setColumnWidth(0, 180)
+        self.upcoming_tree.setColumnWidth(1, 600)
+
 
         # Tasks overdue tab
         self.overdue_tab = QtWidgets.QWidget()
@@ -302,7 +311,7 @@ class UiMainWindow(object):
 
         # Tasks overdue frame
         self.overdue_frame = QtWidgets.QFrame(self.overdue_tab)
-        self.overdue_frame.setGeometry(QtCore.QRect(0, 10, 821, 80))
+        self.overdue_frame.setGeometry(QtCore.QRect(0, 10, 1050, 80))
         self.overdue_frame.setStyleSheet("background-color: rgb(240, 10, 70);")
         self.overdue_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.overdue_frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -310,7 +319,7 @@ class UiMainWindow(object):
 
         # tasks overdue layout
         self.horizontalLayoutWidget_2 = QtWidgets.QWidget(self.overdue_frame)
-        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(0, 0, 811, 80))
+        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(0, 0, 950, 80))
         self.horizontalLayoutWidget_2.setObjectName("horizontalLayoutWidget_2")
         self.overdue_layout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_2)
         self.overdue_layout.setContentsMargins(0, 0, 0, 0)
@@ -321,7 +330,7 @@ class UiMainWindow(object):
         # Tasks overdue label
         self.overdue_label = QtWidgets.QLabel(self.horizontalLayoutWidget_2)
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPointSize(13)
         font.setBold(True)
         font.setWeight(75)
         self.overdue_label.setFont(font)
@@ -333,10 +342,10 @@ class UiMainWindow(object):
 
         # Tasks overdue tree
         self.overdue_tree = QtWidgets.QTreeView(self.overdue_tab)
-        self.overdue_tree.setGeometry(QtCore.QRect(0, 90, 821, 501))
+        self.overdue_tree.setGeometry(QtCore.QRect(0, 90, 950, 490))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
-        font.setPointSize(16)
+        font.setPointSize(11)
         self.overdue_tree.setFont(font)
         self.overdue_tree.setObjectName("overdue_tree")
         self.tasks_tab.addTab(self.overdue_tab, "")
@@ -347,7 +356,7 @@ class UiMainWindow(object):
 
         # Tasks completed frame
         self.completed_frame = QtWidgets.QFrame(self.completed_tab)
-        self.completed_frame.setGeometry(QtCore.QRect(-10, 10, 821, 80))
+        self.completed_frame.setGeometry(QtCore.QRect(0, 10, 1050, 80))
         self.completed_frame.setStyleSheet("background-color: rgb(0, 255, 0);")
         self.completed_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.completed_frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -355,7 +364,7 @@ class UiMainWindow(object):
 
         # Tasks completed layout
         self.horizontalLayoutWidget_3 = QtWidgets.QWidget(self.completed_frame)
-        self.horizontalLayoutWidget_3.setGeometry(QtCore.QRect(10, 0, 801, 80))
+        self.horizontalLayoutWidget_3.setGeometry(QtCore.QRect(10, 0, 950, 80))
         self.horizontalLayoutWidget_3.setObjectName("horizontalLayoutWidget_3")
         self.completed_layout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_3)
         self.completed_layout.setContentsMargins(0, 0, 0, 0)
@@ -366,7 +375,7 @@ class UiMainWindow(object):
         # Tasks completed label
         self.completed_label = QtWidgets.QLabel(self.horizontalLayoutWidget_3)
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPointSize(13)
         font.setBold(True)
         font.setWeight(75)
         self.completed_label.setFont(font)
@@ -378,17 +387,17 @@ class UiMainWindow(object):
 
         # Tasks completed tree
         self.completed_tree = QtWidgets.QTreeView(self.completed_tab)
-        self.completed_tree.setGeometry(QtCore.QRect(0, 90, 821, 501))
+        self.completed_tree.setGeometry(QtCore.QRect(0, 90, 950, 490))
         font = QtGui.QFont()
         font.setFamily("Tahoma")
-        font.setPointSize(16)
+        font.setPointSize(11)
         self.completed_tree.setFont(font)
         self.completed_tree.setObjectName("completed_tree")
         self.tasks_tab.addTab(self.completed_tab, "")
 
-        # Tasks completed frame
+        # Tasks frame
         self.tasks_frame = QtWidgets.QFrame(self.centralwidget)
-        self.tasks_frame.setGeometry(QtCore.QRect(599, 69, 901, 831))
+        self.tasks_frame.setGeometry(QtCore.QRect(450, 69, 1050, 831))
         self.tasks_frame.setStyleSheet("")
         self.tasks_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.tasks_frame.setFrameShadow(QtWidgets.QFrame.Raised)

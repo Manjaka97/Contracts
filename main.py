@@ -26,17 +26,17 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         cursor.execute(add_contract_query)
         connection.commit()
         connection.close()
-        self.ui.contracts_list.addItem('Added item')
+        self.ui.contracts_tree.addItem('Added item')
 
     def delete_contract(self):
-        row = self.ui.contracts_list.currentRow()
-        item = self.ui.contracts_list.item(row)
+        row = self.ui.contracts_tree.currentRow()
+        item = self.ui.contracts_tree.item(row)
         if item is None:
             return
         reply = QMessageBox.question(self, 'Delete Contract', 'Are you sure you want to delete {0}?'.format(
             str(item.text())), QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            item = self.ui.contracts_list.takeItem(row)
+            item = self.ui.contracts_tree.takeItem(row)
             name = item.text()
             del item
 
