@@ -49,6 +49,22 @@ class UiMainWindow(object):
                                          "{\n"
                                          "    background-color: rgb(240, 10, 70);\n"
                                          "}\n"
+                                         "QTreeView#contracts_tree:item\n"
+                                         "{\n"
+                                         "    padding: 4px;\n"
+                                         "}\n"
+                                         "QTreeView#upcoming_tree:item\n"
+                                         "{\n"
+                                         "    padding: 10px;\n"
+                                         "}\n"
+                                         "QTreeView#overdue_tree:item\n"
+                                         "{\n"
+                                         "    padding: 10px;\n"
+                                         "}\n"
+                                         "QTreeView#completed_tree:item\n"
+                                         "{\n"
+                                         "    padding: 10px;\n"
+                                         "}\n"
                                          "")
         self.centralwidget.setObjectName("centralwidget")
 
@@ -159,7 +175,7 @@ class UiMainWindow(object):
         self.contract_model = QtSql.QSqlRelationalTableModel()
         self.contract_model.setTable('contracts')
         query = QtSql.QSqlQuery()
-        query.exec_("SELECT contracts.name, projects.name as project_name FROM contracts JOIN projects ON contracts.project_id = projects.id")
+        query.exec_("SELECT contracts.name as Name, projects.name as Project FROM contracts JOIN projects ON contracts.project_id = projects.id")
         self.contract_model.setQuery(query)
         db.close()
 
@@ -176,7 +192,7 @@ class UiMainWindow(object):
         self.contracts_tree.setObjectName("contracts_tree")
 
         self.contracts_tree.setModel(self.contract_model)
-        self.contracts_tree.setColumnWidth(0, 150)
+        self.contracts_tree.setColumnWidth(0, 200)
 
         # Contracts buttons layout
         self.layoutWidget = QtWidgets.QWidget(self.contracts_frame)
@@ -249,7 +265,7 @@ class UiMainWindow(object):
         # Tasks upcoming frame
         self.upcoming_frame = QtWidgets.QFrame(self.upcoming_tab)
         self.upcoming_frame.setGeometry(QtCore.QRect(0, 10, 1050, 80))
-        self.upcoming_frame.setStyleSheet("background-color: rgb(0, 67, 167);")
+        self.upcoming_frame.setStyleSheet("background-color: rgb(0, 100, 167);")
         self.upcoming_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.upcoming_frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.upcoming_frame.setObjectName("upcoming_frame")
@@ -277,15 +293,15 @@ class UiMainWindow(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.upcoming_layout.addItem(spacerItem1)
 
-        # Tasks model
+        # Upcoming Tasks model
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('Contracts.db')
         if not db.open():
             print('Db not open')
-        self.contract_model = QtSql.QSqlRelationalTableModel()
+        self.upcoming_tasks_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
-        query.exec_("SELECT name, description, deadline FROM tasks")
-        self.contract_model.setQuery(query)
+        query.exec_("SELECT name as Name, description as Description, deadline as Deadline FROM tasks WHERE deadline>=DATE('now') AND completed=0;")
+        self.upcoming_tasks_model.setQuery(query)
         db.close()
 
         # Tasks upcoming tree
@@ -300,9 +316,10 @@ class UiMainWindow(object):
         self.upcoming_tree.setObjectName("upcoming_tree")
         self.tasks_tab.addTab(self.upcoming_tab, "")
 
-        self.upcoming_tree.setModel(self.contract_model)
+        self.upcoming_tree.setModel(self.upcoming_tasks_model)
         self.upcoming_tree.setColumnWidth(0, 180)
         self.upcoming_tree.setColumnWidth(1, 600)
+        self.upcoming_tree.setAlternatingRowColors(True)
 
 
         # Tasks overdue tab
@@ -340,6 +357,17 @@ class UiMainWindow(object):
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.overdue_layout.addItem(spacerItem3)
 
+        # Overdue Tasks model
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.overdue_tasks_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_("SELECT name as Name, description as Description, deadline as Deadline FROM tasks WHERE deadline<DATE('now') AND completed=0;")
+        self.overdue_tasks_model.setQuery(query)
+        db.close()
+
         # Tasks overdue tree
         self.overdue_tree = QtWidgets.QTreeView(self.overdue_tab)
         self.overdue_tree.setGeometry(QtCore.QRect(0, 90, 950, 490))
@@ -350,6 +378,11 @@ class UiMainWindow(object):
         self.overdue_tree.setObjectName("overdue_tree")
         self.tasks_tab.addTab(self.overdue_tab, "")
 
+        self.overdue_tree.setModel(self.overdue_tasks_model)
+        self.overdue_tree.setColumnWidth(0, 180)
+        self.overdue_tree.setColumnWidth(1, 600)
+        self.overdue_tree.setAlternatingRowColors(True)
+
         # Tasks complete tab
         self.completed_tab = QtWidgets.QWidget()
         self.completed_tab.setObjectName("completed_tab")
@@ -357,7 +390,7 @@ class UiMainWindow(object):
         # Tasks completed frame
         self.completed_frame = QtWidgets.QFrame(self.completed_tab)
         self.completed_frame.setGeometry(QtCore.QRect(0, 10, 1050, 80))
-        self.completed_frame.setStyleSheet("background-color: rgb(0, 255, 0);")
+        self.completed_frame.setStyleSheet("background-color: rgb(0, 225, 100);")
         self.completed_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.completed_frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.completed_frame.setObjectName("completed_frame")
@@ -385,6 +418,17 @@ class UiMainWindow(object):
         spacerItem5 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.completed_layout.addItem(spacerItem5)
 
+        # Completed Tasks model
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.completed_tasks_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_("SELECT name as Name, description as Description, date_completed as 'Completion Date' FROM tasks WHERE completed=1;")
+        self.completed_tasks_model.setQuery(query)
+        db.close()
+
         # Tasks completed tree
         self.completed_tree = QtWidgets.QTreeView(self.completed_tab)
         self.completed_tree.setGeometry(QtCore.QRect(0, 90, 950, 490))
@@ -394,6 +438,11 @@ class UiMainWindow(object):
         self.completed_tree.setFont(font)
         self.completed_tree.setObjectName("completed_tree")
         self.tasks_tab.addTab(self.completed_tab, "")
+
+        self.completed_tree.setModel(self.completed_tasks_model)
+        self.completed_tree.setColumnWidth(0, 180)
+        self.completed_tree.setColumnWidth(1, 600)
+        self.completed_tree.setAlternatingRowColors(True)
 
         # Tasks frame
         self.tasks_frame = QtWidgets.QFrame(self.centralwidget)
@@ -405,7 +454,7 @@ class UiMainWindow(object):
 
         # Tasks buttons layout
         self.layoutWidget1 = QtWidgets.QWidget(self.centralwidget)
-        self.layoutWidget1.setGeometry(QtCore.QRect(640, 790, 415, 30))
+        self.layoutWidget1.setGeometry(QtCore.QRect(500, 790, 415, 30))
         self.layoutWidget1.setObjectName("layoutWidget1")
         self.tasks_buttons = QtWidgets.QHBoxLayout(self.layoutWidget1)
         self.tasks_buttons.setContentsMargins(0, 0, 0, 0)
