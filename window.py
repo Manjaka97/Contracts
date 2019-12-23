@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from PyQt5.QtWidgets import QMessageBox
 import resources_rc
-import sqlite3
+
 
 class UiMainWindow(object):
     def setup_ui(self, main_window):

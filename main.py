@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
-import window
+import window, contracts
 import sqlite3
 
 
@@ -10,9 +10,21 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.ui = window.UiMainWindow()
         self.ui.setup_ui(self)
 
-        self.ui.new_button.clicked.connect(self.add_contract)
+        self.ui.contracts_open.clicked.connect(self.open_contract)
         self.ui.contracts_delete.clicked.connect(self.delete_contract)
-        #self.ui.new_button.clicked.connect(self.show_new_contract_window)
+        self.ui.new_button.clicked.connect(self.show_new_contract_window)
+
+    def open_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            return
+        else:
+            contract_index = self.ui.contracts_tree.selectedIndexes()[0]
+            self.contract_name = contract_index.model().itemData(contract_index)[0]
+            project_index = self.ui.contracts_tree.selectedIndexes()[1]
+            self.project_name = project_index.model().itemData(project_index)[0]
+
+            self.contract_window = ContractWindow(self.contract_name, self.project_name)
+            self.contract_window.show()
 
     # To be implemented later
     def show_new_contract_window(self):
@@ -29,29 +41,39 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.ui.contracts_tree.addItem('Added item')
 
     def delete_contract(self):
-        row = self.ui.contracts_tree.currentRow()
-        item = self.ui.contracts_tree.item(row)
-        if item is None:
+        if self.ui.contracts_tree.selectedIndexes() == []:
             return
-        reply = QMessageBox.question(self, 'Delete Contract', 'Are you sure you want to delete {0}?'.format(
-            str(item.text())), QMessageBox.Yes | QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            item = self.ui.contracts_tree.takeItem(row)
-            name = item.text()
-            del item
-
-            connection = sqlite3.connect('test.db')
-            cursor = connection.cursor()
-            name_query = (name,)
-            #contract_id = connection.execute("SELECT id FROM contracts WHERE name = ? AND deleted = 0", (name,))
-            cursor.execute('UPDATE contracts SET deleted=1 WHERE name=?', name_query)
-            connection.commit()
-            connection.close()
+        else:
+            contract_index = self.ui.contracts_tree.selectedIndexes()[0]
+            contract_name = contract_index.model().itemData(contract_index)[0]
+            project_index = self.ui.contracts_tree.selectedIndexes()[1]
+            project_name = project_index.model().itemData(project_index)[0]
 
 
-class ContractWindow(QtWidgets.QInputDialog):
-    def __init__(self):
-        super(ContractWindow, self).__init__()
+        # print('here')
+        # reply = QMessageBox.question(self, 'Delete Contract', 'Are you sure you want to delete {0}?'.format(
+        #     str(item.text())), QMessageBox.Yes | QMessageBox.No)
+        # if reply == QMessageBox.Yes:
+        #     item = self.ui.contracts_tree.takeItem(row)
+        #     name = item.text()
+        #     del item
+
+            # connection = sqlite3.connect('test.db')
+            # cursor = connection.cursor()
+            # name_query = (name,)
+            # #contract_id = connection.execute("SELECT id FROM contracts WHERE name = ? AND deleted = 0", (name,))
+            # cursor.execute('UPDATE contracts SET deleted=1 WHERE name=?', name_query)
+            # connection.commit()
+            # connection.close()
+
+
+class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
+    def __init__(self, contract_name, project_name):
+        QtWidgets.QWidget.__init__(self)
+        self.contract_ui = contracts.Ui_Form()
+        self.contract_ui.setupUi(self, contract_name, project_name)
+
+        self.contract_ui.contract_label
 
 if __name__ == "__main__":
     import sys
