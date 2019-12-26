@@ -2,9 +2,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sqlite3
 
 class Ui_Form(object):
-    def setupUi(self, Form, contract, project):
+    def setupUi(self, Form, contract_id, project_id):
         Form.setObjectName("Form")
         Form.resize(1250, 680)
+        Form.setMinimumSize(QtCore.QSize(1250, 680))
         Form.setMinimumSize(QtCore.QSize(1250, 680))
         Form.setMaximumSize(QtCore.QSize(1250, 680))
 
@@ -25,9 +26,8 @@ class Ui_Form(object):
         self.notes_model = QtSql.QSqlRelationalTableModel()
         self.notes_model.setTable('contracts')
         query = QtSql.QSqlQuery()
-        query.prepare(
-            "SELECT notes FROM contracts where name=?")
-        query.addBindValue(contract)
+        query.prepare("SELECT notes FROM contracts where id=?")
+        query.addBindValue(contract_id)
         query.exec_()
         if query.next():
             notes = query.value(0)
@@ -37,12 +37,29 @@ class Ui_Form(object):
         self.textEdit = QtWidgets.QTextEdit(Form)
         self.textEdit.setGeometry(QtCore.QRect(840, 80, 391, 311))
         self.textEdit.setObjectName("textEdit")
+        self.textEdit.setFontPointSize(11)
         self.textEdit.setText(notes)
 
+        # Document model
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.document_model = QtSql.QSqlRelationalTableModel()
+        self.document_model.setTable('tasks')
+        query = QtSql.QSqlQuery()
+        query.prepare("SELECT document AS '' FROM documents WHERE contract_id=? AND project_id=?")
+        query.addBindValue(contract_id)
+        query.addBindValue(project_id)
+        query.exec_()
+        self.document_model.setQuery(query)
+        db.close()
+
+        # Documents List
         self.documents_list = QtWidgets.QListView(Form)
         self.documents_list.setGeometry(QtCore.QRect(840, 450, 391, 101))
         self.documents_list.setObjectName("documents_list")
-
+        self.documents_list.setModel(self.document_model)
 
         self.label_5 = QtWidgets.QLabel(Form)
         self.label_5.setGeometry(QtCore.QRect(980, 400, 131, 50))
@@ -63,9 +80,8 @@ class Ui_Form(object):
         query.prepare(
             "SELECT parties.name as Name, parties.representative_first as 'Representative "
             "First Name', parties.representative_last as 'Representative Last Name', parties.phone as 'Phone Number', "
-            "parties.email as 'Email Address' FROM parties JOIN projects ON parties.project_id = projects.id WHERE "
-            "projects.name = ?")
-        query.addBindValue(project)
+            "parties.email as 'Email Address' FROM parties WHERE project_id = ?")
+        query.addBindValue(project_id)
         query.exec_()
         self.party_model.setQuery(query)
         db.close()
@@ -94,9 +110,8 @@ class Ui_Form(object):
         query = QtSql.QSqlQuery()
         query.prepare("SELECT tasks.Name as name, tasks.description as Description, tasks.deadline as Deadline, "
                       "parties.name as 'Assigned To', tasks.completed as Status FROM tasks LEFT JOIN parties ON "
-                      "tasks.party_id=parties.id LEFT JOIN contracts ON tasks.contract_id=contracts.id WHERE "
-                      "contracts.name=?")
-        query.addBindValue(contract)
+                      "tasks.party_id=parties.id WHERE contract_id=?")
+        query.addBindValue(contract_id)
         query.exec_()
         self.task_model.setQuery(query)
         db.close()
@@ -183,22 +198,23 @@ class Ui_Form(object):
         self.documents_buttons.setObjectName("documents_buttons")
 
 
-        self.pushButton_7 = QtWidgets.QPushButton(self.layoutWidget_3)
-        self.pushButton_7.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.pushButton_7.setObjectName("pushButton_7")
-        self.documents_buttons.addWidget(self.pushButton_7)
+        self.add_document_button = QtWidgets.QPushButton(self.layoutWidget_3)
+        self.add_document_button.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.add_document_button.setObjectName("add_document_button")
+        self.documents_buttons.addWidget(self.add_document_button)
 
 
-        self.pushButton_8 = QtWidgets.QPushButton(self.layoutWidget_3)
-        self.pushButton_8.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.pushButton_8.setObjectName("pushButton_8")
-        self.documents_buttons.addWidget(self.pushButton_8)
-        self.pushButton_9 = QtWidgets.QPushButton(self.layoutWidget_3)
-        self.pushButton_9.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.open_document_button = QtWidgets.QPushButton(self.layoutWidget_3)
+        self.open_document_button.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.open_document_button.setObjectName("open_document_button")
+        self.documents_buttons.addWidget(self.open_document_button)
+
+        self.delete_document_button = QtWidgets.QPushButton(self.layoutWidget_3)
+        self.delete_document_button.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.delete_document_button.setObjectName("delete_document_button")
+        self.documents_buttons.addWidget(self.delete_document_button)
 
 
-        self.pushButton_9.setObjectName("pushButton_9")
-        self.documents_buttons.addWidget(self.pushButton_9)
         self.save = QtWidgets.QPushButton(self.frame)
         self.save.setGeometry(QtCore.QRect(840, 630, 171, 28))
         self.save.setStyleSheet("background-color: rgb(0, 255, 0);")
@@ -262,7 +278,21 @@ class Ui_Form(object):
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
 
-
+        # Contract Name
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.notes_model = QtSql.QSqlRelationalTableModel()
+        self.notes_model.setTable('contracts')
+        query = QtSql.QSqlQuery()
+        query.prepare("SELECT name FROM contracts where id=? AND project_id=?")
+        query.addBindValue(contract_id)
+        query.addBindValue(project_id)
+        query.exec_()
+        if query.next():
+            contract = query.value(0)
+        db.close()
         self.contract_label = QtWidgets.QLabel(self.names)
         self.contract_label.setText(contract)
         font = QtGui.QFont()
@@ -287,7 +317,18 @@ class Ui_Form(object):
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_2.addWidget(self.label_3)
 
-
+        # Project Name
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        query = QtSql.QSqlQuery()
+        query.prepare("SELECT name FROM projects where id=?")
+        query.addBindValue(project_id)
+        query.exec_()
+        if query.next():
+            project = query.value(0)
+        db.close()
         self.project_label = QtWidgets.QLabel(self.names)
         self.project_label.setText(project)
         font = QtGui.QFont()
@@ -328,9 +369,9 @@ class Ui_Form(object):
         self.pushButton_4.setText(_translate("Form", "Add"))
         self.pushButton_5.setText(_translate("Form", "View/Edit"))
         self.pushButton_6.setText(_translate("Form", "Delete"))
-        self.pushButton_7.setText(_translate("Form", "Add"))
-        self.pushButton_8.setText(_translate("Form", "Open"))
-        self.pushButton_9.setText(_translate("Form", "Delete"))
+        self.add_document_button.setText(_translate("Form", "Add"))
+        self.open_document_button.setText(_translate("Form", "Open"))
+        self.delete_document_button.setText(_translate("Form", "Delete"))
         self.save.setText(_translate("Form", "SAVE CHANGES"))
         self.label_6.setText(_translate("Form", "Parties"))
         self.label_7.setText(_translate("Form", "Tasks"))
