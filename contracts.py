@@ -169,6 +169,7 @@ class Ui_Form(object):
         self.tasks_buttons.setContentsMargins(0, 0, 0, 0)
         self.tasks_buttons.setObjectName("tasks_buttons")
 
+        # TODO: Add complete task button
 
         self.pushButton_4 = QtWidgets.QPushButton(self.layoutWidget_2)
         self.pushButton_4.setStyleSheet("background-color: rgb(255, 255, 255);")

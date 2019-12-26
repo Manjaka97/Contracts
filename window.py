@@ -5,6 +5,7 @@ import resources_rc
 
 class UiMainWindow(object):
     def setup_ui(self, main_window):
+        # TODO: Make all trees alternate colors
         main_window.setObjectName("MainWindow")
         main_window.resize(1500, 900)
         main_window.setMinimumSize(QtCore.QSize(1500, 900))
@@ -86,7 +87,7 @@ class UiMainWindow(object):
         self.logo.setScaledContents(False)
         self.logo.setObjectName("logo")
 
-        # New contract button
+        # New project button
         self.new_button = QtWidgets.QPushButton(self.top_menu_frame)
         self.new_button.setGeometry(QtCore.QRect(50, 0, 150, 70))
         font = QtGui.QFont()
@@ -208,11 +209,11 @@ class UiMainWindow(object):
         self.contracts_open.setObjectName("contracts_open")
         self.contracts_buttons.addWidget(self.contracts_open)
 
-        # Contracts mark as complete button
-        self.contracts_complete = QtWidgets.QPushButton(self.layoutWidget)
-        self.contracts_complete.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.contracts_complete.setObjectName("contracts_complete")
-        self.contracts_buttons.addWidget(self.contracts_complete)
+        # Contracts new contract button
+        self.new_contract = QtWidgets.QPushButton(self.layoutWidget)
+        self.new_contract.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.new_contract.setObjectName("new_contract")
+        self.contracts_buttons.addWidget(self.new_contract)
 
         # Contracts delete button
         self.contracts_delete = QtWidgets.QPushButton(self.layoutWidget)
@@ -247,6 +248,7 @@ class UiMainWindow(object):
         self.tasks_line.setObjectName("tasks_line")
 
         # Tasks tabs
+        # TODO: Add contract to task
         self.tasks_tab = QtWidgets.QTabWidget(self.centralwidget)
         self.tasks_tab.setGeometry(QtCore.QRect(500, 150, 950, 611))
         font = QtGui.QFont()
@@ -460,6 +462,8 @@ class UiMainWindow(object):
         self.tasks_buttons.setContentsMargins(0, 0, 0, 0)
         self.tasks_buttons.setObjectName("tasks_buttons")
 
+        # TODO: Add new task button
+
         # Tasks open button
         self.tasks_open = QtWidgets.QPushButton(self.layoutWidget1)
         self.tasks_open.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -508,13 +512,13 @@ class UiMainWindow(object):
     def retranslate_ui(self, main_window):
         _translate = QtCore.QCoreApplication.translate
         main_window.setWindowTitle(_translate("MainWindow", "Contracts"))
-        self.new_button.setText(_translate("MainWindow", "New Contract"))
+        self.new_button.setText(_translate("MainWindow", "New Project"))
         self.settings_button.setText(_translate("MainWindow", "Settings"))
         self.contracts_icon.setText(_translate("MainWindow", "Contracts                  "))
         self.contracts_search.setPlaceholderText(_translate("MainWindow", "Search contracts"))
         self.contracts_filter.setText(_translate("MainWindow", "Filters"))
         self.contracts_open.setText(_translate("MainWindow", "Open"))
-        self.contracts_complete.setText(_translate("MainWindow", "Mark As Complete"))
+        self.new_contract.setText(_translate("MainWindow", "New Contract"))
         self.contracts_delete.setText(_translate("MainWindow", "Delete"))
         self.tasks_label.setText(_translate("MainWindow", "Tasks"))
         self.upcoming_label.setText(_translate("MainWindow", "UPCOMING TASKS: "))

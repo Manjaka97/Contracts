@@ -27,12 +27,20 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             self.contract_window = ContractWindow(self.contract_name, self.project_name)
             self.contract_window.show()
 
-    # To be implemented later
+    def new_project(self):
+        # TODO: Implement new_project
+        pass
+
+    def settings(self):
+        # TODO: Implement settings
+        pass
+
     def show_new_contract_window(self):
-        self.new_contract_window = ContractWindow()
-        self.new_contract_window.show()
+        # TODO: Implement show_new_contract_window
+        pass
 
     def add_contract(self):
+        # TODO: Implement add_contract
         connection = sqlite3.connect('test.db')
         cursor = connection.cursor()
         add_contract_query = "INSERT INTO contracts(name, priority, deleted) VALUES('Contract 4', 3, 0)"
@@ -42,7 +50,9 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.ui.contracts_tree.addItem('Added item')
 
 
+
     def delete_contract(self):
+        # TODO: Implement delete_contract
         if self.ui.contracts_tree.selectedIndexes() == []:
             return
         else:
@@ -50,7 +60,6 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             contract_name = contract_index.model().itemData(contract_index)[0]
             project_index = self.ui.contracts_tree.selectedIndexes()[1]
             project_name = project_index.model().itemData(project_index)[0]
-
 
         # print('here')
         # reply = QMessageBox.question(self, 'Delete Contract', 'Are you sure you want to delete {0}?'.format(
@@ -68,12 +77,45 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             # connection.commit()
             # connection.close()
 
+    def complete_contract(self):
+        # TODO: Implement complete_contract
+        pass
+
+    def show_filters(self):
+        # TODO: Implement show_filters
+        pass
+
+    def search_contracts(self):
+        # TODO: Implement search_contracts
+        pass
+
+    def show_settings(self):
+        # TODO: Implement show_settings
+        pass
+
+    def open_task(self):
+        # TODO: Implement open_task
+        pass
+
+    def complete_task(self):
+        # TODO: Implement complete_tasks
+        pass
+
+    def open_contract_from_task(self):
+        # TODO: open_contract_from_task
+        pass
+
+    def delete_task(self):
+        # TODO: delete_task
+        pass
+
 
 class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
     def __init__(self, contract_name, project_name):
         QtWidgets.QWidget.__init__(self)
 
         # Project ID:
+        # TODO: Make a  function for QSQLite connection and query
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('Contracts.db')
         if not db.open():
@@ -117,10 +159,12 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
         copyfile(filename[0], dir)
         # Insert into database
         try:
+            # TODO: Make a method for sqlite connection and query
             sqliteConnection = sqlite3.connect('Contracts.db')
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
             query = """ INSERT INTO documents (contract_id, project_id, document) VALUES (?, ?, ?)"""
+            # TODO: Use correct query for document record
             record = (1, 1, name)
             cursor.execute(query, record)
             sqliteConnection.commit()
@@ -135,7 +179,54 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
                 sqliteConnection.close()
                 print('Closed db')
 
-        #self.contract_ui.documents_list.mod
+    def open_document(self):
+        # TODO: Implement open_document
+        pass
+
+    def delete_document(self):
+        # TODO: Implement delete_document
+        pass
+
+    def edit_contract(self):
+        # TODO: Implement edit_name
+        pass
+
+    def edit_project(self):
+        # TODO: Implement edit_project
+        pass
+
+    def add_party(self):
+        # TODO: Implement add_party
+        pass
+
+    def edit_party(self):
+        # TODO: Implement edit_party
+        pass
+
+    def delete_party(self):
+        # TODO: Implement delete_party
+        pass
+
+    def add_task(self):
+        # TODO: Implement add_task
+        pass
+
+    def complete_task(self):
+        # TODO: Implement complete_task (from contract)
+        pass
+
+    def open_task(self):
+        # TODO: Implement open_task (from contract)
+        pass
+
+    def delete_task(self):
+        # TODO: Implement delete_task (from contract)
+        pass
+
+    def save_changes(self):
+        # TODO: Implement save_changes
+        pass
+
 
 if __name__ == "__main__":
     import sys
