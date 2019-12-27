@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sqlite3
 
-class Ui_Form(object):
+class Ui_Form(QtCore.QObject):
     def setupUi(self, Form, contract_id, project_id):
         Form.setObjectName("Form")
         Form.resize(1250, 680)
@@ -87,6 +87,7 @@ class Ui_Form(object):
         db.close()
 
         # Parties Tree
+        # TODO: Change width of all columns
         self.parties_tree = QtWidgets.QTreeView(Form)
         self.parties_tree.setGeometry(QtCore.QRect(30, 140, 731, 131))
         self.parties_tree.setObjectName("parties_tree")

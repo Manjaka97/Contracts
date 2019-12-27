@@ -168,7 +168,7 @@ class UiMainWindow(object):
         self.contracts_filter.setStyleSheet("background-color: white;")
         self.contracts_filter.setObjectName("contracts_filter")
 
-        # Contracts model
+        # Contract model
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('Contracts.db')
         if not db.open():
@@ -176,7 +176,8 @@ class UiMainWindow(object):
         self.contract_model = QtSql.QSqlRelationalTableModel()
         self.contract_model.setTable('contracts')
         query = QtSql.QSqlQuery()
-        query.exec_("SELECT contracts.name as Name, projects.name as Project FROM contracts JOIN projects ON contracts.project_id = projects.id")
+        query.exec_(
+            "SELECT contracts.name as Name, projects.name as Project FROM contracts JOIN projects ON contracts.project_id = projects.id")
         self.contract_model.setQuery(query)
         db.close()
 
@@ -191,6 +192,7 @@ class UiMainWindow(object):
         self.contracts_tree.setFont(font)
         self.contracts_tree.setStyleSheet("background-color: white;")
         self.contracts_tree.setObjectName("contracts_tree")
+
 
         self.contracts_tree.setModel(self.contract_model)
         self.contracts_tree.setColumnWidth(0, 200)
@@ -532,3 +534,17 @@ class UiMainWindow(object):
         self.tasks_complete.setText(_translate("MainWindow", "Mark As Complete"))
         self.tasks_view.setText(_translate("MainWindow", "View Contract"))
         self.tasks_delete.setText(_translate("MainWindow", "Delete"))
+
+    def refresh_contract_tree(self):
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.contract_model = QtSql.QSqlRelationalTableModel()
+        self.contract_model.setTable('contracts')
+        query = QtSql.QSqlQuery()
+        query.exec_(
+            "SELECT contracts.name as Name, projects.name as Project FROM contracts JOIN projects ON contracts.project_id = projects.id")
+        self.contract_model.setQuery(query)
+        db.close()
+        self.contracts_tree.setModel(self.contract_model)

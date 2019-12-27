@@ -6,6 +6,8 @@ import os
 from shutil import copyfile
 
 class Main(QtWidgets.QMainWindow, window.UiMainWindow):
+    main_signal = QtCore.pyqtSignal()
+
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = window.UiMainWindow()
@@ -25,6 +27,8 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             self.project_name = project_index.model().itemData(project_index)[0]
 
             self.contract_window = ContractWindow(self.contract_name, self.project_name)
+            self.contract_window.setWindowModality(QtCore.Qt.ApplicationModal)
+            self.contract_window.contract_tree_signal.connect(self.update_contract_tree)
             self.contract_window.show()
 
     def new_project(self):
@@ -48,8 +52,6 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         connection.commit()
         connection.close()
         self.ui.contracts_tree.addItem('Added item')
-
-
 
     def delete_contract(self):
         # TODO: Implement delete_contract
@@ -109,13 +111,19 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         # TODO: delete_task
         pass
 
+    def update_contract_tree(self):
+        self.ui.refresh_contract_tree()
+
 
 class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
+    contract_tree_signal = QtCore.pyqtSignal()
+
     def __init__(self, contract_name, project_name):
         QtWidgets.QWidget.__init__(self)
+        self.contract_name = contract_name
+        self.project_name = project_name
 
         # Project ID:
-        # TODO: Make a  function for QSQLite connection and query
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('Contracts.db')
         if not db.open():
@@ -124,10 +132,10 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
         self.notes_model.setTable('projects')
         query = QtSql.QSqlQuery()
         query.prepare("SELECT id FROM projects where name=?")
-        query.addBindValue(project_name)
+        query.addBindValue(self.project_name)
         query.exec_()
         if query.next():
-            project_id = query.value(0)
+            self.project_id = query.value(0)
         db.close()
 
         # Contract ID
@@ -139,17 +147,55 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
         self.notes_model.setTable('contracts')
         query = QtSql.QSqlQuery()
         query.prepare("SELECT id FROM contracts where name=? and project_id=?")
-        query.addBindValue(contract_name)
-        query.addBindValue(project_id)
+        query.addBindValue(self.contract_name)
+        query.addBindValue(self.project_id)
         query.exec_()
         if query.next():
-            contract_id = query.value(0)
+            self.contract_id = query.value(0)
         db.close()
 
         self.contract_ui = contracts.Ui_Form()
-        self.contract_ui.setupUi(self, contract_id, project_id)
+        self.contract_ui.setupUi(self, self.contract_id, self.project_id)
 
         self.contract_ui.add_document_button.clicked.connect(self.add_document)
+        self.contract_ui.pushButton_12.clicked.connect(self.edit_contract)
+        self.contract_ui.pushButton_13.clicked.connect(self.edit_project)
+
+    # Helping method to run simple queries
+    def run_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('Contracts.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        cursor.close()
+
+    def fetch_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('Contracts.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        results_tuple = cursor.fetchall()
+        results = [item for t in results_tuple for item in t]
+        cursor.close()
+        return results
+
+    def closeEvent(self, event):
+        close = QtWidgets.QMessageBox()
+        close.setWindowTitle('Exit Contract')
+        close.setText('Exit contract?')
+        close.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        close = close.exec()
+
+        if close == QMessageBox.Yes:
+
+            print('here')
+            event.accept()
+        else:
+            event.ignore()
 
     def add_document(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
@@ -159,13 +205,11 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
         copyfile(filename[0], dir)
         # Insert into database
         try:
-            # TODO: Make a method for sqlite connection and query
             sqliteConnection = sqlite3.connect('Contracts.db')
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
             query = """ INSERT INTO documents (contract_id, project_id, document) VALUES (?, ?, ?)"""
-            # TODO: Use correct query for document record
-            record = (1, 1, name)
+            record = (self.contract_id, self.project_id, name)
             cursor.execute(query, record)
             sqliteConnection.commit()
             print('Document added')
@@ -188,12 +232,41 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
         pass
 
     def edit_contract(self):
-        # TODO: Implement edit_name
-        pass
+        dialog = QtWidgets.QInputDialog(self)
+        dialog.setModal(True)
+        new_name, ok = dialog.getText(self, 'Edit Name', 'Enter Contract Name', QtWidgets.QLineEdit.Normal, text=self.contract_name)
+        if ok and new_name != '':
+            self.original_contract_name = self.contract_name
+            self.contract_name = new_name
+
+        self.run_query("UPDATE contracts SET name=? WHERE id=?", (self.contract_name, self.contract_id))
+        self.contract_ui.contract_label.setText(self.contract_name)
+        self.contract_tree_signal.emit()
 
     def edit_project(self):
-        # TODO: Implement edit_project
-        pass
+        dialog = QtWidgets.QInputDialog(self)
+        dialog.setWindowTitle("Edit Project")
+        dialog.setLabelText("Enter Project Name:")
+        dialog.setTextValue(self.project_name)
+        line_edit = dialog.findChild(QtWidgets.QLineEdit)
+        self.project_list = self.fetch_query("SELECT name FROM projects")
+        print(self.project_list)
+        completer = QtWidgets.QCompleter(self.project_list, line_edit)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        line_edit.setCompleter(completer)
+
+        ok, new_name = (
+            dialog.exec_() == QtWidgets.QDialog.Accepted,
+            dialog.textValue(),
+        )
+        if ok:
+            if ok and new_name != '':
+                self.original_project_name = self.project_name
+                self.project_name = new_name
+
+        self.run_query("UPDATE projects SET name=? WHERE id=?", (self.project_name, self.project_id))
+        self.contract_ui.project_label.setText(self.project_name)
+        self.contract_tree_signal.emit()
 
     def add_party(self):
         # TODO: Implement add_party
@@ -234,4 +307,5 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     Window = Main()
     Window.show()
+
     sys.exit(app.exec_())
