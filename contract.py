@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sqlite3
 
-class Ui_Form(QtCore.QObject):
+class Ui_Form(object):
     def setupUi(self, Form, contract_id, project_id):
         Form.setObjectName("Form")
         Form.resize(1250, 680)

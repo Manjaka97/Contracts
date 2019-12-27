@@ -1,12 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from PyQt5.QtWidgets import QMessageBox
-import window, contracts
+import window, contract, party
 import sqlite3
 import os
 from shutil import copyfile
 
 class Main(QtWidgets.QMainWindow, window.UiMainWindow):
-    main_signal = QtCore.pyqtSignal()
 
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -29,7 +28,14 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             self.contract_window = ContractWindow(self.contract_name, self.project_name)
             self.contract_window.setWindowModality(QtCore.Qt.ApplicationModal)
             self.contract_window.contract_tree_signal.connect(self.update_contract_tree)
+            self.contract_window.party_signal.connect(self.new_party_window)
             self.contract_window.show()
+
+    def new_party_window(self):
+        # TODO: Make line edit select all when clicked
+        self.party_window = PartyWindow()
+        self.party_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.party_window.show()
 
     def new_project(self):
         # TODO: Implement new_project
@@ -62,22 +68,6 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             contract_name = contract_index.model().itemData(contract_index)[0]
             project_index = self.ui.contracts_tree.selectedIndexes()[1]
             project_name = project_index.model().itemData(project_index)[0]
-
-        # print('here')
-        # reply = QMessageBox.question(self, 'Delete Contract', 'Are you sure you want to delete {0}?'.format(
-        #     str(item.text())), QMessageBox.Yes | QMessageBox.No)
-        # if reply == QMessageBox.Yes:
-        #     item = self.ui.contracts_tree.takeItem(row)
-        #     name = item.text()
-        #     del item
-
-            # connection = sqlite3.connect('test.db')
-            # cursor = connection.cursor()
-            # name_query = (name,)
-            # #contract_id = connection.execute("SELECT id FROM contracts WHERE name = ? AND deleted = 0", (name,))
-            # cursor.execute('UPDATE contracts SET deleted=1 WHERE name=?', name_query)
-            # connection.commit()
-            # connection.close()
 
     def complete_contract(self):
         # TODO: Implement complete_contract
@@ -115,8 +105,9 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.ui.refresh_contract_tree()
 
 
-class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
+class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
     contract_tree_signal = QtCore.pyqtSignal()
+    party_signal = QtCore.pyqtSignal()
 
     def __init__(self, contract_name, project_name):
         QtWidgets.QWidget.__init__(self)
@@ -154,12 +145,13 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
             self.contract_id = query.value(0)
         db.close()
 
-        self.contract_ui = contracts.Ui_Form()
+        self.contract_ui = contract.Ui_Form()
         self.contract_ui.setupUi(self, self.contract_id, self.project_id)
 
         self.contract_ui.add_document_button.clicked.connect(self.add_document)
         self.contract_ui.pushButton_12.clicked.connect(self.edit_contract)
         self.contract_ui.pushButton_13.clicked.connect(self.edit_project)
+        self.contract_ui.pushButton.clicked.connect(self.add_party)
 
     # Helping method to run simple queries
     def run_query(self, query, values=()):
@@ -232,6 +224,7 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
         pass
 
     def edit_contract(self):
+        # TODO: Check that name doesn't already exist
         dialog = QtWidgets.QInputDialog(self)
         dialog.setModal(True)
         new_name, ok = dialog.getText(self, 'Edit Name', 'Enter Contract Name', QtWidgets.QLineEdit.Normal, text=self.contract_name)
@@ -269,8 +262,11 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
         self.contract_tree_signal.emit()
 
     def add_party(self):
-        # TODO: Implement add_party
-        pass
+        # TODO: Connect ok button to db update
+        self.party_signal.emit()
+        #party_window = partyWindow()
+        #party_window.show()
+
 
     def edit_party(self):
         # TODO: Implement edit_party
@@ -299,6 +295,15 @@ class ContractWindow(QtWidgets.QWidget, contracts.Ui_Form):
     def save_changes(self):
         # TODO: Implement save_changes
         pass
+
+
+class PartyWindow(QtWidgets.QWidget, party.Ui_partyDialog):
+    party_signal = QtCore.pyqtSignal()
+
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
+        self.party_ui = party.Ui_partyDialog()
+        self.party_ui.setupUi(self)
 
 
 if __name__ == "__main__":
