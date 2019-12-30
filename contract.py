@@ -3,6 +3,8 @@ import sqlite3
 
 class Ui_Form(object):
     def setupUi(self, Form, contract_id, project_id):
+        self.contract_id = contract_id
+        self.project_id = project_id
         Form.setObjectName("Form")
         Form.resize(1250, 680)
         Form.setMinimumSize(QtCore.QSize(1250, 680))
@@ -27,7 +29,7 @@ class Ui_Form(object):
         self.notes_model.setTable('contracts')
         query = QtSql.QSqlQuery()
         query.prepare("SELECT notes FROM contracts where id=?")
-        query.addBindValue(contract_id)
+        query.addBindValue(self.contract_id)
         query.exec_()
         if query.next():
             notes = query.value(0)
@@ -49,8 +51,8 @@ class Ui_Form(object):
         self.document_model.setTable('tasks')
         query = QtSql.QSqlQuery()
         query.prepare("SELECT document AS '' FROM documents WHERE contract_id=? AND project_id=?")
-        query.addBindValue(contract_id)
-        query.addBindValue(project_id)
+        query.addBindValue(self.contract_id)
+        query.addBindValue(self.project_id)
         query.exec_()
         self.document_model.setQuery(query)
         db.close()
@@ -81,7 +83,7 @@ class Ui_Form(object):
             "SELECT parties.name as Name, parties.representative_first as 'Representative "
             "First Name', parties.representative_last as 'Representative Last Name', parties.phone as 'Phone Number', "
             "parties.email as 'Email Address' FROM parties WHERE project_id = ?")
-        query.addBindValue(project_id)
+        query.addBindValue(self.project_id)
         query.exec_()
         self.party_model.setQuery(query)
         db.close()
@@ -112,7 +114,7 @@ class Ui_Form(object):
         query.prepare("SELECT tasks.Name as name, tasks.description as Description, tasks.deadline as Deadline, "
                       "parties.name as 'Assigned To', tasks.completed as Status FROM tasks LEFT JOIN parties ON "
                       "tasks.party_id=parties.id WHERE contract_id=?")
-        query.addBindValue(contract_id)
+        query.addBindValue(self.contract_id)
         query.exec_()
         self.task_model.setQuery(query)
         db.close()
@@ -289,8 +291,8 @@ class Ui_Form(object):
         self.notes_model.setTable('contracts')
         query = QtSql.QSqlQuery()
         query.prepare("SELECT name FROM contracts where id=? AND project_id=?")
-        query.addBindValue(contract_id)
-        query.addBindValue(project_id)
+        query.addBindValue(self.contract_id)
+        query.addBindValue(self.project_id)
         query.exec_()
         if query.next():
             contract = query.value(0)
@@ -383,4 +385,21 @@ class Ui_Form(object):
         self.pushButton_12.setText(_translate("Form", "Edit"))
         self.label_3.setText(_translate("Form", "-"))
         self.pushButton_13.setText(_translate("Form", "Edit"))
-import resources_rc
+
+    def refresh_parties_tree(self):
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.party_model = QtSql.QSqlRelationalTableModel()
+        self.party_model.setTable('parties')
+        query = QtSql.QSqlQuery()
+        query.prepare(
+            "SELECT parties.name as Name, parties.representative_first as 'Representative "
+            "First Name', parties.representative_last as 'Representative Last Name', parties.phone as 'Phone Number', "
+            "parties.email as 'Email Address' FROM parties WHERE project_id = ?")
+        query.addBindValue(self.project_id)
+        query.exec_()
+        self.party_model.setQuery(query)
+        db.close()
+        self.parties_tree.setModel(self.party_model)

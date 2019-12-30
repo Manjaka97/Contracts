@@ -32,9 +32,9 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             self.contract_window.show()
 
     def new_party_window(self):
-        # TODO: Make line edit select all when clicked
-        self.party_window = PartyWindow()
+        self.party_window = PartyWindow(self.contract_window.project_name)
         self.party_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.party_window.party_changed.connect(self.update_parties_tree)
         self.party_window.show()
 
     def new_project(self):
@@ -104,6 +104,8 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
     def update_contract_tree(self):
         self.ui.refresh_contract_tree()
 
+    def update_parties_tree(self):
+        self.contract_window.update_parties_tree()
 
 class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
     contract_tree_signal = QtCore.pyqtSignal()
@@ -183,8 +185,6 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         close = close.exec()
 
         if close == QMessageBox.Yes:
-
-            print('here')
             event.accept()
         else:
             event.ignore()
@@ -262,11 +262,7 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         self.contract_tree_signal.emit()
 
     def add_party(self):
-        # TODO: Connect ok button to db update
         self.party_signal.emit()
-        #party_window = partyWindow()
-        #party_window.show()
-
 
     def edit_party(self):
         # TODO: Implement edit_party
@@ -296,15 +292,72 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         # TODO: Implement save_changes
         pass
 
+    def update_parties_tree(self):
+        self.contract_ui.refresh_parties_tree()
 
 class PartyWindow(QtWidgets.QWidget, party.Ui_partyDialog):
-    party_signal = QtCore.pyqtSignal()
+    party_changed = QtCore.pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, project_name):
         QtWidgets.QWidget.__init__(self)
-        self.party_ui = party.Ui_partyDialog()
-        self.party_ui.setupUi(self)
+        self.project_name = project_name
 
+        # Project ID:
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.notes_model = QtSql.QSqlRelationalTableModel()
+        self.notes_model.setTable('projects')
+        query = QtSql.QSqlQuery()
+        query.prepare("SELECT id FROM projects where name=?")
+        query.addBindValue(self.project_name)
+        query.exec_()
+
+        if query.next():
+            self.project_id = query.value(0)
+
+        db.close()
+
+        self.party_ui = party.Ui_partyDialog()
+        self.party_ui.setupUi(self, self.project_id)
+
+        self.party_ui.pushButton.clicked.connect(self.save_party)
+        self.party_ui.pushButton.clicked.connect(QtWidgets.QApplication.closeAllWindows)
+        self.party_ui.pushButton_2.clicked.connect(self.close)
+
+    def run_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('Contracts.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        cursor.close()
+
+    def fetch_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('Contracts.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        results_tuple = cursor.fetchall()
+        results = [item for t in results_tuple for item in t]
+        cursor.close()
+        return results
+
+    def save_party(self):
+        name = self.party_ui.lineEdit.text()
+        first = self.party_ui.lineEdit_2.text()
+        last = self.party_ui.lineEdit_3.text()
+        phone = self.party_ui.lineEdit_4.text()
+        email = self.party_ui.lineEdit_5.text()
+
+        if name != '' and first != '' and last != '' and phone != '' and email != '':
+            self.run_query('INSERT INTO parties (project_id, name, representative_first, representative_last, phone, '
+                           'email) VALUES (?, ?, ?, ?, ?, ?)', (self.project_id, name, first, last, phone, email))
+            self.party_changed.emit()
 
 if __name__ == "__main__":
     import sys
