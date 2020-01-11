@@ -1,8 +1,11 @@
+# TODO: Remove unnecessary signals and simplify method calls
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from PyQt5.QtWidgets import QMessageBox
 import window, contract, party
 import sqlite3
 import os
+# TODO: fix open pdf with webbrowser or other alternative
+import webbrowser
 from shutil import copyfile
 
 class Main(QtWidgets.QMainWindow, window.UiMainWindow):
@@ -15,6 +18,9 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.ui.contracts_open.clicked.connect(self.open_contract)
         self.ui.contracts_delete.clicked.connect(self.delete_contract)
         self.ui.new_button.clicked.connect(self.show_new_contract_window)
+        self.ui.tasks_delete.clicked.connect(self.delete_completed_task)
+        self.ui.tasks_delete.clicked.connect(self.delete_overdue_task)
+        self.ui.tasks_delete.clicked.connect(self.delete_upcoming_task)
 
     def open_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -27,10 +33,13 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
 
             self.contract_window = ContractWindow(self.contract_name, self.project_name)
             self.contract_window.setWindowModality(QtCore.Qt.ApplicationModal)
-            self.contract_window.contract_tree_signal.connect(self.update_contract_tree)
+            self.contract_window.contract_tree_signal.connect(self.update_contracts_tree)
             self.contract_window.new_party_signal.connect(self.new_party_window)
             self.contract_window.edit_party_signal.connect(self.edit_party_window)
             self.contract_window.delete_party_signal.connect(self.delete_party)
+            self.contract_window.delete_document_signal.connect(self.update_document_list)
+            self.contract_window.new_document_signal.connect(self.update_document_list)
+            self.contract_window.delete_task_signal.connect(self.update_tasks_tree)
             self.contract_window.show()
 
     def run_query(self, query, values=()):
@@ -122,27 +131,75 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         # TODO: open_contract_from_task
         pass
 
-    def delete_task(self):
-        # TODO: delete_task
-        pass
+    def delete_upcoming_task(self):
+        if self.ui.upcoming_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.upcoming_tree.selectedIndexes()[3]
+            task_id = id_index.model().itemData(id_index)[0]
 
-    def update_contract_tree(self):
+            prompt = 'Are you sure you want to delete this task?'
+            buttonReply = QMessageBox.question(self, 'Delete Task', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM tasks WHERE id=?', (task_id,))
+                self.ui.refresh_tasks_trees()
+
+    def delete_overdue_task(self):
+        if self.ui.overdue_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.overdue_tree.selectedIndexes()[3]
+            task_id = id_index.model().itemData(id_index)[0]
+
+            prompt = 'Are you sure you want to delete this task?'
+            buttonReply = QMessageBox.question(self, 'Delete Task', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM tasks WHERE id=?', (task_id,))
+                self.ui.refresh_tasks_trees()
+
+    def delete_completed_task(self):
+        if self.ui.completed_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.completed_tree.selectedIndexes()[3]
+            task_id = id_index.model().itemData(id_index)[0]
+
+            prompt = 'Are you sure you want to delete this task?'
+            buttonReply = QMessageBox.question(self, 'Delete Task', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM tasks WHERE id=?', (task_id,))
+                self.ui.refresh_tasks_trees()
+
+    def update_contracts_tree(self):
         self.ui.refresh_contract_tree()
 
     def update_parties_tree(self):
         self.contract_window.update_parties_tree()
+
+    def update_document_list(self):
+        self.contract_window.update_document_list()
+
+    def update_tasks_tree(self):
+        self.ui.refresh_tasks_trees()
+        self.contract_window.update_tasks_tree()
 
 class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
     contract_tree_signal = QtCore.pyqtSignal()
     new_party_signal = QtCore.pyqtSignal()
     edit_party_signal = QtCore.pyqtSignal(str, str, str, str, str)
     delete_party_signal = QtCore.pyqtSignal(str, int)
+    new_document_signal = QtCore.pyqtSignal()
+    delete_document_signal = QtCore.pyqtSignal()
+    delete_task_signal = QtCore.pyqtSignal()
 
     def __init__(self, contract_name, project_name):
         QtWidgets.QWidget.__init__(self)
         self.contract_name = contract_name
         self.project_name = project_name
-
+        self.dir = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
         # Project ID:
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('Contracts.db')
@@ -183,6 +240,9 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         self.contract_ui.pushButton.clicked.connect(self.add_party)
         self.contract_ui.pushButton_2.clicked.connect(self.edit_party)
         self.contract_ui.pushButton_3.clicked.connect(self.delete_party)
+        self.contract_ui.delete_document_button.clicked.connect(self.delete_document)
+        self.contract_ui.open_document_button.clicked.connect(self.open_document)
+        self.contract_ui.pushButton_6.clicked.connect(self.delete_task)
 
     # Helping method to run simple queries
     def run_query(self, query, values=()):
@@ -221,7 +281,7 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
     def add_document(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
         name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
-        dir = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\" + name
+        dir = self.dir + name
 
         copyfile(filename[0], dir)
         # Insert into database
@@ -243,14 +303,25 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
             if sqliteConnection:
                 sqliteConnection.close()
                 print('Closed db')
+        self.new_document_signal.emit()
 
     def open_document(self):
-        # TODO: Implement open_document
-        pass
+        webbrowser.open_new(r'C:\\Users\\Tantely\\Documents\\HW4')
 
     def delete_document(self):
-        # TODO: Implement delete_document
-        pass
+        if self.contract_ui.documents_list.selectedIndexes() == []:
+            return
+        else:
+            name_index = self.contract_ui.documents_list.selectedIndexes()[0]
+            name = self.contract_ui.documents_list.model().itemData(name_index)[0]
+            prompt = 'Are you sure you want to delete ' + name + '?'
+            buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM documents WHERE document=? AND contract_id=?', (name, self.contract_id))
+                path = self.dir + name
+                os.remove(path)
+                self.delete_document_signal.emit()
 
     def edit_contract(self):
         # TODO: Check that name doesn't already exist
@@ -330,8 +401,18 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         pass
 
     def delete_task(self):
-        # TODO: Implement delete_task (from contract)
-        pass
+        if self.contract_ui.tasks_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.contract_ui.tasks_tree.selectedIndexes()[5]
+            task_id = id_index.model().itemData(id_index)[0]
+
+            prompt = 'Are you sure you want to delete this task?'
+            buttonReply = QMessageBox.question(self, 'Delete Task', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM tasks WHERE id=?', (task_id,))
+                self.delete_task_signal.emit()
 
     def save_changes(self):
         # TODO: Implement save_changes
@@ -339,6 +420,12 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
 
     def update_parties_tree(self):
         self.contract_ui.refresh_parties_tree()
+
+    def update_document_list(self):
+        self.contract_ui.refresh_document_list()
+
+    def update_tasks_tree(self):
+        self.contract_ui.refresh_tasks_tree()
 
 class PartyWindow(QtWidgets.QWidget, party.Ui_partyDialog):
     party_changed = QtCore.pyqtSignal()
