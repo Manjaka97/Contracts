@@ -282,6 +282,8 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
     def add_document(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
         name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
+        if name == '':
+            return
         dir = self.dir + name
 
         copyfile(filename[0], dir)
