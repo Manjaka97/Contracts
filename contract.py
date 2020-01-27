@@ -62,6 +62,7 @@ class Ui_Form(object):
         self.documents_list.setGeometry(QtCore.QRect(840, 450, 391, 101))
         self.documents_list.setObjectName("documents_list")
         self.documents_list.setModel(self.document_model)
+        self.documents_list.setAlternatingRowColors(True)
 
         self.label_5 = QtWidgets.QLabel(Form)
         self.label_5.setGeometry(QtCore.QRect(980, 400, 131, 50))
@@ -93,7 +94,7 @@ class Ui_Form(object):
         self.parties_tree = QtWidgets.QTreeView(Form)
         self.parties_tree.setGeometry(QtCore.QRect(30, 140, 731, 131))
         self.parties_tree.setObjectName("parties_tree")
-
+        self.parties_tree.setAlternatingRowColors(True)
         self.parties_tree.setModel(self.party_model)
 
 
@@ -112,7 +113,7 @@ class Ui_Form(object):
         self.task_model.setTable('tasks')
         query = QtSql.QSqlQuery()
         query.prepare("SELECT tasks.Name as name, tasks.description as Description, tasks.deadline as Deadline, "
-                      "parties.name as 'Assigned To', tasks.completed as Status FROM tasks LEFT JOIN parties ON "
+                      "parties.name as 'Assigned To', tasks.completed as Status, tasks.id as ID FROM tasks LEFT JOIN parties ON "
                       "tasks.party_id=parties.id WHERE contract_id=?")
         query.addBindValue(self.contract_id)
         query.exec_()
@@ -123,7 +124,7 @@ class Ui_Form(object):
         self.tasks_tree = QtWidgets.QTreeView(Form)
         self.tasks_tree.setGeometry(QtCore.QRect(30, 430, 731, 181))
         self.tasks_tree.setObjectName("tasks_tree")
-
+        self.tasks_tree.setAlternatingRowColors(True)
         self.tasks_tree.setModel(self.task_model)
 
 
@@ -403,3 +404,36 @@ class Ui_Form(object):
         self.party_model.setQuery(query)
         db.close()
         self.parties_tree.setModel(self.party_model)
+
+    def refresh_document_list(self):
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.document_model = QtSql.QSqlRelationalTableModel()
+        self.document_model.setTable('tasks')
+        query = QtSql.QSqlQuery()
+        query.prepare("SELECT document AS '' FROM documents WHERE contract_id=? AND project_id=?")
+        query.addBindValue(self.contract_id)
+        query.addBindValue(self.project_id)
+        query.exec_()
+        self.document_model.setQuery(query)
+        db.close()
+        self.documents_list.setModel(self.document_model)
+
+    def refresh_tasks_tree(self):
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.task_model = QtSql.QSqlRelationalTableModel()
+        self.task_model.setTable('tasks')
+        query = QtSql.QSqlQuery()
+        query.prepare("SELECT tasks.Name as name, tasks.description as Description, tasks.deadline as Deadline, "
+                      "parties.name as 'Assigned To', tasks.completed as Status, tasks.id as ID FROM tasks LEFT JOIN parties ON "
+                      "tasks.party_id=parties.id WHERE contract_id=?")
+        query.addBindValue(self.contract_id)
+        query.exec_()
+        self.task_model.setQuery(query)
+        db.close()
+        self.tasks_tree.setModel(self.task_model)

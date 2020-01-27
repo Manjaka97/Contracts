@@ -304,7 +304,7 @@ class UiMainWindow(object):
             print('Db not open')
         self.upcoming_tasks_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
-        query.exec_("SELECT name as Name, description as Description, deadline as Deadline FROM tasks WHERE deadline>=DATE('now') AND completed=0;")
+        query.exec_("SELECT name as Name, description as Description, deadline as Deadline, id as ID FROM tasks WHERE deadline>=DATE('now') AND completed=0;")
         self.upcoming_tasks_model.setQuery(query)
         db.close()
 
@@ -368,7 +368,7 @@ class UiMainWindow(object):
             print('Db not open')
         self.overdue_tasks_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
-        query.exec_("SELECT name as Name, description as Description, deadline as Deadline FROM tasks WHERE deadline<DATE('now') AND completed=0;")
+        query.exec_("SELECT name as Name, description as Description, deadline as Deadline, id as ID FROM tasks WHERE deadline<DATE('now') AND completed=0;")
         self.overdue_tasks_model.setQuery(query)
         db.close()
 
@@ -429,7 +429,7 @@ class UiMainWindow(object):
             print('Db not open')
         self.completed_tasks_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
-        query.exec_("SELECT name as Name, description as Description, date_completed as 'Completion Date' FROM tasks WHERE completed=1;")
+        query.exec_("SELECT name as Name, description as Description, date_completed as 'Completion Date', id as ID FROM tasks WHERE completed=1;")
         self.completed_tasks_model.setQuery(query)
         db.close()
 
@@ -548,3 +548,40 @@ class UiMainWindow(object):
         self.contract_model.setQuery(query)
         db.close()
         self.contracts_tree.setModel(self.contract_model)
+
+    def refresh_tasks_trees(self):
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.upcoming_task_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+            "SELECT name as Name, description as Description, deadline as Deadline, id as ID FROM tasks WHERE deadline>=DATE('now') AND completed=0;")
+        self.upcoming_task_model.setQuery(query)
+        db.close()
+        self.upcoming_tree.setModel(self.upcoming_task_model)
+
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.overdue_task_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+            "SELECT name as Name, description as Description, deadline as Deadline, id as ID FROM tasks WHERE deadline<DATE('now') AND completed=0;")
+        self.overdue_task_model.setQuery(query)
+        db.close()
+        self.overdue_tree.setModel(self.overdue_task_model)
+
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('Contracts.db')
+        if not db.open():
+            print('Db not open')
+        self.completed_task_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+            "SELECT name as Name, description as Description, date_completed as 'Completion Date', id as ID FROM tasks WHERE completed=1;")
+        self.completed_task_model.setQuery(query)
+        db.close()
+        self.completed_tree.setModel(self.completed_task_model)

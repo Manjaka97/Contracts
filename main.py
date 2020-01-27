@@ -243,6 +243,7 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         self.contract_ui.delete_document_button.clicked.connect(self.delete_document)
         self.contract_ui.open_document_button.clicked.connect(self.open_document)
         self.contract_ui.pushButton_6.clicked.connect(self.delete_task)
+        self.contract_ui.save.clicked.connect(self.save_changes)
 
     # Helping method to run simple queries
     def run_query(self, query, values=()):
@@ -306,7 +307,13 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         self.new_document_signal.emit()
 
     def open_document(self):
-        webbrowser.open_new(r'C:\\Users\\Tantely\\Documents\\HW4')
+        if self.contract_ui.documents_list.selectedIndexes() == []:
+            return
+        else:
+            name_index = self.contract_ui.documents_list.selectedIndexes()[0]
+            name = self.contract_ui.documents_list.model().itemData(name_index)[0]
+            filename = self.dir + name
+            os.startfile(filename)
 
     def delete_document(self):
         if self.contract_ui.documents_list.selectedIndexes() == []:
@@ -415,8 +422,12 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
                 self.delete_task_signal.emit()
 
     def save_changes(self):
-        # TODO: Implement save_changes
-        pass
+        prompt = 'Save Changes?'
+        buttonReply = QMessageBox.question(self, 'Save Changes', prompt,
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        notes = self.contract_ui.textEdit.toPlainText()
+        if buttonReply == QMessageBox.Yes:
+            self.run_query('UPDATE contracts SET notes=? WHERE id=?', (notes, self.contract_id))
 
     def update_parties_tree(self):
         self.contract_ui.refresh_parties_tree()
