@@ -5,6 +5,9 @@ class Ui_Form(object):
     def setupUi(self, Form, contract_id, project_id):
         self.contract_id = contract_id
         self.project_id = project_id
+        self.executed  = self.fetch_query('SELECT executed FROM contracts WHERE id=?', (contract_id,))[0]
+        self.active_check = self.fetch_query('SELECT active FROM contracts WHERE id=?', (contract_id,))[0]
+        self.completed_check = self.fetch_query('SELECT completed FROM contracts WHERE id=?', (contract_id,))[0]
         Form.setObjectName("Form")
         Form.resize(1250, 680)
         Form.setMinimumSize(QtCore.QSize(1250, 680))
@@ -262,6 +265,7 @@ class Ui_Form(object):
 
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.status_layout.addItem(spacerItem)
+
         self.active = QtWidgets.QRadioButton(self.status_buttons)
         self.active.setStyleSheet("color: rgb(255, 255, 255);")
         self.active.setObjectName("active")
@@ -273,6 +277,15 @@ class Ui_Form(object):
         self.completed.setObjectName("completed")
         self.status_layout.addWidget(self.completed)
 
+        # Status buttons
+        if self.executed == 1:
+            self.checkBox.setChecked(True)
+
+        if self.active_check == 1:
+            self.active.setChecked(True)
+
+        if self.completed_check == 1:
+            self.completed.setChecked(True)
 
         self.names = QtWidgets.QWidget(Form)
         self.names.setGeometry(QtCore.QRect(31, 21, 731, 61))
@@ -404,6 +417,18 @@ class Ui_Form(object):
         self.party_model.setQuery(query)
         db.close()
         self.parties_tree.setModel(self.party_model)
+
+    def fetch_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('Contracts.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        results_tuple = cursor.fetchall()
+        results = [item for t in results_tuple for item in t]
+        cursor.close()
+        return results
 
     def refresh_document_list(self):
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
