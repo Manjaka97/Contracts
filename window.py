@@ -177,7 +177,7 @@ class UiMainWindow(object):
         self.contract_model.setTable('contracts')
         query = QtSql.QSqlQuery()
         query.exec_(
-            "SELECT contracts.name as Name, projects.name as Project FROM contracts JOIN projects ON contracts.project_id = projects.id")
+            "SELECT contracts.name as Name, projects.name as Project, contracts.id FROM contracts JOIN projects ON contracts.project_id = projects.id")
         self.contract_model.setQuery(query)
         db.close()
 
