@@ -28,10 +28,8 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         else:
             id_index = self.ui.contracts_tree.selectedIndexes()[2]
             self.contract_id = id_index.model().itemData(id_index)[0]
-            project_index = self.ui.contracts_tree.selectedIndexes()[1]
-            self.project_name = project_index.model().itemData(project_index)[0]
 
-            self.contract_window = ContractWindow(self.contract_id, self.project_name)
+            self.contract_window = ContractWindow(self.contract_id)
             self.contract_window.setWindowModality(QtCore.Qt.ApplicationModal)
             self.contract_window.contract_tree_signal.connect(self.update_contracts_tree)
             self.contract_window.new_party_signal.connect(self.new_party_window)
@@ -236,10 +234,9 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
     delete_document_signal = QtCore.pyqtSignal()
     delete_task_signal = QtCore.pyqtSignal()
 
-    def __init__(self, contract_id, project_name):
+    def __init__(self, contract_id):
         QtWidgets.QWidget.__init__(self)
         self.contract_id = contract_id
-        self.project_name = project_name
         self.dir = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
 
         # Project ID:
@@ -247,11 +244,9 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         db.setDatabaseName('Contracts.db')
         if not db.open():
             print('Db not open')
-        self.notes_model = QtSql.QSqlRelationalTableModel()
-        self.notes_model.setTable('projects')
         query = QtSql.QSqlQuery()
-        query.prepare("SELECT id FROM projects where name=?")
-        query.addBindValue(self.project_name)
+        query.prepare("SELECT project_id FROM contracts where id=?")
+        query.addBindValue(self.contract_id)
         query.exec_()
         if query.next():
             self.project_id = query.value(0)
