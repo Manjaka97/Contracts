@@ -22,6 +22,7 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.ui.tasks_delete.clicked.connect(self.delete_overdue_task)
         self.ui.tasks_delete.clicked.connect(self.delete_upcoming_task)
         self.ui.tasks_view.clicked.connect(self.open_task_contract)
+        self.ui.tasks_complete.clicked.connect(self.complete_task)
 
     def open_task_contract(self):
         tab = self.ui.tasks_tab.currentWidget().objectName()
@@ -130,6 +131,57 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         # TODO: Implement complete_contract
         pass
 
+    def complete_task(self):
+        tab = self.ui.tasks_tab.currentWidget().objectName()
+        if tab == 'upcoming_tab':
+            self.complete_upcoming_task()
+        elif tab == 'overdue_tab':
+            self.complete_overdue_task()
+        else:
+            self.incomplete_completed_task()
+
+    def complete_upcoming_task(self):
+        if self.ui.upcoming_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.upcoming_tree.selectedIndexes()[3]
+            task_id = id_index.model().itemData(id_index)[0]
+
+            prompt = 'Mark as complete?'
+            buttonReply = QMessageBox.question(self, 'Complete Task', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query("UPDATE tasks SET completed=1, date_completed=date('now') WHERE id=?", (task_id,))
+                self.ui.refresh_tasks_trees()
+
+    def complete_overdue_task(self):
+        if self.ui.overdue_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.overdue_tree.selectedIndexes()[3]
+            task_id = id_index.model().itemData(id_index)[0]
+
+            prompt = 'Mark as complete?'
+            buttonReply = QMessageBox.question(self, 'Complete Task', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query("UPDATE tasks SET completed=1, date_completed=date('now') WHERE id=?", (task_id,))
+                self.ui.refresh_tasks_trees()
+
+    def incomplete_completed_task(self):
+        if self.ui.completed_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.completed_tree.selectedIndexes()[3]
+            task_id = id_index.model().itemData(id_index)[0]
+
+            prompt = 'Mark as incomplete?'
+            buttonReply = QMessageBox.question(self, 'Incomplete Task', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query("UPDATE tasks SET completed=0, date_completed='' WHERE id=?", (task_id,))
+                self.ui.refresh_tasks_trees()
+
     def show_filters(self):
         # TODO: Implement show_filters
         pass
@@ -144,10 +196,6 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
 
     def open_task(self):
         # TODO: Implement open_task
-        pass
-
-    def complete_task(self):
-        # TODO: Implement complete_tasks
         pass
 
     def open_upcoming_task_contract(self):
@@ -169,17 +217,13 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.open_contract(contract_id)
 
     def open_completed_task_contract(self):
-        if self.ui.upcoming_tree.selectedIndexes() == []:
+        if self.ui.completed_tree.selectedIndexes() == []:
             return
         else:
-            id_index = self.ui.upcoming_tree.selectedIndexes()[3]
+            id_index = self.ui.completed_tree.selectedIndexes()[3]
             task_id = id_index.model().itemData(id_index)[0]
             contract_id = self.fetch_query('SELECT contract_id from tasks WHERE id=?', (task_id,))[0]
         self.open_contract(contract_id)
-
-    def open_contract_from_task(self):
-        # TODO: open_contract_from_task
-        pass
 
     def delete_upcoming_task(self):
         if self.ui.upcoming_tree.selectedIndexes() == []:
