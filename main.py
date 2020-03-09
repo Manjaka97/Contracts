@@ -1,10 +1,10 @@
 # TODO: Remove unnecessary signals and simplify method calls
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from PyQt5.QtWidgets import QMessageBox
-import window, contract, party
+import window, contract, party, task
 import sqlite3
 import os
-# TODO: fix open pdf with webbrowser or other alternative
+
 import webbrowser
 from shutil import copyfile
 
@@ -23,6 +23,7 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         self.ui.tasks_delete.clicked.connect(self.delete_upcoming_task)
         self.ui.tasks_view.clicked.connect(self.open_task_contract)
         self.ui.tasks_complete.clicked.connect(self.complete_task)
+        self.ui.tasks_open.clicked.connect(self.open_task)
 
     def open_task_contract(self):
         tab = self.ui.tasks_tab.currentWidget().objectName()
@@ -86,13 +87,13 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
             self.contract_window.update_parties_tree()
 
     def new_party_window(self):
-        self.party_window = PartyWindow(self.contract_window.project_name)
+        self.party_window = PartyWindow(self.contract_window.project_id)
         self.party_window.setWindowModality(QtCore.Qt.ApplicationModal)
         self.party_window.party_changed.connect(self.update_parties_tree)
         self.party_window.show()
 
     def edit_party_window(self, name, first, last, phone, email):
-        self.party_window = PartyWindow(self.contract_window.project_name, name=name, first=first, last=last, phone=phone, email=email, update=True)
+        self.party_window = PartyWindow(self.contract_window.project_id, name=name, first=first, last=last, phone=phone, email=email, update=True)
         self.party_window.setWindowModality(QtCore.Qt.ApplicationModal)
         self.party_window.party_changed.connect(self.update_parties_tree)
         self.party_window.show()
@@ -195,7 +196,29 @@ class Main(QtWidgets.QMainWindow, window.UiMainWindow):
         pass
 
     def open_task(self):
-        # TODO: Implement open_task
+        tab = self.ui.tasks_tab.currentWidget().objectName()
+        if tab == 'upcoming_tab':
+            self.open_upcoming_task()
+        elif tab == 'overdue_tab':
+            self.open_overdue_task()
+        else:
+            self.open_completed_task()
+
+    def open_upcoming_task(self):
+        pass
+
+    def open_overdue_task(self):
+        if self.ui.overdue_tree.selectedIndexes() == []:
+            return
+
+        id_index = self.ui.overdue_tree.selectedIndexes()[3]
+        task_id = id_index.model().itemData(id_index)[0]
+
+        self.task_window = TaskWindow(task_id)
+        self.task_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.task_window.show()
+
+    def open_completed_task(self):
         pass
 
     def open_upcoming_task_contract(self):
@@ -288,6 +311,7 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
     new_document_signal = QtCore.pyqtSignal()
     delete_document_signal = QtCore.pyqtSignal()
     delete_task_signal = QtCore.pyqtSignal()
+    edit_task_signal = QtCore.pyqtSignal(int)
 
     def __init__(self, contract_id):
         QtWidgets.QWidget.__init__(self)
@@ -319,6 +343,7 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         self.contract_ui.open_document_button.clicked.connect(self.open_document)
         self.contract_ui.pushButton_6.clicked.connect(self.delete_task)
         self.contract_ui.save.clicked.connect(self.save_changes)
+        self.contract_ui.pushButton_5.clicked.connect(self.edit_task)
 
     # Helping method to run simple queries
     def run_query(self, query, values=()):
@@ -461,7 +486,7 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
             phone = phone_index.model().itemData(phone_index)[0]
             email_index = self.contract_ui.parties_tree.selectedIndexes()[4]
             email = email_index.model().itemData(email_index)[0]
-            self.edit_party_signal.emit(str(name), str(first), str(last), str(phone), str(email))
+
 
     def delete_party(self):
         if self.contract_ui.parties_tree.selectedIndexes() == []:
@@ -479,9 +504,14 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
         # TODO: Implement complete_task (from contract)
         pass
 
-    def open_task(self):
-        # TODO: Implement open_task (from contract)
-        pass
+    def edit_task(self):
+        if self.contract_ui.tasks_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.contract_ui.parties_tree.selectedIndexes()[5]
+            id = id_index.model().itemData(id_index)[0]
+            self.edit_task_signal.emit(id)
+
 
     def delete_task(self):
         if self.contract_ui.tasks_tree.selectedIndexes() == []:
@@ -517,28 +547,15 @@ class ContractWindow(QtWidgets.QWidget, contract.Ui_Form):
 class PartyWindow(QtWidgets.QWidget, party.Ui_partyDialog):
     party_changed = QtCore.pyqtSignal()
 
-    def __init__(self, project_name, name='', first='', last='', phone='', email='', update=False):
+    def __init__(self, project_id, name='', first='', last='', phone='', email='', update=False):
         QtWidgets.QWidget.__init__(self)
-        self.project_name = project_name
+        self.project_id = project_id
         self.name = name
         self.first = first
         self.last = last
         self.phone = phone
         self.email = email
         self.update = update
-
-        # Project ID:
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('Contracts.db')
-        if not db.open():
-            print('Db not open')
-        query = QtSql.QSqlQuery()
-        query.prepare("SELECT id FROM projects where name=?")
-        query.addBindValue(self.project_name)
-        query.exec_()
-        if query.next():
-            self.project_id = query.value(0)
-        db.close()
 
         # Party ID:
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
@@ -559,6 +576,7 @@ class PartyWindow(QtWidgets.QWidget, party.Ui_partyDialog):
         self.party_ui.pushButton.clicked.connect(self.save_party)
         self.party_changed.connect(self.close)
         self.party_ui.pushButton_2.clicked.connect(self.close)
+
 
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('Contracts.db')
@@ -620,6 +638,78 @@ class PartyWindow(QtWidgets.QWidget, party.Ui_partyDialog):
                         'INSERT INTO parties (project_id, name, representative_first, representative_last, phone, '
                         'email) VALUES (?, ?, ?, ?, ?, ?)', (self.project_id, name, first, last, phone, email))
                     self.party_changed.emit()
+
+class TaskWindow(QtWidgets.QWidget, task.Ui_Form):
+    task_changed = QtCore.pyqtSignal()
+
+    def __init__(self, task_id=None, update=True):
+        QtWidgets.QWidget.__init__(self)
+        self.update = update
+        self.task_id = task_id
+        self.contract_id = self.fetch_query('SELECT contract_id FROM tasks WHERE id=?', (self.task_id,))[0]
+        self.name = self.fetch_query('SELECT name FROM tasks WHERE id=?', (self.task_id,))[0]
+        self.task_ui = task.Ui_Form()
+        self.task_ui.setupUi(self, self.task_id)
+        self.task_ui.save.clicked.connect(self.save_task)
+        self.task_changed.connect(self.close)
+
+    def save_task(self, update=True):
+        name = self.task_ui.task_name.text()
+        description = self.task_ui.description.toPlainText()
+        deadline = self.task_ui.deadline.text()
+        completed = self.task_ui.checkBox.isChecked()
+        self.update = True
+        existing_tasks = self.fetch_query('SELECT name FROM tasks WHERE contract_id=?', (self.contract_id,))
+
+        if name == '':
+            buttonReply = QMessageBox.question(self, 'Empty Name', 'Name cannot be blank',
+                                               QMessageBox.Ok)
+        else:
+            if self.update is True:
+                if name == self.name:
+                    self.run_query(
+                        'Update tasks SET name=?, description=?, deadline=? WHERE id=?', (name, description, deadline, self.task_id))
+                    self.task_changed.emit()
+
+                elif name in existing_tasks:
+                    prompt = name + ' already exists. Please choose another name'
+                    buttonReply = QMessageBox.question(self, 'Name taken', prompt, QMessageBox.Ok)
+
+                else:
+                    self.run_query(
+                        'Update tasks SET name=?, description=?, deadline=? WHERE id=?', (name, description, deadline, self.task_id))
+                    self.task_changed.emit()
+            else:
+                if name in existing_tasks:
+                    prompt = name + ' already exists. Please choose another name'
+                    buttonReply = QMessageBox.question(self, 'Name taken', prompt, QMessageBox.Ok)
+
+                else:
+                    #TODO: Needs fix
+                    self.run_query(
+                        'INSERT INTO tasks (name, description, email) VALUES (?, ?, ?, ?, ?, ?)', (self.project_id, name, first, last, phone, email))
+                    self.task_changed.emit()
+
+    def run_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('Contracts.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        cursor.close()
+
+    def fetch_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('Contracts.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        results_tuple = cursor.fetchall()
+        results = [item for t in results_tuple for item in t]
+        cursor.close()
+        return results
 
 if __name__ == "__main__":
     import sys
