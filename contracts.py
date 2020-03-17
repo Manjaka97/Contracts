@@ -277,11 +277,16 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         description = self.ui.contract_description.toPlainText()
 
-        if contract_id == '': # New contract
-            self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
-        else: # Edit contract
-            self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, extension_limit=?, description=? WHERE id=?", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description, contract_id))
-        self.show_contracts()
+        if title == '':
+            self.message = QMessageBox()
+            self.message.setText('Title cannot be empty')
+            self.message.show()
+        else:
+            if contract_id == '': # New contract
+                self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
+            else: # Edit contract
+                self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, extension_limit=?, description=? WHERE id=?", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description, contract_id))
+            self.show_contracts()
 
     def get_start(self):
         self.calendar_window = Calendar()
