@@ -561,7 +561,21 @@ class Ui_MainWindow(object):
         self.contract_master.setAutoFillBackground(False)
         self.contract_master.setObjectName("contract_master")
         self.gridLayout_8.addWidget(self.contract_master, 5, 6, 1, 1)
+
+        # Contract Parties
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.contract_party_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_contracts JOIN people on people_contracts.person_id=people.id WHERE people_contracts.contract_id=" + str(self.next_contract_id()))
+        self.contract_party_model.setQuery(query)
+        db.close()
+
         self.contract_parties = QtWidgets.QTreeView(self.scrollAreaWidgetContents_8)
+        self.contract_parties.setModel(self.contract_party_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_parties.setFont(font)
@@ -4601,21 +4615,8 @@ class Ui_MainWindow(object):
         self.contract_cancel.clear()
         self.contract_extension.clear()
         self.contract_description.clear()
-
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.contract_attachment_model = QtSql.QSqlRelationalTableModel()
-        self.contract_attachment_model.setTable('documents')
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=1 AND owner_id=" + str(
-                        self.next_contract_id()))
-        self.contract_attachment_model.setQuery(query)
-        db.close()
-
-        self.contract_attachments.setModel(self.contract_attachment_model)
+        self.update_contracts_attachments()
+        self.update_parties()
 
     def update_contracts_attachments(self):
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
@@ -4632,3 +4633,18 @@ class Ui_MainWindow(object):
         db.close()
 
         self.contract_attachments.setModel(self.contract_attachment_model)
+
+    def update_parties(self):
+         # Contract Parties
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+             print('Db not open')
+        self.contract_party_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+             "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_contracts JOIN people on people_contracts.person_id=people.id WHERE people_contracts.contract_id=" + str(
+                     self.next_contract_id()))
+        self.contract_party_model.setQuery(query)
+        db.close()
+        self.contract_parties.setModel(self.contract_party_model)

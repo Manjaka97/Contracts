@@ -1,9 +1,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from PyQt5.QtWidgets import QMessageBox
 from datetime import datetime
-import ui, calendar
+import ui, calendar, person
 import sqlite3
 import os
+import re
 
 import webbrowser
 from shutil import copyfile
@@ -55,7 +56,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Attachments
         self.ui.contract_add_attachment.clicked.connect(self.add_contract_attachment)
         self.ui.contract_open_attachment.clicked.connect(self.open_contract_attachment)
-        self.ui.contract_delete_attachment.clicked.connect(self.delete_contract_attachement)
+        self.ui.contract_delete_attachment.clicked.connect(self.delete_contract_attachment)
+
+        # Parties
+        self.ui.add_party.clicked.connect(self.party_window)
+        self.ui.delete_party.clicked.connect(self.delete_party)
 
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
@@ -98,6 +103,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             for doc in docs:
                 os.remove(doc)
             self.run_query("DELETE FROM documents WHERE owner_id=?", (self.next_contract_id(),))
+            self.run_query("DELETE FROM people_contracts WHERE contract_id=?", (self.next_contract_id(),))
 
     def show_people(self):
         self.ui.main_widget.setCurrentIndex(3)
@@ -176,7 +182,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         reference = self.ui.contract_reference.text()
         account = self.ui.contract_account.text()
         status = self.ui.contract_status.currentIndex()
-        master = self.ui.contract_master.currentText()[0]
+        master = int(re.findall(r'\d+', self.ui.contract_master.currentText())[0])
         value = self.ui.contract_value.text()
         currency = self.ui.contract_currency.currentIndex()
 
@@ -280,7 +286,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             url = self.ui.contract_attachments.model().itemData(url_index)[0]
             os.startfile(url)
 
-    def delete_contract_attachement(self):
+    def delete_contract_attachment(self):
         if self.ui.contract_attachments.selectedIndexes() == []:
             return
         else:
@@ -299,9 +305,37 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 os.remove(url)
                 self.ui.update_contracts_attachments()
 
+    def party_window(self):
+        self.party_window = PersonDialog()
+        self.party_window.show()
+        self.party_window.select_signal.connect(self.select_party)
+
+    def select_party(self, person_id):
+        self.run_query('INSERT INTO people_contracts(person_id,contract_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',(person_id, self.next_contract_id(),person_id, self.next_contract_id()))
+        self.ui.update_parties()
+        
+    def delete_party(self):
+        if self.ui.contract_parties.selectedIndexes() == []:
+            return
+        else:
+            first_index = self.ui.contract_parties.selectedIndexes()[1]
+            first = self.ui.contract_parties.model().itemData(first_index)[0]
+            last_index = self.ui.contract_parties.selectedIndexes()[2]
+            last = self.ui.contract_parties.model().itemData(last_index)[0]
+            id_index = self.ui.contract_parties.selectedIndexes()[0]
+            person_id = self.ui.contract_parties.model().itemData(id_index)[0]
+
+            prompt = 'Are you sure you want to delete ' + first + ' ' + last + '?'
+            buttonReply = QMessageBox.question(self, 'Delete Party', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM people_contracts WHERE person_id=? AND contract_id=?', (person_id, self.next_contract_id()))
+                self.ui.update_parties()
+
     def next_contract_id(self):
         next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
         return next_id
+
         
 class Calendar(QtWidgets.QWidget, calendar.Ui_Form):
     select_signal = QtCore.pyqtSignal(QtCore.QDate)
@@ -317,6 +351,30 @@ class Calendar(QtWidgets.QWidget, calendar.Ui_Form):
         self.select_signal.emit(self.calendar_ui.calendarWidget.selectedDate())
         self.close()
 
+
+class PersonDialog(QtWidgets.QWidget, person.Ui_Form):
+    select_signal = QtCore.pyqtSignal(int)
+    new_signal = QtCore.pyqtSignal()
+
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
+        self.person_ui = person.Ui_Form()
+        self.person_ui.setupUi(self)
+        self.person_ui.select.clicked.connect(self.select)
+        self.person_ui.new_2.clicked.connect(self.new_person)
+        self.person_ui.cancel.clicked.connect(self.close)
+
+    def select(self):
+        if self.person_ui.comboBox.currentText() == '':
+            return
+
+        person_id = int(re.findall(r'\d+', self.person_ui.comboBox.currentText())[0])
+        self.select_signal.emit(person_id)
+        self.close()
+
+    def new_person(self):
+        self.new_signal.emit()
+        self.close()
 
 if __name__ == "__main__":
     import sys
