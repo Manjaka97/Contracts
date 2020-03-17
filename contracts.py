@@ -62,6 +62,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.add_party.clicked.connect(self.party_window)
         self.ui.delete_party.clicked.connect(self.delete_party)
 
+        # Edits
+        self.ui.edit_contract_btn.clicked.connect(self.edit_contract)
+
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
@@ -91,8 +94,17 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.main_widget.setCurrentIndex(1)
 
     def new_contract(self):
-        self.ui.new_contract_window()
+        self.ui.new_contract_window() # This clears all fields
         self.ui.main_widget.setCurrentIndex(2)
+
+    def edit_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.contracts_tree.selectedIndexes()[0]
+            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+            self.ui.edit_contract_window(contract_id)
+            self.ui.main_widget.setCurrentIndex(2)
 
     def cancel_contract(self):
         buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
@@ -175,6 +187,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.main_widget.setCurrentIndex(15)
 
     def save_contract(self):
+        contract_id = self.ui.contract_id_lb.text()
         title = self.ui.contract_title.text()
         type = self.ui.contract_type.currentIndex()
         category = self.ui.contract_category.currentIndex()
@@ -209,7 +222,10 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         description = self.ui.contract_description.toPlainText()
 
-        self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
+        if contract_id == '': # New contract
+            self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
+        else: # Edit contract
+            self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, extension_limit=?, description=? WHERE id=?", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description, contract_id))
         self.show_contracts()
 
     def get_start(self):

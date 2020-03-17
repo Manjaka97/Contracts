@@ -4618,7 +4618,39 @@ class Ui_MainWindow(object):
         self.update_contracts_attachments()
         self.update_parties()
 
-    def update_contracts_attachments(self):
+    def edit_contract_window(self, contract_id):
+        self.contract_id_lb.setText(str(contract_id))
+        self.contract_title.setText(self.fetch_query('SELECT title from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_type.setCurrentIndex(self.fetch_query('SELECT type_id from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_category.setCurrentIndex(self.fetch_query('SELECT category_id from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_classification.setCurrentIndex(self.fetch_query('SELECT classification_id from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_reference.setText(self.fetch_query('SELECT reference from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_account.setText(self.fetch_query('SELECT account_reference from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_status.setCurrentIndex(self.fetch_query('SELECT status_id from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_value.setText(str(self.fetch_query('SELECT value from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_currency.setCurrentIndex(self.fetch_query('SELECT currency_id from contracts WHERE id=?',(contract_id,))[0]-1)
+        term = self.fetch_query('SELECT term_id from contracts WHERE id=?',(contract_id,))[0]
+        if term == 0:
+            self.term_none.setChecked(True)
+        elif term == 1:
+            self.term_fixed.setChecked(True)
+        elif term == 2:
+            self.term_recurring.setChecked(True)
+        elif term == 3:
+            self.term_rolling.setChecked(True)
+        self.contract_start.setText(self.fetch_query('SELECT start_date from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_end.setText(self.fetch_query('SELECT end_date from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_review.setText(self.fetch_query('SELECT review_date from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_cancel.setText(self.fetch_query('SELECT cancel_date from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_extension.setText(self.fetch_query('SELECT extension_limit from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_description.setText(self.fetch_query('SELECT description from contracts WHERE id=?',(contract_id,))[0])
+        self.update_contracts_attachments(contract_id)
+        self.update_parties(contract_id)
+
+
+    def update_contracts_attachments(self, contract_id=None):
+        if contract_id is None:
+            contract_id = self.next_contract_id()
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
         if not db.open():
@@ -4627,15 +4659,16 @@ class Ui_MainWindow(object):
         self.contract_attachment_model.setTable('documents')
         query = QtSql.QSqlQuery()
         query.exec_(
-             "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=1 AND owner_id=" + str(
-                            self.next_contract_id()))
+             "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=1 AND owner_id=" + str(contract_id))
         self.contract_attachment_model.setQuery(query)
         db.close()
 
         self.contract_attachments.setModel(self.contract_attachment_model)
 
-    def update_parties(self):
-         # Contract Parties
+    def update_parties(self, contract_id=None):
+        if contract_id is None:
+            contract_id = self.next_contract_id()
+        # Contract Parties
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
         if not db.open():
@@ -4643,8 +4676,7 @@ class Ui_MainWindow(object):
         self.contract_party_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
         query.exec_(
-             "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_contracts JOIN people on people_contracts.person_id=people.id WHERE people_contracts.contract_id=" + str(
-                     self.next_contract_id()))
+             "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_contracts JOIN people on people_contracts.person_id=people.id WHERE people_contracts.contract_id=" + str(contract_id))
         self.contract_party_model.setQuery(query)
         db.close()
         self.contract_parties.setModel(self.contract_party_model)
