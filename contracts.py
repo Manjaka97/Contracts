@@ -65,6 +65,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Edits
         self.ui.edit_contract_btn.clicked.connect(self.edit_contract)
 
+        # Deletes
+        self.ui.delete_contract_btn.clicked.connect(self.delete_contract)
+
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
@@ -105,6 +108,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
             self.ui.edit_contract_window(contract_id)
             self.ui.main_widget.setCurrentIndex(2)
+
+    def delete_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.contracts_tree.selectedIndexes()[0]
+            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+            title_index = self.ui.contracts_tree.selectedIndexes()[1]
+            contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
+            prompt = 'Are you sure you want to delete ' + contract_title + '?'
+            buttonReply = QMessageBox.question(self, 'Delete Contract', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
+                self.ui.update_contracts()
 
     def cancel_contract(self):
         buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
