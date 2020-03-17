@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from PyQt5.QtWidgets import QMessageBox
-import ui
+from datetime import datetime
+import ui, calendar
 import sqlite3
 import os
 
@@ -41,13 +42,45 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.cancel_risk.clicked.connect(self.cancel_risk)
         self.ui.cancel_todo.clicked.connect(self.cancel_todo)
 
+        # Save Buttons
+        self.ui.save_contract.clicked.connect(self.save_contract)
+
+        # Dates
+        self.ui.contract_start_btn.clicked.connect(self.get_start)
+        self.ui.contract_cancel_btn.clicked.connect(self.get_cancel)
+        self.ui.contract_end_btn.clicked.connect(self.get_end)
+        self.ui.contract_review_btn.clicked.connect(self.get_review)
+
+    def run_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('data.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        cursor.close()
+
+    def fetch_query(self, query, values=()):
+        sqliteConnection = sqlite3.connect('data.db')
+        cursor = sqliteConnection.cursor()
+        print('Connected to SQLite')
+        cursor.execute(query, values)
+        sqliteConnection.commit()
+        print('Query executed')
+        results_tuple = cursor.fetchall()
+        results = [item for t in results_tuple for item in t]
+        cursor.close()
+        return results
+
     def show_dashboard(self):
         self.ui.main_widget.setCurrentIndex(0)
 
     def show_contracts(self):
+        self.ui.update_contracts()
         self.ui.main_widget.setCurrentIndex(1)
 
     def new_contract(self):
+        self.ui.new_contract_window()
         self.ui.main_widget.setCurrentIndex(2)
 
     def cancel_contract(self):
@@ -124,6 +157,95 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def show_archives(self):
         self.ui.main_widget.setCurrentIndex(15)
+
+    def save_contract(self):
+        title = self.ui.contract_title.text()
+        type = self.ui.contract_type.currentIndex()
+        category = self.ui.contract_category.currentIndex()
+        classification = self.ui.contract_classification.currentIndex()
+        reference = self.ui.contract_reference.text()
+        account = self.ui.contract_account.text()
+        status = self.ui.contract_status.currentIndex()
+        master = self.ui.contract_master.currentText()[0]
+        value = self.ui.contract_value.text()
+        currency = self.ui.contract_currency.currentIndex()
+
+        start = self.ui.contract_start.text()
+        end = self.ui.contract_end.text()
+        cancel = self.ui.contract_cancel.text()
+        review = self.ui.contract_review.text()
+        limit = self.ui.contract_extension.text()
+
+        if self.ui.term_none.isChecked():
+            term = 0
+            start = ''
+            end = ''
+            cancel = ''
+            review = ''
+        elif self.ui.term_fixed.isChecked():
+            term = 1
+        # TODO: Add calculation for next recurrence
+        elif self.ui.term_recurring.isChecked():
+            term = 2
+        elif self.ui.term_rolling.isChecked():
+            term = 3
+            end = ''
+
+        description = self.ui.contract_description.toPlainText()
+
+        self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
+        self.show_contracts()
+
+    def get_start(self):
+        self.calendar_window = Calendar()
+        self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.calendar_window.select_signal.connect(self.set_start)
+        self.calendar_window.show()
+
+    def set_start(self, date):
+        self.ui.contract_start.setText(date.toString('MM/dd/yyyy'))
+
+    def get_end(self):
+        self.calendar_window = Calendar()
+        self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.calendar_window.select_signal.connect(self.set_end)
+        self.calendar_window.show()
+
+    def set_end(self, date):
+        self.ui.contract_end.setText(date.toString('MM/dd/yyyy'))
+
+    def get_review(self):
+        self.calendar_window = Calendar()
+        self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.calendar_window.select_signal.connect(self.set_review)
+        self.calendar_window.show()
+
+    def set_review(self, date):
+        self.ui.contract_review.setText(date.toString('MM/dd/yyyy'))
+        
+    def get_cancel(self):
+        self.calendar_window = Calendar()
+        self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.calendar_window.select_signal.connect(self.set_cancel)
+        self.calendar_window.show()
+
+    def set_cancel(self, date):
+        self.ui.contract_cancel.setText(date.toString('MM/dd/yyyy'))
+        
+class Calendar(QtWidgets.QWidget, calendar.Ui_Form):
+    select_signal = QtCore.pyqtSignal(QtCore.QDate)
+
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
+        self.calendar_ui = calendar.Ui_Form()
+        self.calendar_ui.setupUi(self)
+        self.calendar_ui.select.clicked.connect(self.select)
+        self.calendar_ui.cancel.clicked.connect(self.close)
+
+    def select(self):
+        self.select_signal.emit(self.calendar_ui.calendarWidget.selectedDate())
+        self.close()
+
 
 if __name__ == "__main__":
     import sys

@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
+import sqlite3
 import resources_rc
 
 class Ui_MainWindow(object):
@@ -426,8 +427,14 @@ class Ui_MainWindow(object):
         self.contract_model = QtSql.QSqlRelationalTableModel()
         self.contract_model.setTable('contracts')
         query = QtSql.QSqlQuery()
+        if self.contract_type_menu.currentIndex() == 0:
+                query_condition = ""
+        elif self.contract_type_menu.currentIndex() == 1:
+                query_condition = "WHERE contracts.status_id=1"
+        elif self.contract_type_menu.currentIndex() == 2:
+                query_condition = "WHERE contracts.status_id=1"
         query.exec_(
-                "SELECT contracts.id as ID, title as Title, type_id, classification.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classification ON contracts.classification_id=classification.id JOIN status ON contracts.status_id=status.id")
+                "SELECT contracts.id as ID, title as Title, type_id, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id")
         self.contract_model.setQuery(query)
         db.close()
 
@@ -535,7 +542,18 @@ class Ui_MainWindow(object):
 "background-color: rgb(75, 75, 75);")
         self.label_86.setObjectName("label_86")
         self.gridLayout_8.addWidget(self.label_86, 3, 0, 1, 1)
+
+        # Contract Master
+        contracts_id = self.fetch_query('SELECT id FROM contracts')
+        contracts_title = self.fetch_query('SELECT title FROM contracts')
+        contracts = []
+        for c_id, c_title in zip(contracts_id, contracts_title):
+                c = str(c_id) + ' - ' + c_title
+                contracts.append(c)
         self.contract_master = QtWidgets.QComboBox(self.scrollAreaWidgetContents_8)
+        self.contract_master.addItem('0 - No Master Contract')
+        for contract in contracts:
+                self.contract_master.addItem(contract)
         self.contract_master.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -580,6 +598,24 @@ class Ui_MainWindow(object):
         self.verticalLayout_32.addWidget(self.delete_party)
         self.gridLayout_8.addLayout(self.verticalLayout_32, 7, 4, 1, 1)
         self.contract_category = QtWidgets.QComboBox(self.scrollAreaWidgetContents_8)
+        self.contract_category.addItem('Not Selected')
+        self.contract_category.addItem('Common Commodities')
+        self.contract_category.addItem('Construction')
+        self.contract_category.addItem('Energy & Utilites')
+        self.contract_category.addItem('Facilities')
+        self.contract_category.addItem('Fuel, Lubricant & Gas')
+        self.contract_category.addItem('Common Commodities')
+        self.contract_category.addItem('ICT')
+        self.contract_category.addItem('Logistics')
+        self.contract_category.addItem('Marketing & Media')
+        self.contract_category.addItem('Medical Supplies')
+        self.contract_category.addItem('Office Solutions')
+        self.contract_category.addItem('Personnel Related')
+        self.contract_category.addItem('Professional Services')
+        self.contract_category.addItem('Social Care')
+        self.contract_category.addItem('Travel')
+        self.contract_category.addItem('Vehicles')
+        self.contract_category.addItem('Waste Management')
         self.contract_category.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -599,6 +635,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_37 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_37.setObjectName("horizontalLayout_37")
         self.term_none = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_8)
+        self.term_none.setChecked(True)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.term_none.setFont(font)
@@ -848,7 +885,26 @@ class Ui_MainWindow(object):
 "background-color: rgb(75, 75, 75);")
         self.label_117.setObjectName("label_117")
         self.gridLayout_8.addWidget(self.label_117, 13, 0, 1, 1)
+
+        # Contract Type
         self.contract_type = QtWidgets.QComboBox(self.scrollAreaWidgetContents_8)
+        types = self.fetch_query('SELECT name FROM contract_types')
+        for type in types:
+                self.contract_type.addItem(type)
+        # self.contract_type.addItem('Not Selected')
+        # self.contract_type.addItem('Construction')
+        # self.contract_type.addItem('Energy & Utilities')
+        # self.contract_type.addItem('Facilities')
+        # self.contract_type.addItem('Finance')
+        # self.contract_type.addItem('General Goods')
+        # self.contract_type.addItem('General Services')
+        # self.contract_type.addItem('IT Hardware')
+        # self.contract_type.addItem('IT Software & Services')
+        # self.contract_type.addItem('Legal')
+        # self.contract_type.addItem('Marketing')
+        # self.contract_type.addItem('Office Supplies')
+        # self.contract_type.addItem('Personnel')
+        # self.contract_type.addItem('Professional Services')
         self.contract_type.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -4487,7 +4543,7 @@ class Ui_MainWindow(object):
         self.archives_lb.setText(_translate("MainWindow", "Archives"))
 
     def run_query(self, query, values=()):
-        sqliteConnection = sqlite3.connect('Contracts.db')
+        sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
         print('Connected to SQLite')
         cursor.execute(query, values)
@@ -4496,7 +4552,7 @@ class Ui_MainWindow(object):
         cursor.close()
 
     def fetch_query(self, query, values=()):
-        sqliteConnection = sqlite3.connect('Contracts.db')
+        sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
         print('Connected to SQLite')
         cursor.execute(query, values)
@@ -4506,3 +4562,37 @@ class Ui_MainWindow(object):
         results = [item for t in results_tuple for item in t]
         cursor.close()
         return results
+
+    def update_contracts(self):
+        # Contracts Tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.contract_model = QtSql.QSqlRelationalTableModel()
+        self.contract_model.setTable('contracts')
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT contracts.id as ID, title as Title, type_id, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id")
+        self.contract_model.setQuery(query)
+        db.close()
+        self.contracts_tree.setModel(self.contract_model)
+
+    def new_contract_window(self):
+        self.contract_id_lb.clear()
+        self.contract_title.clear()
+        self.contract_type.setCurrentIndex(0)
+        self.contract_category.setCurrentIndex(0)
+        self.contract_classification.setCurrentIndex(0)
+        self.contract_reference.clear()
+        self.contract_account.clear()
+        self.contract_status.setCurrentIndex(0)
+        self.contract_value.clear()
+        self.contract_currency.setCurrentIndex(0)
+        self.term_none.setChecked(True)
+        self.contract_start.clear()
+        self.contract_end.clear()
+        self.contract_review.clear()
+        self.contract_cancel.clear()
+        self.contract_extension.clear()
+        self.contract_description.clear()
