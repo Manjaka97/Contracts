@@ -13,6 +13,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui.Ui_MainWindow()
         self.ui.setupUi(self)
+        self.dir = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
 
         # Menu Buttons
         self.ui.dashboard_btn.clicked.connect(self.show_dashboard)
@@ -51,6 +52,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.contract_end_btn.clicked.connect(self.get_end)
         self.ui.contract_review_btn.clicked.connect(self.get_review)
 
+        # Attachments
+        self.ui.contract_add_attachment.clicked.connect(self.add_contract_attachment)
+        self.ui.contract_open_attachment.clicked.connect(self.open_contract_attachment)
+        self.ui.contract_delete_attachment.clicked.connect(self.delete_contract_attachement)
+
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
@@ -88,6 +94,10 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             self.show_contracts()
+            docs = self.fetch_query("SELECT url FROM documents WHERE owner_id=?", (self.next_contract_id(),))
+            for doc in docs:
+                os.remove(doc)
+            self.run_query("DELETE FROM documents WHERE owner_id=?", (self.next_contract_id(),))
 
     def show_people(self):
         self.ui.main_widget.setCurrentIndex(3)
@@ -231,6 +241,67 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def set_cancel(self, date):
         self.ui.contract_cancel.setText(date.toString('MM/dd/yyyy'))
+
+    def add_contract_attachment(self):
+        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
+        name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
+        if name == '':
+            return
+        dir = self.dir + name
+        copyfile(filename[0], dir)
+
+        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
+        # Insert into database
+        try:
+            sqliteConnection = sqlite3.connect('data.db')
+            cursor = sqliteConnection.cursor()
+            print('Connected to SQLite')
+            query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?)"""
+            record = (name, dir, 1, next_id)
+            cursor.execute(query, record)
+            sqliteConnection.commit()
+            print('Document added')
+            cursor.close()
+
+        except sqlite3.Error as error:
+            print('Failed to insert document', error)
+
+        finally:
+            if sqliteConnection:
+                sqliteConnection.close()
+                print('Closed db')
+        self.ui.update_contracts_attachments()
+
+    def open_contract_attachment(self):
+        if self.ui.contract_attachments.selectedIndexes() == []:
+            return
+        else:
+            url_index = self.ui.contract_attachments.selectedIndexes()[2]
+            url = self.ui.contract_attachments.model().itemData(url_index)[0]
+            os.startfile(url)
+
+    def delete_contract_attachement(self):
+        if self.ui.contract_attachments.selectedIndexes() == []:
+            return
+        else:
+            name_index = self.ui.contract_attachments.selectedIndexes()[1]
+            name = self.ui.contract_attachments.model().itemData(name_index)[0]
+            url_index = self.ui.contract_attachments.selectedIndexes()[2]
+            url = self.ui.contract_attachments.model().itemData(url_index)[0]
+            id_index = self.ui.contract_attachments.selectedIndexes()[0]
+            id = self.ui.contract_attachments.model().itemData(id_index)[0]
+
+            prompt = 'Are you sure you want to delete ' + name + '?'
+            buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM documents WHERE id=?', (id,))
+                os.remove(url)
+                self.ui.update_contracts_attachments()
+
+    def next_contract_id(self):
+        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
+        return next_id
         
 class Calendar(QtWidgets.QWidget, calendar.Ui_Form):
     select_signal = QtCore.pyqtSignal(QtCore.QDate)

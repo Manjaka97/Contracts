@@ -891,20 +891,6 @@ class Ui_MainWindow(object):
         types = self.fetch_query('SELECT name FROM contract_types')
         for type in types:
                 self.contract_type.addItem(type)
-        # self.contract_type.addItem('Not Selected')
-        # self.contract_type.addItem('Construction')
-        # self.contract_type.addItem('Energy & Utilities')
-        # self.contract_type.addItem('Facilities')
-        # self.contract_type.addItem('Finance')
-        # self.contract_type.addItem('General Goods')
-        # self.contract_type.addItem('General Services')
-        # self.contract_type.addItem('IT Hardware')
-        # self.contract_type.addItem('IT Software & Services')
-        # self.contract_type.addItem('Legal')
-        # self.contract_type.addItem('Marketing')
-        # self.contract_type.addItem('Office Supplies')
-        # self.contract_type.addItem('Personnel')
-        # self.contract_type.addItem('Professional Services')
         self.contract_type.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -1074,7 +1060,22 @@ class Ui_MainWindow(object):
 "background-color: rgb(75, 75, 75);")
         self.label_102.setObjectName("label_102")
         self.verticalLayout_33.addWidget(self.label_102)
+
+        # Contracts Attachments
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.contract_attachment_model = QtSql.QSqlRelationalTableModel()
+        self.contract_attachment_model.setTable('documents')
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=1 AND owner_id=" + str(self.next_contract_id()))
+        self.contract_attachment_model.setQuery(query)
+        db.close()
+
         self.contract_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_8)
+        self.contract_attachments.setModel(self.contract_attachment_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_attachments.setFont(font)
@@ -4563,6 +4564,10 @@ class Ui_MainWindow(object):
         cursor.close()
         return results
 
+    def next_contract_id(self):
+        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
+        return next_id
+
     def update_contracts(self):
         # Contracts Tree
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
@@ -4596,3 +4601,34 @@ class Ui_MainWindow(object):
         self.contract_cancel.clear()
         self.contract_extension.clear()
         self.contract_description.clear()
+
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.contract_attachment_model = QtSql.QSqlRelationalTableModel()
+        self.contract_attachment_model.setTable('documents')
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=1 AND owner_id=" + str(
+                        self.next_contract_id()))
+        self.contract_attachment_model.setQuery(query)
+        db.close()
+
+        self.contract_attachments.setModel(self.contract_attachment_model)
+
+    def update_contracts_attachments(self):
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+            print('Db not open')
+        self.contract_attachment_model = QtSql.QSqlRelationalTableModel()
+        self.contract_attachment_model.setTable('documents')
+        query = QtSql.QSqlQuery()
+        query.exec_(
+             "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=1 AND owner_id=" + str(
+                            self.next_contract_id()))
+        self.contract_attachment_model.setQuery(query)
+        db.close()
+
+        self.contract_attachments.setModel(self.contract_attachment_model)
