@@ -1300,7 +1300,7 @@ class Ui_MainWindow(object):
                 "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people")
         self.person_model.setQuery(query)
         db.close()
-        
+
         self.people_tree = QtWidgets.QTreeView(self.layoutWidget_2)
         self.people_tree.setModel(self.person_model)
         font = QtGui.QFont()
@@ -1429,7 +1429,7 @@ class Ui_MainWindow(object):
         self.person_type.setAutoFillBackground(False)
         self.person_type.setObjectName("person_type")
         self.gridLayout_9.addWidget(self.person_type, 5, 7, 1, 1)
-        
+
         # Person salutation
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
@@ -1558,7 +1558,7 @@ class Ui_MainWindow(object):
         self.label_110.setText("")
         self.label_110.setObjectName("label_110")
         self.gridLayout_9.addWidget(self.label_110, 6, 0, 1, 1)
-        
+
         # Person company
         ids = self.fetch_query('SELECT id FROM companies')
         names = self.fetch_query('SELECT name FROM companies')
@@ -1813,7 +1813,21 @@ class Ui_MainWindow(object):
         self.company_website_search.setObjectName("company_website_search")
         self.horizontalLayout_73.addWidget(self.company_website_search)
         self.verticalLayout_54.addLayout(self.horizontalLayout_73)
+
+        # Companies Tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.company_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies")
+        self.company_model.setQuery(query)
+        db.close()
+        
         self.companies_tree = QtWidgets.QTreeView(self.layoutWidget_4)
+        self.companies_tree.setModel(self.company_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.companies_tree.setFont(font)
@@ -2053,7 +2067,21 @@ class Ui_MainWindow(object):
         self.label_131.setStyleSheet("color: rgb(255, 255, 255);background-color: rgb(75, 75, 75);")
         self.label_131.setObjectName("label_131")
         self.gridLayout_10.addWidget(self.label_131, 10, 5, 1, 1)
+
+        # Company segment
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.segment_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT segment FROM segments")
+        self.segment_model.setQuery(query)
+        db.close()
+
         self.segment = QtWidgets.QComboBox(self.scrollAreaWidgetContents_10)
+        self.segment.setModel(self.segment_model)
         self.segment.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -2147,7 +2175,21 @@ class Ui_MainWindow(object):
         self.company_number.setAutoFillBackground(False)
         self.company_number.setObjectName("company_number")
         self.gridLayout_10.addWidget(self.company_number, 7, 7, 1, 1)
+
+        # Company type
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.company_type_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT type FROM company_types")
+        self.company_type_model.setQuery(query)
+        db.close()
+
         self.company_type = QtWidgets.QComboBox(self.scrollAreaWidgetContents_10)
+        self.company_type.setModel(self.company_type_model)
         self.company_type.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -4635,6 +4677,7 @@ class Ui_MainWindow(object):
         self.update_parties()
 
     def new_person_window(self):
+        self.person_id_lb.clear()
         self.salutation.setCurrentIndex(0)
         self.first_name.clear()
         self.last_name.clear()
@@ -4647,18 +4690,35 @@ class Ui_MainWindow(object):
         self.email.clear()
         self.fax.clear()
 
+    def new_company_window(self):
+        self.company_id_lb.clear()
+        self.company_name.clear()
+        self.company_type.setCurrentIndex(0)
+        self.address_1.clear()
+        self.address_2.clear()
+        self.city.clear()
+        self.state.clear()
+        self.zip.clear()
+        self.country.clear()
+        self.segment.setCurrentIndex(0)
+        self.company_number.clear()
+        self.website.clear()
+        self.company_email.clear()
+        self.contact.clear()
+        self.company_fax.clear()
+
     # Edits
     def edit_contract_window(self, contract_id):
         self.contract_id_lb.setText(str(contract_id))
-        self.contract_title.setText(self.fetch_query('SELECT title from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_type.setCurrentIndex(self.fetch_query('SELECT type_id from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_category.setCurrentIndex(self.fetch_query('SELECT category_id from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_title.setText(str(self.fetch_query('SELECT title from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_type.setCurrentIndex(str(self.fetch_query('SELECT type_id from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_category.setCurrentIndex(int(self.fetch_query('SELECT category_id from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_classification.setCurrentIndex(self.fetch_query('SELECT classification_id from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_reference.setText(self.fetch_query('SELECT reference from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_account.setText(self.fetch_query('SELECT account_reference from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_status.setCurrentIndex(self.fetch_query('SELECT status_id from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_reference.setText(str(self.fetch_query('SELECT reference from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_account.setText(str(self.fetch_query('SELECT account_reference from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_status.setCurrentIndex(int(self.fetch_query('SELECT status_id from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_value.setText(str(self.fetch_query('SELECT value from contracts WHERE id=?',(contract_id,))[0]))
-        self.contract_currency.setCurrentIndex(self.fetch_query('SELECT currency_id from contracts WHERE id=?',(contract_id,))[0]-1)
+        self.contract_currency.setCurrentIndex(int(self.fetch_query('SELECT currency_id from contracts WHERE id=?',(contract_id,))[0]))
         term = self.fetch_query('SELECT term_id from contracts WHERE id=?',(contract_id,))[0]
         if term == 0:
             self.term_none.setChecked(True)
@@ -4668,28 +4728,45 @@ class Ui_MainWindow(object):
             self.term_recurring.setChecked(True)
         elif term == 3:
             self.term_rolling.setChecked(True)
-        self.contract_start.setText(self.fetch_query('SELECT start_date from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_end.setText(self.fetch_query('SELECT end_date from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_review.setText(self.fetch_query('SELECT review_date from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_cancel.setText(self.fetch_query('SELECT cancel_date from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_extension.setText(self.fetch_query('SELECT extension_limit from contracts WHERE id=?',(contract_id,))[0])
-        self.contract_description.setText(self.fetch_query('SELECT description from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_start.setText(str(self.fetch_query('SELECT start_date from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_end.setText(str(self.fetch_query('SELECT end_date from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_review.setText(str(self.fetch_query('SELECT review_date from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_cancel.setText(str(self.fetch_query('SELECT cancel_date from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_extension.setText(str(self.fetch_query('SELECT extension_limit from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_description.setText(str(self.fetch_query('SELECT description from contracts WHERE id=?',(contract_id,))[0]))
         self.update_contracts_attachments(contract_id)
         self.update_parties(contract_id)
 
     def edit_person_window(self, person_id):
         self.person_id_lb.setText(str(person_id))
-        self.salutation.setCurrentIndex(self.fetch_query('SELECT salutation_id FROM people WHERE id=?',(person_id,))[0])
-        self.first_name.setText(self.fetch_query('SELECT first FROM people WHERE id=?',(person_id,))[0])
-        self.last_name.setText(self.fetch_query('SELECT last FROM people WHERE id=?',(person_id,))[0])
-        self.gender.setCurrentIndex(self.fetch_query('SELECT gender_id FROM people WHERE id=?',(person_id,))[0])
-        self.job.setText(self.fetch_query('SELECT job FROM people WHERE id=?',(person_id,))[0])
-        self.company.setCurrentIndex(self.fetch_query('SELECT company_id FROM people WHERE id=?',(person_id,))[0])
-        self.person_type.setText(self.fetch_query('SELECT type FROM people WHERE id=?',(person_id,))[0])
-        self.phone.setText(self.fetch_query('SELECT phone FROM people WHERE id=?',(person_id,))[0])
-        self.mobile.setText(self.fetch_query('SELECT mobile FROM people WHERE id=?',(person_id,))[0])
-        self.email.setText(self.fetch_query('SELECT email FROM people WHERE id=?',(person_id,))[0])
-        self.fax.setText(self.fetch_query('SELECT fax FROM people WHERE id=?',(person_id,))[0])
+        self.salutation.setCurrentIndex(int(self.fetch_query('SELECT salutation_id FROM people WHERE id=?',(person_id,))[0]))
+        self.first_name.setText(str(self.fetch_query('SELECT first FROM people WHERE id=?',(person_id,))[0]))
+        self.last_name.setText(str(self.fetch_query('SELECT last FROM people WHERE id=?',(person_id,))[0]))
+        self.gender.setCurrentIndex(int(self.fetch_query('SELECT gender_id FROM people WHERE id=?',(person_id,))[0]))
+        self.job.setText(str(self.fetch_query('SELECT job FROM people WHERE id=?',(person_id,))[0]))
+        self.company.setCurrentIndex(int(self.fetch_query('SELECT company_id FROM people WHERE id=?',(person_id,))[0]))
+        self.person_type.setText(str(self.fetch_query('SELECT type FROM people WHERE id=?',(person_id,))[0]))
+        self.phone.setText(str(self.fetch_query('SELECT phone FROM people WHERE id=?',(person_id,))[0]))
+        self.mobile.setText(str(self.fetch_query('SELECT mobile FROM people WHERE id=?',(person_id,))[0]))
+        self.email.setText(str(self.fetch_query('SELECT email FROM people WHERE id=?',(person_id,))[0]))
+        self.fax.setText(str(self.fetch_query('SELECT fax FROM people WHERE id=?',(person_id,))[0]))
+    
+    def edit_company_window(self, company_id):
+            self.company_id_lb.setText(str(company_id))
+            self.company_name.setText(self.fetch_query('SELECT name FROM companies WHERE id=?',(company_id,))[0])
+            self.company_type.setCurrentIndex(int(self.fetch_query('SELECT type_id FROM companies WHERE id=?',(company_id,))[0]))
+            self.address_1.setText(self.fetch_query('SELECT address1 FROM companies WHERE id=?',(company_id,))[0])
+            self.address_2.setText(self.fetch_query('SELECT address2 FROM companies WHERE id=?',(company_id,))[0])
+            self.city.setText(self.fetch_query('SELECT city FROM companies WHERE id=?',(company_id,))[0])
+            self.state.setText(self.fetch_query('SELECT state FROM companies WHERE id=?',(company_id,))[0])
+            self.zip.setText(str(self.fetch_query('SELECT zip FROM companies WHERE id=?',(company_id,))[0]))
+            self.country.setText(self.fetch_query('SELECT country FROM companies WHERE id=?',(company_id,))[0])
+            self.segment.setCurrentIndex(int(self.fetch_query('SELECT segment_id FROM companies WHERE id=?',(company_id,))[0]))
+            self.company_number.setText(str(self.fetch_query('SELECT number FROM companies WHERE id=?',(company_id,))[0]))
+            self.website.setText(self.fetch_query('SELECT website FROM companies WHERE id=?',(company_id,))[0])
+            self.company_email.setText(self.fetch_query('SELECT email FROM companies WHERE id=?',(company_id,))[0])
+            self.contact.setText(str(self.fetch_query('SELECT phone FROM companies WHERE id=?',(company_id,))[0]))
+            self.company_fax.setText(str(self.fetch_query('SELECT fax FROM companies WHERE id=?',(company_id,))[0]))
 
     # Updates
     def update_contracts(self):
@@ -4720,6 +4797,20 @@ class Ui_MainWindow(object):
         self.person_model.setQuery(query)
         db.close()
         self.people_tree.setModel(self.person_model)
+
+    def update_companies(self):
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.company_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+            query.exec_(
+                    "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies")
+            self.company_model.setQuery(query)
+            db.close()
+
+            self.companies_tree.setModel(self.company_model)
 
     # Attachments
     def update_contracts_attachments(self, contract_id=None):

@@ -47,6 +47,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Save Buttons
         self.ui.save_contract.clicked.connect(self.save_contract)
         self.ui.save_person.clicked.connect(self.save_person)
+        self.ui.save_company.clicked.connect(self.save_company)
 
         # Dates
         self.ui.contract_start_btn.clicked.connect(self.get_start)
@@ -66,18 +67,23 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Edits
         self.ui.edit_contract_btn.clicked.connect(self.edit_contract)
         self.ui.edit_person_btn.clicked.connect(self.edit_person)
+        self.ui.open_party.clicked.connect(self.edit_person_from_contract)
+        self.ui.edit_company_btn.clicked.connect(self.edit_company)
 
         # Deletes
         self.ui.delete_contract_btn.clicked.connect(self.delete_contract)
         self.ui.delete_person_btn.clicked.connect(self.delete_person)
+        self.ui.delete_company_btn.clicked.connect(self.delete_company)
 
         # Archives
         self.ui.archive_contract_btn.clicked.connect(self.archive_contract)
         self.ui.archive_person_btn.clicked.connect(self.archive_person)
+        self.ui.archive_company_btn.clicked.connect(self.archive_company)
 
         # Favorites
         self.ui.favorite_contract_btn.clicked.connect(self.favorite_contract)
         self.ui.favorite_person_btn.clicked.connect(self.favorite_person)
+        self.ui.favorite_company_btn.clicked.connect(self.favorite_company)
 
     # Sql Commands
     def run_query(self, query, values=()):
@@ -114,6 +120,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.main_widget.setCurrentIndex(3)
 
     def show_companies(self):
+        self.ui.update_companies()
         self.ui.main_widget.setCurrentIndex(5)
 
     def show_reminders(self):
@@ -144,6 +151,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.main_widget.setCurrentIndex(4)
 
     def new_company(self):
+        self.ui.new_company_window()
         self.ui.main_widget.setCurrentIndex(6)
 
     def new_reminder(self):
@@ -271,6 +279,35 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             else: # Edit contract
                 self.run_query("UPDATE people SET salutation_id=?, first=?, last=?, gender_id=?, job=?, company_id=?, type=?, phone=?, mobile=?, email=?, fax=? WHERE id=?", (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax, person_id))
             self.show_people()
+            
+    def save_company(self):
+        company_id = self.ui.company_id_lb.text()
+        name = self.ui.company_name.text()
+        type_id = self.ui.company_type.currentIndex()
+        address1 = self.ui.address_1.text()
+        address2 = self.ui.address_2.text()
+        city = self.ui.city.text()
+        state = self.ui.state.text()
+        zip = self.ui.zip.text()
+        country = self.ui.country.text()
+        segment_id = self.ui.segment.currentIndex()
+        number = self.ui.company_number.text()
+        website = self.ui.website.text()
+        email = self.ui.company_email.text()
+        phone = self.ui.contact.text()
+        fax = self.ui.company_fax.text()
+
+        if name == '':
+            self.message = QMessageBox()
+            self.message.setText('Name cannot be empty')
+            self.message.show()
+        else:
+            if company_id == '': # New company
+                self.run_query("INSERT INTO companies (name, type_id, address1, address2, city, state, zip, country, segment_id, number, website, email, phone, fax, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, type_id, address1, address2, city, state, zip, country, segment_id, number, website, email, phone, fax))
+            else: # Edit company
+                self.run_query("UPDATE companies SET name=?, type_id=?, address1=?, address2=?, city=?, state=?, zip=?, country=?, segment_id=?, number=?, website=?, email=?, phone=?, fax=? WHERE id=?", (name, type_id, address1, address2, city, state, zip, country, segment_id, number, website, email, phone, fax, company_id))
+            self.show_companies()
+            
     # Edit
     def edit_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -289,7 +326,25 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             person_id = self.ui.people_tree.model().itemData(id_index)[0]
             self.ui.edit_person_window(person_id)
             self.ui.main_widget.setCurrentIndex(4)
+
+    def edit_person_from_contract(self):
+        if self.ui.contract_parties.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.contract_parties.selectedIndexes()[0]
+            person_id = self.ui.contract_parties.model().itemData(id_index)[0]
+            self.ui.edit_person_window(person_id)
+            self.ui.main_widget.setCurrentIndex(4)
     
+    def edit_company(self):
+        if self.ui.companies_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.companies_tree.selectedIndexes()[0]
+            company_id = self.ui.companies_tree.model().itemData(id_index)[0]
+            self.ui.edit_company_window(company_id)
+            self.ui.main_widget.setCurrentIndex(6)
+        
     # Delete
     def delete_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -317,11 +372,27 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             last_index = self.ui.people_tree.selectedIndexes()[1]
             last = self.ui.people_tree.model().itemData(last_index)[0]
             prompt = 'Are you sure you want to delete' + first + ' ' + last + '?'
-            buttonReply = QMessageBox.question(self, 'Archive person', prompt,
+            buttonReply = QMessageBox.question(self, 'Delete person', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
                 self.run_query('DELETE FROM people WHERE id=?', (person_id,))
                 self.ui.update_people()
+     
+    def delete_company(self):
+        if self.ui.companies_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.companies_tree.selectedIndexes()[0]
+            company_id = self.ui.companies_tree.model().itemData(id_index)[0]
+            name_index = self.ui.companies_tree.selectedIndexes()[1]
+            name = self.ui.companies_tree.model().itemData(name_index)[0]
+            
+            prompt = 'Are you sure you want to delete' + name + '?'
+            buttonReply = QMessageBox.question(self, 'Delete company', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM companies WHERE id=?', (company_id,))
+                self.ui.update_companies()
                 
     # Archive
     def archive_contract(self):
@@ -355,6 +426,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE people SET archived=1 WHERE id=?', (person_id,))
                 self.ui.update_people()
+                
+    def archive_company(self):
+        if self.ui.companies_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.companies_tree.selectedIndexes()[0]
+            company_id = self.ui.companies_tree.model().itemData(id_index)[0]
+            name_index = self.ui.companies_tree.selectedIndexes()[1]
+            company_name = self.ui.companies_tree.model().itemData(name_index)[0]
+            prompt = 'Are you sure you want to archive' + company_name + '?'
+            buttonReply = QMessageBox.question(self, 'Archive company', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('UPDATE companies SET archived=1 WHERE id=?', (company_id,))
+                self.ui.update_companies()
     # Favorite
     def favorite_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -387,6 +473,22 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.message.setText('(Un)marked as favorite')
             self.message.show()
             self.ui.update_people()
+    
+    def favorite_company(self):
+        if self.ui.companies_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.companies_tree.selectedIndexes()[0]
+            company_id = self.ui.companies_tree.model().itemData(id_index)[0]
+            fav_status = self.fetch_query('SELECT favorite FROM companies WHERE id=?',(company_id,))
+            if fav_status == 0:
+                self.run_query('UPDATE companies SET favorite=1 WHERE id=?', (company_id,))
+            else:
+                self.run_query('UPDATE companies SET favorite=0 WHERE id=?', (company_id,))
+            self.message = QMessageBox()
+            self.message.setText('(Un)marked as favorite')
+            self.message.show()
+            self.ui.update_companies()
             
     # Dates
     def get_start(self):
@@ -502,6 +604,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.party_window = PersonDialog()
         self.party_window.show()
         self.party_window.select_signal.connect(self.select_party)
+        self.party_window.new_signal.connect(self.new_person)
 
     def select_party(self, person_id):
         if self.ui.contract_id_lb.text() == "":
@@ -541,6 +644,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                    (person_id, contract_id))
                     self.ui.update_parties(contract_id)
 
+
+
     # Next IDs
     def next_contract_id(self):
         next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
@@ -560,7 +665,6 @@ class Calendar(QtWidgets.QWidget, calendar.Ui_Form):
     def select(self):
         self.select_signal.emit(self.calendar_ui.calendarWidget.selectedDate())
         self.close()
-
 
 class PersonDialog(QtWidgets.QWidget, person.Ui_Form):
     select_signal = QtCore.pyqtSignal(int)
