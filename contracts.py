@@ -46,6 +46,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         # Save Buttons
         self.ui.save_contract.clicked.connect(self.save_contract)
+        self.ui.save_person.clicked.connect(self.save_person)
 
         # Dates
         self.ui.contract_start_btn.clicked.connect(self.get_start)
@@ -64,16 +65,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         # Edits
         self.ui.edit_contract_btn.clicked.connect(self.edit_contract)
+        self.ui.edit_person_btn.clicked.connect(self.edit_person)
 
         # Deletes
         self.ui.delete_contract_btn.clicked.connect(self.delete_contract)
+        self.ui.delete_person_btn.clicked.connect(self.delete_person)
 
         # Archives
         self.ui.archive_contract_btn.clicked.connect(self.archive_contract)
+        self.ui.archive_person_btn.clicked.connect(self.archive_person)
 
         # Favorites
         self.ui.favorite_contract_btn.clicked.connect(self.favorite_contract)
+        self.ui.favorite_person_btn.clicked.connect(self.favorite_person)
 
+    # Sql Commands
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
@@ -95,6 +101,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         cursor.close()
         return results
 
+    # Show
     def show_dashboard(self):
         self.ui.main_widget.setCurrentIndex(0)
 
@@ -102,135 +109,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.update_contracts()
         self.ui.main_widget.setCurrentIndex(1)
 
-    def new_contract(self):
-        self.ui.new_contract_window() # This clears all fields
-        self.ui.main_widget.setCurrentIndex(2)
-
-    def edit_contract(self):
-        if self.ui.contracts_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.contracts_tree.selectedIndexes()[0]
-            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
-            self.ui.edit_contract_window(contract_id)
-            self.ui.main_widget.setCurrentIndex(2)
-
-    def delete_contract(self):
-        if self.ui.contracts_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.contracts_tree.selectedIndexes()[0]
-            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
-            title_index = self.ui.contracts_tree.selectedIndexes()[1]
-            contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
-            prompt = 'Are you sure you want to delete ' + contract_title + '?'
-            buttonReply = QMessageBox.question(self, 'Delete Contract', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
-                self.ui.update_contracts()
-
-    def archive_contract(self):
-        if self.ui.contracts_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.contracts_tree.selectedIndexes()[0]
-            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
-            title_index = self.ui.contracts_tree.selectedIndexes()[1]
-            contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
-            prompt = 'Are you sure you want to archive' + contract_title + '?'
-            buttonReply = QMessageBox.question(self, 'Archive Contract', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('UPDATE contracts SET archived=1 WHERE id=?', (contract_id,))
-                self.ui.update_contracts()
-
-    def favorite_contract(self):
-        if self.ui.contracts_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.contracts_tree.selectedIndexes()[0]
-            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
-            fav_status = self.fetch_query('SELECT favorite FROM contracts WHERE id=?',(contract_id,))
-            if fav_status == 0:
-                self.run_query('UPDATE contracts SET favorite=1 WHERE id=?', (contract_id,))
-            else:
-                self.run_query('UPDATE contracts SET favorite=0 WHERE id=?', (contract_id,))
-            self.message = QMessageBox()
-            self.message.setText('(Un)marked as favorite')
-            self.message.show()
-            self.ui.update_contracts()
-
-    def cancel_contract(self):
-        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
-                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if buttonReply == QMessageBox.Yes:
-            self.show_contracts()
-            docs = self.fetch_query("SELECT url FROM documents WHERE owner_id=?", (self.next_contract_id(),))
-            for doc in docs:
-                os.remove(doc)
-            self.run_query("DELETE FROM documents WHERE owner_id=?", (self.next_contract_id(),))
-            self.run_query("DELETE FROM people_contracts WHERE contract_id=?", (self.next_contract_id(),))
-
     def show_people(self):
+        self.ui.update_people()
         self.ui.main_widget.setCurrentIndex(3)
-
-    def new_person(self):
-        self.ui.main_widget.setCurrentIndex(4)
-
-    def cancel_person(self):
-        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
-                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if buttonReply == QMessageBox.Yes:
-            self.show_people()
 
     def show_companies(self):
         self.ui.main_widget.setCurrentIndex(5)
 
-    def new_company(self):
-        self.ui.main_widget.setCurrentIndex(6)
-
-    def cancel_company(self):
-        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
-                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if buttonReply == QMessageBox.Yes:
-            self.show_companies()
-
     def show_reminders(self):
         self.ui.main_widget.setCurrentIndex(7)
-
-    def new_reminder(self):
-        self.ui.main_widget.setCurrentIndex(8)
-
-    def cancel_reminder(self):
-        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
-                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if buttonReply == QMessageBox.Yes:
-            self.show_reminders()
 
     def show_risks(self):
         self.ui.main_widget.setCurrentIndex(9)
 
-    def new_risk(self):
-        self.ui.main_widget.setCurrentIndex(10)
-
-    def cancel_risk(self):
-        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
-                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if buttonReply == QMessageBox.Yes:
-            self.show_risks()
-
     def show_todos(self):
         self.ui.main_widget.setCurrentIndex(11)
-
-    def new_todo(self):
-        self.ui.main_widget.setCurrentIndex(12)
-
-    def cancel_todo(self):
-        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
-                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if buttonReply == QMessageBox.Yes:
-            self.show_todos()
 
     def show_library(self):
         self.ui.main_widget.setCurrentIndex(13)
@@ -241,6 +134,72 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def show_archives(self):
         self.ui.main_widget.setCurrentIndex(15)
 
+    # New
+    def new_contract(self):
+        self.ui.new_contract_window() # This clears all fields
+        self.ui.main_widget.setCurrentIndex(2)
+
+    def new_person(self):
+        self.ui.new_person_window()
+        self.ui.main_widget.setCurrentIndex(4)
+
+    def new_company(self):
+        self.ui.main_widget.setCurrentIndex(6)
+
+    def new_reminder(self):
+        self.ui.main_widget.setCurrentIndex(8)
+
+    def new_risk(self):
+        self.ui.main_widget.setCurrentIndex(10)
+
+    def new_todo(self):
+        self.ui.main_widget.setCurrentIndex(12)
+
+    # Cancel
+    def cancel_contract(self):
+        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            self.show_contracts()
+
+            # Remove attachments and parties if contract is cancelled
+            docs = self.fetch_query("SELECT url FROM documents WHERE owner_id=?", (self.next_contract_id(),))
+            for doc in docs:
+                os.remove(doc)
+            self.run_query("DELETE FROM documents WHERE owner_id=?", (self.next_contract_id(),))
+            self.run_query("DELETE FROM people_contracts WHERE contract_id=?", (self.next_contract_id(),))
+
+    def cancel_person(self):
+        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            self.show_people()
+
+    def cancel_company(self):
+        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            self.show_companies()
+
+    def cancel_reminder(self):
+        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            self.show_reminders()
+
+    def cancel_risk(self):
+        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            self.show_risks()
+
+    def cancel_todo(self):
+        buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            self.show_todos()
+
+    # Save
     def save_contract(self):
         contract_id = self.ui.contract_id_lb.text()
         title = self.ui.contract_title.text()
@@ -288,6 +247,148 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, extension_limit=?, description=? WHERE id=?", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description, contract_id))
             self.show_contracts()
 
+    def save_person(self):
+        person_id = self.ui.person_id_lb.text()
+        salutation_id = self.ui.salutation.currentIndex()
+        first = self.ui.first_name.text()
+        last = self.ui.last_name.text()
+        gender_id = self.ui.gender.currentIndex()
+        job = self.ui.job.text()
+        company_id = self.ui.company.currentIndex()
+        type = self.ui.person_type.text()
+        phone = self.ui.phone.text()
+        mobile = self.ui.mobile.text()
+        email = self.ui.email.text()
+        fax = self.ui.fax.text()
+
+        if first == '' and last == '':
+            self.message = QMessageBox()
+            self.message.setText('Name cannot be empty')
+            self.message.show()
+        else:
+            if person_id == '': # New person
+                self.run_query("INSERT INTO people (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax))
+            else: # Edit contract
+                self.run_query("UPDATE people SET salutation_id=?, first=?, last=?, gender_id=?, job=?, company_id=?, type=?, phone=?, mobile=?, email=?, fax=? WHERE id=?", (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax, person_id))
+            self.show_people()
+    # Edit
+    def edit_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.contracts_tree.selectedIndexes()[0]
+            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+            self.ui.edit_contract_window(contract_id)
+            self.ui.main_widget.setCurrentIndex(2)
+
+    def edit_person(self):
+        if self.ui.people_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.people_tree.selectedIndexes()[0]
+            person_id = self.ui.people_tree.model().itemData(id_index)[0]
+            self.ui.edit_person_window(person_id)
+            self.ui.main_widget.setCurrentIndex(4)
+    
+    # Delete
+    def delete_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.contracts_tree.selectedIndexes()[0]
+            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+            title_index = self.ui.contracts_tree.selectedIndexes()[1]
+            contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
+            prompt = 'Are you sure you want to delete ' + contract_title + '?'
+            buttonReply = QMessageBox.question(self, 'Delete Contract', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
+                self.ui.update_contracts()
+    
+    def delete_person(self):
+        if self.ui.people_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.people_tree.selectedIndexes()[0]
+            person_id = self.ui.people_tree.model().itemData(id_index)[0]
+            first_index = self.ui.people_tree.selectedIndexes()[1]
+            first = self.ui.people_tree.model().itemData(first_index)[0]
+            last_index = self.ui.people_tree.selectedIndexes()[1]
+            last = self.ui.people_tree.model().itemData(last_index)[0]
+            prompt = 'Are you sure you want to delete' + first + ' ' + last + '?'
+            buttonReply = QMessageBox.question(self, 'Archive person', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM people WHERE id=?', (person_id,))
+                self.ui.update_people()
+                
+    # Archive
+    def archive_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.contracts_tree.selectedIndexes()[0]
+            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+            title_index = self.ui.contracts_tree.selectedIndexes()[1]
+            contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
+            prompt = 'Are you sure you want to archive' + contract_title + '?'
+            buttonReply = QMessageBox.question(self, 'Archive Contract', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('UPDATE contracts SET archived=1 WHERE id=?', (contract_id,))
+                self.ui.update_contracts()
+    
+    def archive_person(self):
+        if self.ui.people_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.people_tree.selectedIndexes()[0]
+            person_id = self.ui.people_tree.model().itemData(id_index)[0]
+            first_index = self.ui.people_tree.selectedIndexes()[1]
+            first = self.ui.people_tree.model().itemData(first_index)[0]
+            last_index = self.ui.people_tree.selectedIndexes()[1]
+            last = self.ui.people_tree.model().itemData(last_index)[0]
+            prompt = 'Are you sure you want to archive' + first + ' ' + last + '?'
+            buttonReply = QMessageBox.question(self, 'Archive person', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('UPDATE people SET archived=1 WHERE id=?', (person_id,))
+                self.ui.update_people()
+    # Favorite
+    def favorite_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.contracts_tree.selectedIndexes()[0]
+            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+            fav_status = self.fetch_query('SELECT favorite FROM contracts WHERE id=?',(contract_id,))
+            if fav_status == 0:
+                self.run_query('UPDATE contracts SET favorite=1 WHERE id=?', (contract_id,))
+            else:
+                self.run_query('UPDATE contracts SET favorite=0 WHERE id=?', (contract_id,))
+            self.message = QMessageBox()
+            self.message.setText('(Un)marked as favorite')
+            self.message.show()
+            self.ui.update_contracts()
+
+    def favorite_person(self):
+        if self.ui.people_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.people_tree.selectedIndexes()[0]
+            person_id = self.ui.people_tree.model().itemData(id_index)[0]
+            fav_status = self.fetch_query('SELECT favorite FROM people WHERE id=?',(person_id,))
+            if fav_status == 0:
+                self.run_query('UPDATE people SET favorite=1 WHERE id=?', (person_id,))
+            else:
+                self.run_query('UPDATE people SET favorite=0 WHERE id=?', (person_id,))
+            self.message = QMessageBox()
+            self.message.setText('(Un)marked as favorite')
+            self.message.show()
+            self.ui.update_people()
+            
+    # Dates
     def get_start(self):
         self.calendar_window = Calendar()
         self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -324,6 +425,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def set_cancel(self, date):
         self.ui.contract_cancel.setText(date.toString('MM/dd/yyyy'))
 
+    # Attachments
     def add_contract_attachment(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
         name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
@@ -332,14 +434,17 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         dir = self.dir + name
         copyfile(filename[0], dir)
 
-        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
+        if self.ui.contract_id_lb.text() == "":
+            contract_id = self.next_contract_id()
+        else:
+            contract_id = self.ui.contract_id_lb.text()
         # Insert into database
         try:
             sqliteConnection = sqlite3.connect('data.db')
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
             query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?)"""
-            record = (name, dir, 1, next_id)
+            record = (name, dir, 1, contract_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
             print('Document added')
@@ -352,7 +457,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if sqliteConnection:
                 sqliteConnection.close()
                 print('Closed db')
-        self.ui.update_contracts_attachments()
+
+        if self.ui.contract_id_lb.text() == "":
+            self.ui.update_contracts_attachments()
+        else:
+            self.ui.update_contracts_attachments(contract_id)
 
     def open_contract_attachment(self):
         if self.ui.contract_attachments.selectedIndexes() == []:
@@ -377,18 +486,35 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM documents WHERE id=?', (id,))
-                os.remove(url)
-                self.ui.update_contracts_attachments()
+                if self.ui.contract_id_lb.text() == "":
+                    contract_id = self.next_contract_id()
+                    self.run_query('DELETE FROM documents WHERE id=?', (id,))
+                    os.remove(url)
+                    self.ui.update_contracts_attachments()
+                else:
+                    contract_id = self.ui.contract_id_lb.text()
+                    self.run_query('DELETE FROM documents WHERE id=?', (id,))
+                    os.remove(url)
+                    self.ui.update_contracts_attachments(contract_id)
 
+    # Parties
     def party_window(self):
         self.party_window = PersonDialog()
         self.party_window.show()
         self.party_window.select_signal.connect(self.select_party)
 
     def select_party(self, person_id):
-        self.run_query('INSERT INTO people_contracts(person_id,contract_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',(person_id, self.next_contract_id(),person_id, self.next_contract_id()))
-        self.ui.update_parties()
+        if self.ui.contract_id_lb.text() == "":
+            contract_id = self.next_contract_id()
+            self.run_query(
+                'INSERT INTO people_contracts(person_id,contract_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',
+                (person_id, contract_id, person_id, contract_id))
+            self.ui.update_parties()
+
+        else:
+            contract_id = self.ui.contract_id_lb.text()
+            self.run_query('INSERT INTO people_contracts(person_id,contract_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',(person_id, contract_id, person_id, contract_id))
+            self.ui.update_parties(contract_id)
         
     def delete_party(self):
         if self.ui.contract_parties.selectedIndexes() == []:
@@ -405,9 +531,17 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Party', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM people_contracts WHERE person_id=? AND contract_id=?', (person_id, self.next_contract_id()))
-                self.ui.update_parties()
+                if self.ui.contract_id_lb.text() == "":
+                    contract_id = self.next_contract_id()
+                    self.run_query('DELETE FROM people_contracts WHERE person_id=? AND contract_id=?', (person_id, contract_id))
+                    self.ui.update_parties()
+                else:
+                    contract_id = self.ui.contract_id_lb.text()
+                    self.run_query('DELETE FROM people_contracts WHERE person_id=? AND contract_id=?',
+                                   (person_id, contract_id))
+                    self.ui.update_parties(contract_id)
 
+    # Next IDs
     def next_contract_id(self):
         next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
         return next_id

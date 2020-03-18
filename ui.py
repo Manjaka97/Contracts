@@ -434,7 +434,7 @@ class Ui_MainWindow(object):
         elif self.contract_type_menu.currentIndex() == 2:
                 query_condition = "WHERE contracts.status_id=1"
         query.exec_(
-                "SELECT contracts.id as ID, title as Title, type_id, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id")
+                "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
         self.contract_model.setQuery(query)
         db.close()
 
@@ -1288,7 +1288,21 @@ class Ui_MainWindow(object):
         self.person_type_search.setObjectName("person_type_search")
         self.horizontalLayout_68.addWidget(self.person_type_search)
         self.verticalLayout_53.addLayout(self.horizontalLayout_68)
+
+        # People Tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.person_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people")
+        self.person_model.setQuery(query)
+        db.close()
+        
         self.people_tree = QtWidgets.QTreeView(self.layoutWidget_2)
+        self.people_tree.setModel(self.person_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.people_tree.setFont(font)
@@ -1415,21 +1429,27 @@ class Ui_MainWindow(object):
         self.person_type.setAutoFillBackground(False)
         self.person_type.setObjectName("person_type")
         self.gridLayout_9.addWidget(self.person_type, 5, 7, 1, 1)
+        
+        # Person salutation
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.salutation_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT salutation FROM salutations")
+        self.salutation_model.setQuery(query)
+        db.close()
+
         self.salutation = QtWidgets.QComboBox(self.scrollAreaWidgetContents_9)
+        self.salutation.setModel(self.salutation_model)
         self.salutation.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.salutation.setFont(font)
         self.salutation.setAutoFillBackground(False)
         self.salutation.setObjectName("salutation")
-        self.salutation.addItem("")
-        self.salutation.addItem("")
-        self.salutation.addItem("")
-        self.salutation.addItem("")
-        self.salutation.addItem("")
-        self.salutation.addItem("")
-        self.salutation.addItem("")
-        self.salutation.addItem("")
         self.gridLayout_9.addWidget(self.salutation, 1, 3, 1, 1)
         self.label_105 = QtWidgets.QLabel(self.scrollAreaWidgetContents_9)
         self.label_105.setMinimumSize(QtCore.QSize(0, 35))
@@ -1538,7 +1558,19 @@ class Ui_MainWindow(object):
         self.label_110.setText("")
         self.label_110.setObjectName("label_110")
         self.gridLayout_9.addWidget(self.label_110, 6, 0, 1, 1)
+        
+        # Person company
+        ids = self.fetch_query('SELECT id FROM companies')
+        names = self.fetch_query('SELECT name FROM companies')
+        companies = []
+        for company_id, name in zip(ids, names):
+            comp = str(company_id) + ' - ' + str(name)
+            companies.append(comp)
+
         self.company = QtWidgets.QComboBox(self.scrollAreaWidgetContents_9)
+        self.company.addItem('0 - No Company')
+        for item in companies:
+            self.company.addItem(item)
         self.company.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -4251,14 +4283,6 @@ class Ui_MainWindow(object):
         self.label_104.setText(_translate("MainWindow", "Salutation"))
         self.person_type.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);"))
         self.salutation.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);"))
-        self.salutation.setItemText(0, _translate("MainWindow", "Not Selected"))
-        self.salutation.setItemText(1, _translate("MainWindow", "Dr"))
-        self.salutation.setItemText(2, _translate("MainWindow", "Master"))
-        self.salutation.setItemText(3, _translate("MainWindow", "Miss"))
-        self.salutation.setItemText(4, _translate("MainWindow", "Mr"))
-        self.salutation.setItemText(5, _translate("MainWindow", "Mrs"))
-        self.salutation.setItemText(6, _translate("MainWindow", "Ms"))
-        self.salutation.setItemText(7, _translate("MainWindow", "Prof"))
         self.label_105.setText(_translate("MainWindow", "Fax"))
         self.label_106.setText(_translate("MainWindow", "Gender"))
         self.email.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);"))
@@ -4557,6 +4581,7 @@ class Ui_MainWindow(object):
         self.reports_lb.setText(_translate("MainWindow", "Reports"))
         self.archives_lb.setText(_translate("MainWindow", "Archives"))
 
+    # SQL commands
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
@@ -4578,25 +4603,16 @@ class Ui_MainWindow(object):
         cursor.close()
         return results
 
+    # Next IDs
     def next_contract_id(self):
         next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
         return next_id
 
-    def update_contracts(self):
-        # Contracts Tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.contract_model = QtSql.QSqlRelationalTableModel()
-        self.contract_model.setTable('contracts')
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT contracts.id as ID, title as Title, type_id, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id")
-        self.contract_model.setQuery(query)
-        db.close()
-        self.contracts_tree.setModel(self.contract_model)
+    def next_person_id(self):
+        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='people'")[0] + 1
+        return next_id
 
+    # New windows
     def new_contract_window(self):
         self.contract_id_lb.clear()
         self.contract_title.clear()
@@ -4618,6 +4634,20 @@ class Ui_MainWindow(object):
         self.update_contracts_attachments()
         self.update_parties()
 
+    def new_person_window(self):
+        self.salutation.setCurrentIndex(0)
+        self.first_name.clear()
+        self.last_name.clear()
+        self.gender.setCurrentIndex(0)
+        self.job.clear()
+        self.company.setCurrentIndex(0)
+        self.person_type.clear()
+        self.phone.clear()
+        self.mobile.clear()
+        self.email.clear()
+        self.fax.clear()
+
+    # Edits
     def edit_contract_window(self, contract_id):
         self.contract_id_lb.setText(str(contract_id))
         self.contract_title.setText(self.fetch_query('SELECT title from contracts WHERE id=?',(contract_id,))[0])
@@ -4647,7 +4677,51 @@ class Ui_MainWindow(object):
         self.update_contracts_attachments(contract_id)
         self.update_parties(contract_id)
 
+    def edit_person_window(self, person_id):
+        self.person_id_lb.setText(str(person_id))
+        self.salutation.setCurrentIndex(self.fetch_query('SELECT salutation_id FROM people WHERE id=?',(person_id,))[0])
+        self.first_name.setText(self.fetch_query('SELECT first FROM people WHERE id=?',(person_id,))[0])
+        self.last_name.setText(self.fetch_query('SELECT last FROM people WHERE id=?',(person_id,))[0])
+        self.gender.setCurrentIndex(self.fetch_query('SELECT gender_id FROM people WHERE id=?',(person_id,))[0])
+        self.job.setText(self.fetch_query('SELECT job FROM people WHERE id=?',(person_id,))[0])
+        self.company.setCurrentIndex(self.fetch_query('SELECT company_id FROM people WHERE id=?',(person_id,))[0])
+        self.person_type.setText(self.fetch_query('SELECT type FROM people WHERE id=?',(person_id,))[0])
+        self.phone.setText(self.fetch_query('SELECT phone FROM people WHERE id=?',(person_id,))[0])
+        self.mobile.setText(self.fetch_query('SELECT mobile FROM people WHERE id=?',(person_id,))[0])
+        self.email.setText(self.fetch_query('SELECT email FROM people WHERE id=?',(person_id,))[0])
+        self.fax.setText(self.fetch_query('SELECT fax FROM people WHERE id=?',(person_id,))[0])
 
+    # Updates
+    def update_contracts(self):
+        # Contracts Tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.contract_model = QtSql.QSqlRelationalTableModel()
+        self.contract_model.setTable('contracts')
+        query = QtSql.QSqlQuery()
+        query.exec_(
+               "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
+        self.contract_model.setQuery(query)
+        db.close()
+        self.contracts_tree.setModel(self.contract_model)
+
+    def update_people(self):
+        # People Tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+            print('Db not open')
+        self.person_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people")
+        self.person_model.setQuery(query)
+        db.close()
+        self.people_tree.setModel(self.person_model)
+
+    # Attachments
     def update_contracts_attachments(self, contract_id=None):
         if contract_id is None:
             contract_id = self.next_contract_id()
@@ -4665,6 +4739,7 @@ class Ui_MainWindow(object):
 
         self.contract_attachments.setModel(self.contract_attachment_model)
 
+    # Parties
     def update_parties(self, contract_id=None):
         if contract_id is None:
             contract_id = self.next_contract_id()
@@ -4676,7 +4751,10 @@ class Ui_MainWindow(object):
         self.contract_party_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
         query.exec_(
-             "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_contracts JOIN people on people_contracts.person_id=people.id WHERE people_contracts.contract_id=" + str(contract_id))
+             "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_contracts JOIN people ON people_contracts.person_id=people.id WHERE people_contracts.contract_id=" + str(contract_id))
         self.contract_party_model.setQuery(query)
         db.close()
         self.contract_parties.setModel(self.contract_party_model)
+
+
+
