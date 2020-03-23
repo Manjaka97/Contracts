@@ -2385,7 +2385,21 @@ class Ui_MainWindow(object):
         self.reminder_snoozed_search.setObjectName("reminder_snoozed_search")
         self.horizontalLayout_78.addWidget(self.reminder_snoozed_search)
         self.verticalLayout_55.addLayout(self.horizontalLayout_78)
+
+        # Reminders tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.reminder_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id")
+        self.reminder_model.setQuery(query)
+        db.close()
+
         self.reminders_tree = QtWidgets.QTreeView(self.layoutWidget_6)
+        self.reminders_tree.setModel(self.reminder_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminders_tree.setFont(font)
@@ -2477,7 +2491,22 @@ class Ui_MainWindow(object):
         self.label_140.setStyleSheet("color: rgb(255, 255, 255);background-color: rgb(75, 75, 75);")
         self.label_140.setObjectName("label_140")
         self.gridLayout_11.addWidget(self.label_140, 0, 0, 1, 1)
+        
+        # Reminder people tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.reminder_person_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_reminders JOIN people ON people_reminders.person_id=people.id WHERE people_reminders.reminder_id=" + str(
+                        self.next_reminder_id))
+        self.reminder_person_model.setQuery(query)
+        db.close()
+        
         self.reminder_people = QtWidgets.QTreeView(self.scrollAreaWidgetContents_11)
+        self.reminder_people.setModel(self.reminder_person_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_people.setFont(font)
@@ -2550,7 +2579,21 @@ class Ui_MainWindow(object):
         self.label_143.setStyleSheet("color: rgb(255, 255, 255);background-color: rgb(75, 75, 75);")
         self.label_143.setObjectName("label_143")
         self.gridLayout_11.addWidget(self.label_143, 3, 0, 1, 1)
+        
+        # Reminder Contract
+        contracts_id = self.fetch_query('SELECT id FROM contracts')
+        contracts_title = self.fetch_query('SELECT title FROM contracts')
+        contracts = []
+        for c_id, c_title in zip(contracts_id, contracts_title):
+                c = str(c_id) + ' - ' + c_title
+                contracts.append(c)
+
         self.reminder_contract = QtWidgets.QComboBox(self.scrollAreaWidgetContents_11)
+        
+        self.reminder_contract.addItem('0 - No Contract')
+        for contract in contracts:
+                self.reminder_contract.addItem(contract)
+        
         self.reminder_contract.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -2558,7 +2601,20 @@ class Ui_MainWindow(object):
         self.reminder_contract.setAutoFillBackground(False)
         self.reminder_contract.setObjectName("reminder_contract")
         self.gridLayout_11.addWidget(self.reminder_contract, 2, 1, 1, 1)
+        
+        # Reminder company
+        companies_id = self.fetch_query('SELECT id FROM companies')
+        companies_title = self.fetch_query('SELECT name FROM companies')
+        companies = []
+        for c_id, c_title in zip(companies_id, companies_title):
+                c = str(c_id) + ' - ' + c_title
+                companies.append(c)
+            
         self.reminder_company = QtWidgets.QComboBox(self.scrollAreaWidgetContents_11)
+        
+        self.reminder_company.addItem('0 - No company')
+        for company in companies:
+                self.reminder_company.addItem(company)
         self.reminder_company.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -2611,7 +2667,22 @@ class Ui_MainWindow(object):
         self.label_146.setStyleSheet("color: rgb(255, 255, 255);background-color: rgb(75, 75, 75);")
         self.label_146.setObjectName("label_146")
         self.verticalLayout_40.addWidget(self.label_146)
+
+        # Reminder attachments
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.reminder_attachment_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=2 AND owner_id=" + str(
+                        self.next_reminder_id))
+        self.reminder_attachment_model.setQuery(query)
+        db.close()
+
         self.reminder_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_11)
+        self.reminder_attachments.setModel(self.reminder_attachment_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_attachments.setFont(font)
@@ -4622,6 +4693,16 @@ class Ui_MainWindow(object):
         self.delete_document.setText(_translate("MainWindow", "Delete"))
         self.reports_lb.setText(_translate("MainWindow", "Reports"))
         self.archives_lb.setText(_translate("MainWindow", "Archives"))
+        self.group1 = QtWidgets.QButtonGroup()
+        self.group1.addButton(self.specific_date_radio)
+        self.group1.addButton(self.relative_date_radio)
+        self.group2 = QtWidgets.QButtonGroup()
+        self.group2.addButton(self.do_not_recur_radio)
+        self.group2.addButton(self.recur_radio)
+        self.group3 = QtWidgets.QButtonGroup()
+        self.group3.addButton(self.until_key_date_radio)
+        self.group3.addButton(self.recur_until_specific)
+        self.group3.addButton(self.recur_indefinitely_radio)
 
     # SQL commands
     def run_query(self, query, values=()):
@@ -4654,6 +4735,9 @@ class Ui_MainWindow(object):
         next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='people'")[0] + 1
         return next_id
 
+    def next_reminder_id(self):
+            next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0] + 1
+            return next_id
     # New windows
     def new_contract_window(self):
         self.contract_id_lb.clear()
@@ -4673,7 +4757,7 @@ class Ui_MainWindow(object):
         self.contract_cancel.clear()
         self.contract_extension.clear()
         self.contract_description.clear()
-        self.update_contracts_attachments()
+        self.update_contract_attachments()
         self.update_parties()
 
     def new_person_window(self):
@@ -4707,13 +4791,39 @@ class Ui_MainWindow(object):
         self.contact.clear()
         self.company_fax.clear()
 
+    def new_reminder_window(self):
+        self.reminder_id_lb.clear()
+        self.reminder_name.clear()
+        self.reminder_contract.setCurrentIndex(0)
+        self.reminder_company.setCurrentIndex(0)
+        self.update_reminder_attachments()
+        self.reminder_description.clear()
+        self.update_reminder_people()
+        self.reminder_complete.setChecked(False)
+        self.reminder_snoozed.setChecked(False)
+        self.specific_date_radio.setChecked(True)
+        self.relative_date_radio.setChecked(False)
+        self.do_not_recur_radio.setChecked(True)
+        self.recur_radio.setChecked(False)
+        self.recur_until_specific.setChecked(False)
+        self.until_key_date_radio.setChecked(False)
+        self.recur_indefinitely_radio.setChecked(False)
+        self.reminder_specific_date.clear()
+        self.reminder_relative_date.clear()
+        self.time_type.setCurrentIndex(0)
+        self.before.setCurrentIndex(0)
+        self.key_date.setCurrentIndex(0)
+        self.recur_type.setCurrentIndex(0)
+        self.recur_until_specific_2.clear()
+        self.until_key_date.setCurrentIndex(0)
+
     # Edits
     def edit_contract_window(self, contract_id):
         self.contract_id_lb.setText(str(contract_id))
         self.contract_title.setText(str(self.fetch_query('SELECT title from contracts WHERE id=?',(contract_id,))[0]))
-        self.contract_type.setCurrentIndex(str(self.fetch_query('SELECT type_id from contracts WHERE id=?',(contract_id,))[0]))
+        self.contract_type.setCurrentIndex(int(self.fetch_query('SELECT type_id from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_category.setCurrentIndex(int(self.fetch_query('SELECT category_id from contracts WHERE id=?',(contract_id,))[0]))
-        self.contract_classification.setCurrentIndex(self.fetch_query('SELECT classification_id from contracts WHERE id=?',(contract_id,))[0])
+        self.contract_classification.setCurrentIndex(int(self.fetch_query('SELECT classification_id from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_reference.setText(str(self.fetch_query('SELECT reference from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_account.setText(str(self.fetch_query('SELECT account_reference from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_status.setCurrentIndex(int(self.fetch_query('SELECT status_id from contracts WHERE id=?',(contract_id,))[0]))
@@ -4734,7 +4844,7 @@ class Ui_MainWindow(object):
         self.contract_cancel.setText(str(self.fetch_query('SELECT cancel_date from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_extension.setText(str(self.fetch_query('SELECT extension_limit from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_description.setText(str(self.fetch_query('SELECT description from contracts WHERE id=?',(contract_id,))[0]))
-        self.update_contracts_attachments(contract_id)
+        self.update_contract_attachments(contract_id)
         self.update_parties(contract_id)
 
     def edit_person_window(self, person_id):
@@ -4767,6 +4877,41 @@ class Ui_MainWindow(object):
             self.company_email.setText(self.fetch_query('SELECT email FROM companies WHERE id=?',(company_id,))[0])
             self.contact.setText(str(self.fetch_query('SELECT phone FROM companies WHERE id=?',(company_id,))[0]))
             self.company_fax.setText(str(self.fetch_query('SELECT fax FROM companies WHERE id=?',(company_id,))[0]))
+
+    def edit_reminder_window(self, reminder_id):
+            self.reminder_id_lb.setText(str(reminder_id))
+            self.reminder_name.setText(str(self.fetch_query('SELECT name FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.reminder_contract.setCurrentIndex(int(self.fetch_query('SELECT contract_id FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.reminder_company.setCurrentIndex(int(self.fetch_query('SELECT company_id FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.update_reminder_attachments()
+            self.reminder_description.setText(str(self.fetch_query('SELECT description FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.update_reminder_people()
+            if int(self.fetch_query('SELECT complete FROM reminders WHERE id=?',(reminder_id,))[0]) == 1:
+                self.reminder_complete.setChecked(True)
+            if int(self.fetch_query('SELECT snoozed FROM reminders WHERE id=?', (reminder_id,))[0]) == 1:
+                self.reminder_snoozed.setChecked(True)
+            if int(self.fetch_query('SELECT specific_radio FROM reminders WHERE id=?', (reminder_id,))[0]) == 1:
+                self.specific_date_radio.setChecked(True)
+            if int(self.fetch_query('SELECT relative_radio FROM reminders WHERE id=?', (reminder_id,))[0]) == 1:
+                self.relative_date_radio.setChecked(True)
+            if int(self.fetch_query('SELECT do_not_recur_radio FROM reminders WHERE id=?', (reminder_id,))[0]) == 1:
+                self.do_not_recur_radio.setChecked(True)
+            if int(self.fetch_query('SELECT recur_radio FROM reminders WHERE id=?',(reminder_id,))[0]) == 1:
+                    self.recur_radio.setChecked(True)
+            if int(self.fetch_query('SELECT until_specific_radio FROM reminders WHERE id=?',(reminder_id,))[0]) == 1:
+                    self.recur_until_specific.setChecked(True)
+            if int(self.fetch_query('SELECT until_key_radio FROM reminders WHERE id=?',(reminder_id,))[0]) == 1:
+                    self.until_key_date_radio.setChecked(True)
+            if int(self.fetch_query('SELECT indefinitely_radio FROM reminders WHERE id=?',(reminder_id,))[0]) == 1:
+                    self.recur_indefinitely_radio.setChecked(True)
+            self.reminder_specific_date.setText(str(self.fetch_query('SELECT specific_date FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.reminder_relative_date.setText(str(self.fetch_query('SELECT relative_date FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.time_type.setCurrentIndex(int(self.fetch_query('SELECT time_id FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.before.setCurrentIndex(int(self.fetch_query('SELECT before_after FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.key_date.setCurrentIndex(int(self.fetch_query('SELECT date_id FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.recur_type.setCurrentIndex(int(self.fetch_query('SELECT recur_id FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.recur_until_specific_2.setText(str(self.fetch_query('SELECT until_date FROM reminders WHERE id=?',(reminder_id,))[0]))
+            self.until_key_date.setCurrentIndex(int(self.fetch_query('SELECT until_key_id FROM reminders WHERE id=?',(reminder_id,))[0]))
 
     # Updates
     def update_contracts(self):
@@ -4812,8 +4957,22 @@ class Ui_MainWindow(object):
 
             self.companies_tree.setModel(self.company_model)
 
+    def update_reminders(self):
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.reminder_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+            query.exec_(
+                    "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id")
+            self.reminder_model.setQuery(query)
+            db.close()
+
+            self.reminders_tree.setModel(self.reminder_model)
+
     # Attachments
-    def update_contracts_attachments(self, contract_id=None):
+    def update_contract_attachments(self, contract_id=None):
         if contract_id is None:
             contract_id = self.next_contract_id()
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
@@ -4829,6 +4988,22 @@ class Ui_MainWindow(object):
         db.close()
 
         self.contract_attachments.setModel(self.contract_attachment_model)
+        
+    def update_reminder_attachments(self, reminder_id=None):
+        if reminder_id is None:
+            reminder_id = self.next_reminder_id()
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+            print('Db not open')
+        self.reminder_attachment_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+             "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=2 AND owner_id=" + str(reminder_id))
+        self.reminder_attachment_model.setQuery(query)
+        db.close()
+
+        self.reminder_attachments.setModel(self.reminder_attachment_model)
 
     # Parties
     def update_parties(self, contract_id=None):
@@ -4846,6 +5021,23 @@ class Ui_MainWindow(object):
         self.contract_party_model.setQuery(query)
         db.close()
         self.contract_parties.setModel(self.contract_party_model)
+
+    def update_reminder_people(self, reminder_id=None):
+            if reminder_id is None:
+                    reminder_id = self.next_reminder_id()
+            # reminder people
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.reminder_person_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+            query.exec_(
+                    "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_reminders JOIN people ON people_reminders.person_id=people.id WHERE people_reminders.reminder_id=" + str(
+                            reminder_id))
+            self.reminder_person_model.setQuery(query)
+            db.close()
+            self.reminder_people.setModel(self.reminder_person_model)
 
 
 
