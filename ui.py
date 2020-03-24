@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sqlite3
 import resources_rc
+import os
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -3658,7 +3659,21 @@ class Ui_MainWindow(object):
         self.todo_resolution_search.setObjectName("todo_resolution_search")
         self.horizontalLayout_91.addWidget(self.todo_resolution_search)
         self.verticalLayout_57.addLayout(self.horizontalLayout_91)
+
+        # Todos tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.todo_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id")
+        self.todo_model.setQuery(query)
+        db.close()
+
         self.todos_tree = QtWidgets.QTreeView(self.layoutWidget_18)
+        self.todos_tree.setModel(self.todo_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.todos_tree.setFont(font)
@@ -3797,7 +3812,18 @@ class Ui_MainWindow(object):
         self.todo_priority.addItem("")
         self.todo_priority.addItem("")
         self.gridLayout_14.addWidget(self.todo_priority, 4, 3, 1, 1)
+        
+        # To Do company
+        companies_id = self.fetch_query('SELECT id FROM companies')
+        companies_title = self.fetch_query('SELECT name FROM companies')
+        companies = []
+        for c_id, c_title in zip(companies_id, companies_title):
+                c = str(c_id) + ' - ' + c_title
+                companies.append(c)
         self.todo_company = QtWidgets.QComboBox(self.scrollAreaWidgetContents_13)
+        self.todo_company.addItem('0 - No company')
+        for company in companies:
+                self.todo_company.addItem(company)
         self.todo_company.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -3861,7 +3887,20 @@ class Ui_MainWindow(object):
         self.gridLayout_14.addWidget(self.label_171, 6, 0, 1, 1)
         self.horizontalLayout_58 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_58.setObjectName("horizontalLayout_58")
+        
+        # To do contract
+        contracts_id = self.fetch_query('SELECT id FROM contracts')
+        contracts_title = self.fetch_query('SELECT title FROM contracts')
+        contracts = []
+        for c_id, c_title in zip(contracts_id, contracts_title):
+                c = str(c_id) + ' - ' + c_title
+                contracts.append(c)
         self.todo_contract = QtWidgets.QComboBox(self.scrollAreaWidgetContents_13)
+
+        self.todo_contract.addItem('0 - No Master Contract')
+        for contract in contracts:
+                self.todo_contract.addItem(contract)
+            
         self.todo_contract.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -3904,7 +3943,18 @@ class Ui_MainWindow(object):
         self.gridLayout_14.addWidget(self.todo_subject, 1, 3, 1, 1)
         self.horizontalLayout_60 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_60.setObjectName("horizontalLayout_60")
+        
+        # To do responsible
+        people_id = self.fetch_query('SELECT id FROM people')
+        first = self.fetch_query('SELECT first FROM people')
+        last = self.fetch_query('SELECT last FROM people')
+        people = []
+        for p_id, p_first, p_last in zip(people_id, first, last):
+                c = str(p_id) + ' - ' + p_first + ' ' + p_last
+                people.append(c)
         self.todo_responsible = QtWidgets.QComboBox(self.scrollAreaWidgetContents_13)
+        for p in people:
+                self.todo_responsible.addItem(p)
         self.todo_responsible.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -4896,6 +4946,19 @@ class Ui_MainWindow(object):
         self.risk_mitigation.clear()
         self.update_risk_attachments()
 
+    def new_todo_window(self):
+        self.todo_id_lb.clear()
+        self.todo_subject.clear()
+        self.todo_status.setCurrentIndex(0)
+        self.todo_responsible.setCurrentIndex(0)
+        self.todo_start_date.clear()
+        self.todo_resolutio_date.clear()
+        self.todo_priority.setCurrentIndex(0)
+        self.todo_severity.setCurrentIndex(0)
+        self.todo_contract.setCurrentIndex(0)
+        self.todo_company.setCurrentIndex(0)
+        self.todo_description.clear()
+
     # Edits
     def edit_contract_window(self, contract_id):
         self.contract_id_lb.setText(str(contract_id))
@@ -5003,6 +5066,19 @@ class Ui_MainWindow(object):
             self.risk_notes.setText(str(self.fetch_query('SELECT notes FROM risks WHERE id=?',(risk_id,))[0]))
             self.risk_mitigation.setText(str(self.fetch_query('SELECT mitigation FROM risks WHERE id=?',(risk_id,))[0]))
             self.update_risk_attachments(risk_id)
+        
+    def edit_todo_window(self, todo_id):
+            self.todo_id_lb.setText(str(todo_id))
+            self.todo_subject.setText(str(self.fetch_query('SELECT subject FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_status.setCurrentIndex(int(self.fetch_query('SELECT status_id FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_responsible.setCurrentIndex(int(self.fetch_query('SELECT responsible_id FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_start_date.setText(str(self.fetch_query('SELECT start_date FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_resolutio_date.setText(str(self.fetch_query('SELECT deadline FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_priority.setCurrentIndex(int(self.fetch_query('SELECT priority_id FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_severity.setCurrentIndex(int(self.fetch_query('SELECT severity_id FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_contract.setCurrentIndex(int(self.fetch_query('SELECT contract_id FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_company.setCurrentIndex(int(self.fetch_query('SELECT company_id FROM todos WHERE id=?',(todo_id,))[0]))
+            self.todo_description.setText(str(self.fetch_query('SELECT description FROM todos WHERE id=?',(todo_id,))[0]))
 
     # Updates
     def update_contracts(self):
@@ -5076,10 +5152,25 @@ class Ui_MainWindow(object):
 
             self.risks_tree.setModel(self.risk_model)
 
+    def update_todos(self):
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.todo_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+            query.exec_(
+                    "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id")
+            self.todo_model.setQuery(query)
+            db.close()
+
+            self.todos_tree.setModel(self.todo_model)
+
     # Attachments
     def update_contract_attachments(self, contract_id=None):
         if contract_id is None:
             contract_id = self.next_contract_id()
+
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
         if not db.open():
@@ -5097,6 +5188,7 @@ class Ui_MainWindow(object):
     def update_reminder_attachments(self, reminder_id=None):
         if reminder_id is None:
             reminder_id = self.next_reminder_id()
+
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
         if not db.open():
@@ -5113,6 +5205,7 @@ class Ui_MainWindow(object):
     def update_risk_attachments(self, risk_id=None):
         if risk_id is None:
             risk_id = self.next_risk_id()
+
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
         if not db.open():
@@ -5130,6 +5223,7 @@ class Ui_MainWindow(object):
     def update_parties(self, contract_id=None):
         if contract_id is None:
             contract_id = self.next_contract_id()
+
         # Contract Parties
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
@@ -5146,6 +5240,7 @@ class Ui_MainWindow(object):
     def update_reminder_people(self, reminder_id=None):
             if reminder_id is None:
                     reminder_id = self.next_reminder_id()
+
             # reminder people
             db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
             db.setDatabaseName('data.db')
