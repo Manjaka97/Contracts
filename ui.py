@@ -3225,6 +3225,36 @@ class Ui_MainWindow(object):
         self.risk_type.addItem("")
         self.risk_type.addItem("")
         self.gridLayout_13.addWidget(self.risk_type, 3, 3, 1, 1)
+
+        # Risk end date
+        self.label_175 = QtWidgets.QLabel(self.scrollAreaWidgetContents_12)
+        self.label_175.setMinimumSize(QtCore.QSize(0, 35))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label_175.setFont(font)
+        self.label_175.setStyleSheet("color: rgb(255, 255, 255);background-color: rgb(75, 75, 75);")
+        self.label_175.setObjectName("label_175")
+        self.gridLayout_13.addWidget(self.label_175, 4, 0, 1, 1)
+        self.horizontalLayout_93 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_93.setObjectName("horizontalLayout_93")
+        self.risk_end = QtWidgets.QLineEdit(self.scrollAreaWidgetContents_12)
+        self.risk_end.setMinimumSize(QtCore.QSize(0, 35))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.risk_end.setFont(font)
+        self.risk_end.setAutoFillBackground(False)
+        self.risk_end.setObjectName("risk_end")
+        self.horizontalLayout_93.addWidget(self.risk_end)
+        self.risk_end_btn = QtWidgets.QToolButton(self.scrollAreaWidgetContents_12)
+        self.risk_end_btn.setMinimumSize(QtCore.QSize(0, 35))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.risk_end_btn.setFont(font)
+        self.risk_end_btn.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.risk_end_btn.setObjectName("risk_end_btn")
+        self.horizontalLayout_93.addWidget(self.risk_end_btn)
+        self.gridLayout_13.addLayout(self.horizontalLayout_93, 4, 1, 1, 1)
+
         self.verticalLayout_47 = QtWidgets.QVBoxLayout()
         self.verticalLayout_47.setObjectName("verticalLayout_47")
         self.horizontalLayout_52 = QtWidgets.QHBoxLayout()
@@ -3288,7 +3318,20 @@ class Ui_MainWindow(object):
         self.label_156.setStyleSheet("color: rgb(255, 255, 255);background-color: rgb(75, 75, 75);")
         self.label_156.setObjectName("label_156")
         self.gridLayout_13.addWidget(self.label_156, 3, 2, 1, 1)
+
+        # Risk contract
+        contracts_id = self.fetch_query('SELECT id FROM contracts')
+        contracts_title = self.fetch_query('SELECT title FROM contracts')
+        contracts = []
+        for c_id, c_title in zip(contracts_id, contracts_title):
+                c = str(c_id) + ' - ' + c_title
+                contracts.append(c)
+
         self.risk_contract = QtWidgets.QComboBox(self.scrollAreaWidgetContents_12)
+        self.risk_contract.addItem('0 - No Master Contract')
+        for contract in contracts:
+                self.risk_contract.addItem(contract)
+
         self.risk_contract.setMinimumSize(QtCore.QSize(423, 35))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -3375,7 +3418,22 @@ class Ui_MainWindow(object):
         self.label_162.setStyleSheet("color: rgb(255, 255, 255);background-color: rgb(75, 75, 75);")
         self.label_162.setObjectName("label_162")
         self.verticalLayout_44.addWidget(self.label_162)
+
+        # Risk attachments
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.risk_attachment_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=3 AND owner_id=" + str(
+                        self.next_risk_id()))
+        self.risk_attachment_model.setQuery(query)
+        db.close()
+
         self.risk_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_12)
+        self.risk_attachments.setModel(self.risk_attachment_model)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risk_attachments.setFont(font)
@@ -4592,6 +4650,10 @@ class Ui_MainWindow(object):
         self.risk_type.setItemText(3, _translate("MainWindow", "Quality"))
         self.risk_type.setItemText(4, _translate("MainWindow", "Resource"))
         self.risk_type.setItemText(5, _translate("MainWindow", "Time"))
+        self.label_175.setText(_translate("MainWindow", "End Date"))
+        self.risk_end.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);\n"
+                                                             "color: rgb(0,0,0)"))
+        self.risk_end_btn.setText(_translate("MainWindow", "..."))
         self.label_153.setText(_translate("MainWindow", "Probability"))
         self.risk_probability.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);"))
         self.risk_probability.setItemText(0, _translate("MainWindow", "Low"))
@@ -4738,6 +4800,11 @@ class Ui_MainWindow(object):
     def next_reminder_id(self):
             next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0] + 1
             return next_id
+
+    def next_risk_id(self):
+            next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0] + 1
+            return next_id
+
     # New windows
     def new_contract_window(self):
         self.contract_id_lb.clear()
@@ -4816,6 +4883,18 @@ class Ui_MainWindow(object):
         self.recur_type.setCurrentIndex(0)
         self.recur_until_specific_2.clear()
         self.until_key_date.setCurrentIndex(0)
+
+    def new_risk_window(self):
+        self.risk_id_lb.clear()
+        self.risk_name.clear()
+        self.risk_contract.setCurrentIndex(0)
+        self.risk_probability.setCurrentIndex(0)
+        self.risk_impact.setCurrentIndex(0)
+        self.risk_type.setCurrentIndex(0)
+        self.risk_end.clear()
+        self.risk_notes.clear()
+        self.risk_mitigation.clear()
+        self.update_risk_attachments()
 
     # Edits
     def edit_contract_window(self, contract_id):
@@ -4912,6 +4991,18 @@ class Ui_MainWindow(object):
             self.recur_type.setCurrentIndex(int(self.fetch_query('SELECT recur_id FROM reminders WHERE id=?',(reminder_id,))[0]))
             self.recur_until_specific_2.setText(str(self.fetch_query('SELECT until_date FROM reminders WHERE id=?',(reminder_id,))[0]))
             self.until_key_date.setCurrentIndex(int(self.fetch_query('SELECT until_key_id FROM reminders WHERE id=?',(reminder_id,))[0]))
+        
+    def edit_risk_window(self, risk_id):
+            self.risk_id_lb.setText(str(risk_id))
+            self.risk_name.setText(str(self.fetch_query('SELECT name FROM risks WHERE id=?',(risk_id,))[0]))
+            self.risk_contract.setCurrentIndex(int(self.fetch_query('SELECT contract_id FROM risks WHERE id=?',(risk_id,))[0]))
+            self.risk_probability.setCurrentIndex(int(self.fetch_query('SELECT probability_id FROM risks WHERE id=?',(risk_id,))[0]))
+            self.risk_impact.setCurrentIndex(int(self.fetch_query('SELECT impact_id FROM risks WHERE id=?',(risk_id,))[0]))
+            self.risk_type.setCurrentIndex(int(self.fetch_query('SELECT type_id FROM risks WHERE id=?',(risk_id,))[0]))
+            self.risk_end.setText(str(self.fetch_query('SELECT end_date FROM risks WHERE id=?',(risk_id,))[0]))
+            self.risk_notes.setText(str(self.fetch_query('SELECT notes FROM risks WHERE id=?',(risk_id,))[0]))
+            self.risk_mitigation.setText(str(self.fetch_query('SELECT mitigation FROM risks WHERE id=?',(risk_id,))[0]))
+            self.update_risk_attachments(risk_id)
 
     # Updates
     def update_contracts(self):
@@ -4971,6 +5062,20 @@ class Ui_MainWindow(object):
 
             self.reminders_tree.setModel(self.reminder_model)
 
+    def update_risks(self):
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.risk_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+            query.exec_(
+                    "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id")
+            self.risk_model.setQuery(query)
+            db.close()
+
+            self.risks_tree.setModel(self.risk_model)
+
     # Attachments
     def update_contract_attachments(self, contract_id=None):
         if contract_id is None:
@@ -5005,6 +5110,22 @@ class Ui_MainWindow(object):
 
         self.reminder_attachments.setModel(self.reminder_attachment_model)
 
+    def update_risk_attachments(self, risk_id=None):
+        if risk_id is None:
+            risk_id = self.next_risk_id()
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+            print('Db not open')
+        self.risk_attachment_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+             "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=3 AND owner_id=" + str(risk_id))
+        self.risk_attachment_model.setQuery(query)
+        db.close()
+
+        self.risk_attachments.setModel(self.risk_attachment_model)
+        
     # Parties
     def update_parties(self, contract_id=None):
         if contract_id is None:

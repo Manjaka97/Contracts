@@ -50,6 +50,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.save_person.clicked.connect(self.save_person)
         self.ui.save_company.clicked.connect(self.save_company)
         self.ui.save_reminder.clicked.connect(self.save_reminder)
+        self.ui.save_risk.clicked.connect(self.save_risk)
 
         # Dates
         self.ui.contract_start_btn.clicked.connect(self.get_start)
@@ -58,6 +59,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.contract_review_btn.clicked.connect(self.get_review)
         self.ui.specific_date_btn.clicked.connect(self.get_specific)
         self.ui.recur_until_btn.clicked.connect(self.get_until_specific)
+        self.ui.risk_end_btn.clicked.connect(self.get_risk_end)
 
         # Attachments
         self.ui.contract_add_attachment.clicked.connect(self.add_contract_attachment)
@@ -66,6 +68,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.reminder_add_attachment.clicked.connect(self.add_reminder_attachment)
         self.ui.reminder_open_attachment.clicked.connect(self.open_reminder_attachment)
         self.ui.reminder_delete_attachment.clicked.connect(self.delete_reminder_attachment)
+        self.ui.risk_add_attachment_3.clicked.connect(self.add_risk_attachment)
+        self.ui.risk_open_attachment_3.clicked.connect(self.open_risk_attachment)
+        self.ui.risk_delete_attachment_3.clicked.connect(self.delete_risk_attachment)
 
         # Parties
         self.ui.add_party.clicked.connect(self.party_window)
@@ -80,28 +85,31 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.edit_company_btn.clicked.connect(self.edit_company)
         self.ui.edit_reminder_btn.clicked.connect(self.edit_reminder)
         self.ui.reminder_open_party.clicked.connect(self.edit_person_from_reminder)
+        self.ui.edit_risk_btn.clicked.connect(self.edit_risk)
 
         # Deletes
         self.ui.delete_contract_btn.clicked.connect(self.delete_contract)
         self.ui.delete_person_btn.clicked.connect(self.delete_person)
         self.ui.delete_company_btn.clicked.connect(self.delete_company)
         self.ui.delete_reminder_btn.clicked.connect(self.delete_reminder)
+        self.ui.delete_risk_btn.clicked.connect(self.delete_risk)
 
         # Archives
         self.ui.archive_contract_btn.clicked.connect(self.archive_contract)
         self.ui.archive_person_btn.clicked.connect(self.archive_person)
         self.ui.archive_company_btn.clicked.connect(self.archive_company)
         self.ui.archive_reminder_btn.clicked.connect(self.archive_reminder)
+        self.ui.archive_risk_btn.clicked.connect(self.archive_risk)
 
         # Favorites
         self.ui.favorite_contract_btn.clicked.connect(self.favorite_contract)
         self.ui.favorite_person_btn.clicked.connect(self.favorite_person)
         self.ui.favorite_company_btn.clicked.connect(self.favorite_company)
+        self.ui.favorite_risk_btn.clicked.connect(self.favorite_risk)
 
         self.ui.complete_reminder_btn.clicked.connect(self.complete_reminder)
         self.ui.uncomplete_reminder_btn.clicked.connect(self.uncomplete_reminder)
         self.ui.snooze_reminder_btn.clicked.connect(self.snooze_reminder)
-
 
     # Sql Commands
     def run_query(self, query, values=()):
@@ -146,6 +154,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.main_widget.setCurrentIndex(7)
 
     def show_risks(self):
+        self.ui.update_risks()
         self.ui.main_widget.setCurrentIndex(9)
 
     def show_todos(self):
@@ -178,6 +187,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.main_widget.setCurrentIndex(8)
 
     def new_risk(self):
+        self.ui.new_risk_window()
         self.ui.main_widget.setCurrentIndex(10)
 
     def new_todo(self):
@@ -228,6 +238,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         if buttonReply == QMessageBox.Yes:
             self.show_risks()
 
+            # Remove attachments if risk is cancelled
+            docs = self.fetch_query("SELECT url FROM documents WHERE type_id=3 AND owner_id=?",
+                                    (self.next_risk_id(),))
+            for doc in docs:
+                os.remove(doc)
+            self.run_query("DELETE FROM documents WHERE type_id=3 AND owner_id=?", (self.next_risk_id(),))
+            
     def cancel_todo(self):
         buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -556,7 +573,29 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                             specific_date, relative_date, time_id, before_after,
                             date_id, recur_id, until_date, until_key_id, deadline, next_recurrence, reminder_id))
         self.show_reminders()
-            
+        
+    def save_risk(self):
+        risk_id = self.ui.risk_id_lb.text()
+        name = self.ui.risk_name.text()
+        contract_id = self.ui.risk_contract.currentIndex()
+        probability_id = self.ui.risk_probability.currentIndex()
+        impact_id = self.ui.risk_impact.currentIndex()
+        type_id = self.ui.risk_type.currentIndex()
+        end_date = self.ui.risk_end.text()
+        notes = self.ui.risk_notes.toPlainText()
+        mitigation = self.ui.risk_mitigation.toPlainText()
+        
+        if name == '':
+            self.message = QMessageBox()
+            self.message.setText('Name cannot be empty')
+            self.message.show()
+        else:
+            if risk_id == '': # New risk
+                self.run_query("INSERT INTO risks (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation, date_created) VALUES(?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation))
+            else: # Edit contract
+                self.run_query("UPDATE risks SET name=?, contract_id=?, probability_id=?, impact_id=?, type_id=?, end_date=?, notes=?, mitigation=? WHERE id=?", (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation, risk_id))
+            self.show_risks()
+
     # Edit
     def edit_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -611,6 +650,16 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             person_id = self.ui.reminder_people.model().itemData(id_index)[0]
             self.ui.edit_person_window(person_id)
             self.ui.main_widget.setCurrentIndex(4)
+            
+    def edit_risk(self):
+        if self.ui.risks_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.risks_tree.selectedIndexes()[0]
+            risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
+            self.ui.edit_risk_window(risk_id)
+            self.ui.main_widget.setCurrentIndex(10)
+            
     # Delete
     def delete_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -690,7 +739,27 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query('DELETE FROM people_reminders WHERE reminder_id=?',
                                (reminder_id,))
                 self.ui.update_reminders()
-                
+    
+    def delete_risk(self):
+        if self.ui.risks_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.risks_tree.selectedIndexes()[0]
+            risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
+            name_index = self.ui.risks_tree.selectedIndexes()[1]
+            risk_name = self.ui.risks_tree.model().itemData(name_index)[0]
+            prompt = 'Are you sure you want to delete ' + risk_name + '?'
+            buttonReply = QMessageBox.question(self, 'Delete risk', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('DELETE FROM risks WHERE id=?', (risk_id,))
+                # Remove associated documents
+                urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
+                for url in urls:
+                    os.remove(url)
+                self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
+                self.ui.update_risks()
+
     # Archive
     def archive_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -753,6 +822,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE reminders SET archived=1 WHERE id=?', (reminder_id,))
                 self.ui.update_reminders()
+                
+    def archive_risk(self):
+        if self.ui.risks_tree.selectedIndexes() == []:
+            return
+        else:
+            id_index = self.ui.risks_tree.selectedIndexes()[0]
+            risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
+            name_index = self.ui.risks_tree.selectedIndexes()[1]
+            risk_name = self.ui.risks_tree.model().itemData(name_index)[0]
+            prompt = 'Are you sure you want to archive' + risk_name + '?'
+            buttonReply = QMessageBox.question(self, 'Archive risk', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query('UPDATE risks SET archived=1 WHERE id=?', (risk_id,))
+                self.ui.update_risks()
                 
     # Favorite
     def favorite_contract(self):
@@ -825,7 +909,25 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.setText('(Unmarked as favorite')
             
             self.message.show()
-            self.ui.update_reminders()
+            self.ui.update_reminders()\
+
+    def favorite_risk(self):
+        if self.ui.risks_tree.selectedIndexes() == []:
+            return
+        else:
+            self.message = QMessageBox()
+            id_index = self.ui.risks_tree.selectedIndexes()[0]
+            risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
+            fav_status = self.fetch_query('SELECT favorite FROM risks WHERE id=?', (risk_id,))[0]
+            if fav_status == 0:
+                self.run_query('UPDATE risks SET favorite=1 WHERE id=?', (risk_id,))
+                self.message.setText('Marked as favorite')
+            else:
+                self.run_query('UPDATE risks SET favorite=0 WHERE id=?', (risk_id,))
+                self.message.setText('(Unmarked as favorite')
+
+            self.message.show()
+            self.ui.update_risks()
 
     def complete_reminder(self):
         if self.ui.reminders_tree.selectedIndexes() == []:
@@ -933,6 +1035,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def set_until_specific(self, date):
         self.ui.recur_until_specific_2.setText(date.toString('MM/dd/yyyy'))
+        
+    def get_risk_end(self):
+        self.calendar_window = Calendar()
+        self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.calendar_window.select_signal.connect(self.set_risk_end)
+        self.calendar_window.show()
+
+    def set_risk_end(self, date):
+        self.ui.risk_end.setText(date.toString('MM/dd/yyyy'))
 
     # Attachments
     def add_contract_attachment(self):
@@ -1076,6 +1187,77 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     self.run_query('DELETE FROM documents WHERE id=?', (reminder_id,))
                     os.remove(url)
                     self.ui.update_reminder_attachments(reminder_id)
+    
+    def add_risk_attachment(self):
+        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
+        name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
+        if name == '':
+            return
+        dir = self.dir + name
+        copyfile(filename[0], dir)
+
+        if self.ui.risk_id_lb.text() == "":
+            risk_id = self.next_risk_id()
+        else:
+            risk_id = self.ui.risk_id_lb.text()
+        # Insert into database
+        try:
+            sqliteConnection = sqlite3.connect('data.db')
+            cursor = sqliteConnection.cursor()
+            print('Connected to SQLite')
+            query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?)"""
+            record = (name, dir, 3, risk_id)
+            cursor.execute(query, record)
+            sqliteConnection.commit()
+            print('Document added')
+            cursor.close()
+
+        except sqlite3.Error as error:
+            print('Failed to insert document', error)
+
+        finally:
+            if sqliteConnection:
+                sqliteConnection.close()
+                print('Closed db')
+
+        if self.ui.risk_id_lb.text() == "":
+            self.ui.update_risk_attachments()
+        else:
+            self.ui.update_risk_attachments(risk_id)
+
+    def open_risk_attachment(self):
+        if self.ui.risk_attachments.selectedIndexes() == []:
+            return
+        else:
+            url_index = self.ui.risk_attachments.selectedIndexes()[2]
+            url = self.ui.risk_attachments.model().itemData(url_index)[0]
+            os.startfile(url)
+
+    def delete_risk_attachment(self):
+        if self.ui.risk_attachments.selectedIndexes() == []:
+            return
+        else:
+            name_index = self.ui.risk_attachments.selectedIndexes()[1]
+            name = self.ui.risk_attachments.model().itemData(name_index)[0]
+            url_index = self.ui.risk_attachments.selectedIndexes()[2]
+            url = self.ui.risk_attachments.model().itemData(url_index)[0]
+            id_index = self.ui.risk_attachments.selectedIndexes()[0]
+            risk_id = self.ui.risk_attachments.model().itemData(id_index)[0]
+
+            prompt = 'Are you sure you want to delete ' + name + '?'
+            buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                if self.ui.risk_id_lb.text() == "":
+                    risk_id = self.next_risk_id()
+                    self.run_query('DELETE FROM documents WHERE id=?', (risk_id,))
+                    os.remove(url)
+                    self.ui.update_risk_attachments()
+                else:
+                    risk_id = self.ui.risk_id_lb.text()
+                    self.run_query('DELETE FROM documents WHERE id=?', (risk_id,))
+                    os.remove(url)
+                    self.ui.update_risk_attachments(risk_id)
                     
     # People
     def party_window(self):
@@ -1169,8 +1351,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                    (person_id, reminder_id))
                     self.ui.update_reminder_people(reminder_id)
 
-
-
     # Next IDs
     def next_contract_id(self):
         next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
@@ -1180,7 +1360,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0] + 1
         return next_id
 
-        
+    def next_risk_id(self):
+        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0] + 1
+        return next_id
+
+
 class Calendar(QtWidgets.QWidget, calendarWidget.Ui_Form):
     select_signal = QtCore.pyqtSignal(QtCore.QDate)
 
