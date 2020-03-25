@@ -724,11 +724,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Contract', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
                 # Remove associated documents
                 urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?',(1, contract_id))
                 for url in urls:
-                    os.remove(url)
+                    if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                    # Check if url is unique. If it is not unique, same file is used elsewhere so only remove in the database, not the folder
+                        os.remove(url)
+                self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
                 self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (1,contract_id))
                 # Remove parties
                 self.run_query('DELETE FROM people_contracts WHERE contract_id=?',
@@ -780,11 +782,12 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete reminder', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM reminders WHERE id=?', (reminder_id,))
                 # Remove associated documents
                 urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
                 for url in urls:
-                    os.remove(url)
+                    if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                        os.remove(url)
+                self.run_query('DELETE FROM reminders WHERE id=?', (reminder_id,))
                 self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
                 # Remove people
                 self.run_query('DELETE FROM people_reminders WHERE reminder_id=?',
@@ -803,11 +806,12 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete risk', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM risks WHERE id=?', (risk_id,))
                 # Remove associated documents
                 urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
                 for url in urls:
-                    os.remove(url)
+                    if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                        os.remove(url)
+                self.run_query('DELETE FROM risks WHERE id=?', (risk_id,))
                 self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
                 self.ui.update_risks()
 
@@ -1223,8 +1227,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
+                if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                    os.remove(url)
                 self.run_query('DELETE FROM documents WHERE id=?', (attachment_id,))
-                os.remove(url)
                 if self.ui.contract_id_lb.text() == "":
                     self.ui.update_contract_attachments()
                 else:
@@ -1290,8 +1295,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
+                if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                    os.remove(url)
                 self.run_query('DELETE FROM documents WHERE id=?', (attachment_id,))
-                os.remove(url)
                 if self.ui.reminder_id_lb.text() == "":
                     self.ui.update_reminder_attachments()
                 else:
@@ -1357,8 +1363,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
+                if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                    os.remove(url)
                 self.run_query('DELETE FROM documents WHERE id=?', (attachment_id,))
-                os.remove(url)
                 if self.ui.risk_id_lb.text() == "":
                     self.ui.update_risk_attachments()
                 else:
@@ -1474,9 +1481,10 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def remove_unsaved(self):
         # Remove attachments and parties if contract is cancelled
-        docs = self.fetch_query("SELECT url FROM documents WHERE temp=1")
-        for doc in docs:
-            os.remove(doc)
+        urls = self.fetch_query("SELECT url FROM documents WHERE temp=1")
+        for url in urls:
+            if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                os.remove(url)
         self.run_query("DELETE FROM documents WHERE temp=1")
         self.run_query("DELETE FROM people_contracts WHERE temp=1")
         self.run_query("DELETE FROM people_reminders WHERE temp=1")
