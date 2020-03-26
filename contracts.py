@@ -19,9 +19,17 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui.Ui_MainWindow()
         self.ui.setupUi(self)
-        self.dir = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
+        # Using dir_ because dir is a reserved keyword
+        # The line below does not work after freezing the app
+        #self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
+        if getattr(sys, 'frozen', False):
+            # frozen
+            self.dir_ = os.path.dirname(sys.executable) + "\\documents\\"
+        else:
+            # unfrozen
+            dir_ = os.path.dirname(os.path.realpath(__file__))
+        if not os.path.exists(self.dir_):
+            os.makedirs(self.dir_)
 
         # Menu Buttons
         self.ui.dashboard_btn.clicked.connect(self.show_dashboard)
@@ -269,7 +277,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.remove_unsaved()
             self.restore_unsaved()
             self.show_reminders()
-            
+
     def cancel_risk(self):
         buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -277,7 +285,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.remove_unsaved()
             self.restore_unsaved()
             self.show_risks()
-            
+
     def cancel_todo(self):
         buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -377,7 +385,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             else: # Edit contract
                 self.run_query("UPDATE people SET salutation_id=?, first=?, last=?, gender_id=?, job=?, company_id=?, type=?, phone=?, mobile=?, email=?, fax=? WHERE id=?", (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax, person_id))
             self.show_people()
-            
+
     def save_company(self):
         company_id = self.ui.company_id_lb.text()
         name = self.ui.company_name.text()
@@ -659,7 +667,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.run_query("UPDATE people_reminders SET temp=0 WHERE reminder_id=?", (reminder_id,))
         self.confirm_delete()
         self.show_reminders()
-        
+
     def save_risk(self):
         risk_id = self.ui.risk_id_lb.text()
         name = self.ui.risk_name.text()
@@ -694,7 +702,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=3 AND owner_id=? ", (risk_id,))
             self.confirm_delete()
             self.show_risks()
-    
+
     def save_todo(self):
         todo_id = self.ui.todo_id_lb.text()
         subject = self.ui.todo_subject.text()
@@ -729,7 +737,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             else: # Edit contract
                 self.run_query("UPDATE todos SET subject=?, status_id=?, responsible_id=?, start_date=?, deadline=?, priority_id=?, severity_id=?, contract_id=?, company_id=?, description=? WHERE id=?", (subject, status_id, responsible_id, start_date, deadline, priority_id, severity_id, contract_id, company_id, description, todo_id))
             self.show_todos()
-        
+
     # Edit
     def edit_contract(self):
         self.remove_unsaved()
@@ -763,7 +771,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             person_id = self.ui.contract_parties.model().itemData(id_index)[0]
             self.ui.edit_person_window(person_id)
             self.ui.main_widget.setCurrentIndex(4)
-    
+
     def edit_company(self):
         self.remove_unsaved()
         self.restore_unsaved()
@@ -774,7 +782,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             company_id = self.ui.companies_tree.model().itemData(id_index)[0]
             self.ui.edit_company_window(company_id)
             self.ui.main_widget.setCurrentIndex(6)
-    
+
     def edit_reminder(self):
         self.remove_unsaved()
         self.restore_unsaved()
@@ -796,7 +804,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             person_id = self.ui.reminder_people.model().itemData(id_index)[0]
             self.ui.edit_person_window(person_id)
             self.ui.main_widget.setCurrentIndex(4)
-            
+
     def edit_risk(self):
         self.remove_unsaved()
         self.restore_unsaved()
@@ -842,7 +850,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query('DELETE FROM people_contracts WHERE contract_id=?',
                                (contract_id,))
                 self.ui.update_contracts()
-    
+
     def delete_person(self):
         if self.ui.people_tree.selectedIndexes() == []:
             return
@@ -859,7 +867,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('DELETE FROM people WHERE id=?', (person_id,))
                 self.ui.update_people()
-     
+
     def delete_company(self):
         if self.ui.companies_tree.selectedIndexes() == []:
             return
@@ -868,14 +876,14 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             company_id = self.ui.companies_tree.model().itemData(id_index)[0]
             name_index = self.ui.companies_tree.selectedIndexes()[1]
             name = self.ui.companies_tree.model().itemData(name_index)[0]
-            
+
             prompt = 'Are you sure you want to delete' + name + '?'
             buttonReply = QMessageBox.question(self, 'Delete company', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
                 self.run_query('DELETE FROM companies WHERE id=?', (company_id,))
                 self.ui.update_companies()
-                
+
     def delete_reminder(self):
         if self.ui.reminders_tree.selectedIndexes() == []:
             return
@@ -898,7 +906,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query('DELETE FROM people_reminders WHERE reminder_id=?',
                                (reminder_id,))
                 self.ui.update_reminders()
-    
+
     def delete_risk(self):
         if self.ui.risks_tree.selectedIndexes() == []:
             return
@@ -950,7 +958,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE contracts SET archived=1 WHERE id=?', (contract_id,))
                 self.ui.update_contracts()
-    
+
     def archive_person(self):
         if self.ui.people_tree.selectedIndexes() == []:
             return
@@ -967,7 +975,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE people SET archived=1 WHERE id=?', (person_id,))
                 self.ui.update_people()
-                
+
     def archive_company(self):
         if self.ui.companies_tree.selectedIndexes() == []:
             return
@@ -982,7 +990,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE companies SET archived=1 WHERE id=?', (company_id,))
                 self.ui.update_companies()
-                
+
     def archive_reminder(self):
         if self.ui.reminders_tree.selectedIndexes() == []:
             return
@@ -997,7 +1005,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE reminders SET archived=1 WHERE id=?', (reminder_id,))
                 self.ui.update_reminders()
-                
+
     def archive_risk(self):
         if self.ui.risks_tree.selectedIndexes() == []:
             return
@@ -1012,7 +1020,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE risks SET archived=1 WHERE id=?', (risk_id,))
                 self.ui.update_risks()
-                
+
     def archive_todo(self):
         if self.ui.todos_tree.selectedIndexes() == []:
             return
@@ -1027,7 +1035,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('UPDATE todos SET archived=1 WHERE id=?', (todo_id,))
                 self.ui.update_todos()
-                
+
     # Favorite
     def favorite_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -1088,7 +1096,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
             self.message.show()
             self.ui.update_companies()
-    
+
     def favorite_reminder(self):
         if self.ui.reminders_tree.selectedIndexes() == []:
             return
@@ -1105,7 +1113,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             else:
                 self.run_query('UPDATE reminders SET favorite=0 WHERE id=?', (reminder_id,))
                 self.message.setText('Unmarked as favorite')
-            
+
             self.message.show()
             self.ui.update_reminders()\
 
@@ -1166,7 +1174,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
             self.message.show()
             self.ui.update_reminders()
-            
+
     def snooze_reminder(self):
         if self.ui.reminders_tree.selectedIndexes() == []:
             return
@@ -1183,7 +1191,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             else:
                 self.run_query('UPDATE reminders SET snoozed=0 WHERE id=?', (reminder_id,))
                 self.message.setText('Unsnoozed reminder')
-            
+
             self.message.show()
             self.ui.update_reminders()
 
@@ -1206,7 +1214,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
             self.message.show()
             self.ui.update_todos()
-            
+
     # Dates
     def get_start(self):
         self.calendar_window = Calendar()
@@ -1234,7 +1242,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def set_review(self, date):
         self.ui.contract_review.setText(date.toString('MM/dd/yyyy'))
-        
+
     def get_cancel(self):
         self.calendar_window = Calendar()
         self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -1243,13 +1251,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def set_cancel(self, date):
         self.ui.contract_cancel.setText(date.toString('MM/dd/yyyy'))
-        
+
     def get_specific(self):
         self.calendar_window = Calendar()
         self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
         self.calendar_window.select_signal.connect(self.set_specific)
         self.calendar_window.show()
-    
+
     def set_specific(self, date):
         self.ui.reminder_specific_date.setText(date.toString('MM/dd/yyyy'))
 
@@ -1261,7 +1269,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def set_until_specific(self, date):
         self.ui.recur_until_specific_2.setText(date.toString('MM/dd/yyyy'))
-        
+
     def get_risk_end(self):
         self.calendar_window = Calendar()
         self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -1270,7 +1278,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def set_risk_end(self, date):
         self.ui.risk_end.setText(date.toString('MM/dd/yyyy'))
-        
+
     def get_todo_start(self):
         self.calendar_window = Calendar()
         self.calendar_window.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -1288,7 +1296,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def set_todo_end(self, date):
         self.ui.todo_resolutio_date.setText(date.toString('MM/dd/yyyy'))
-        
+
     # Attachments
     def add_contract_attachment(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
@@ -1299,8 +1307,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Adding a timestamp to make sure all urls are unique
         timestamp = str(datetime.now())[:19]
         timestamp = timestamp.replace(':','_')
-        dir = self.dir + timestamp + name
-        copyfile(filename[0], dir)
+        dir_ = self.dir_ + timestamp + name
+        copyfile(filename[0], dir_)
 
         if self.ui.contract_id_lb.text() == "":
             contract_id = self.next_contract_id()
@@ -1312,7 +1320,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
             query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?, 1)"""
-            record = (name, dir, 1, contract_id)
+            record = (name, dir_, 1, contract_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
             print('Document added')
@@ -1367,8 +1375,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Adding a timestamp to make sure all urls are unique
         timestamp = str(datetime.now())[:19]
         timestamp = timestamp.replace(':', '_')
-        dir = self.dir + timestamp + name
-        copyfile(filename[0], dir)
+        dir_ = self.dir_ + timestamp + name
+        copyfile(filename[0], dir_)
 
         if self.ui.reminder_id_lb.text() == "":
             reminder_id = self.next_reminder_id()
@@ -1380,7 +1388,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
             query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?, 1)"""
-            record = (name, dir, 2, reminder_id)
+            record = (name, dir_, 2, reminder_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
             print('Document added')
@@ -1425,7 +1433,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     self.ui.update_reminder_attachments()
                 else:
                     self.ui.update_reminder_attachments(self.ui.reminder_id_lb.text())
-    
+
     def add_risk_attachment(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Add File', '.')
         name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
@@ -1435,8 +1443,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Adding a timestamp to make sure all urls are unique
         timestamp = str(datetime.now())[:19]
         timestamp = timestamp.replace(':', '_')
-        dir = self.dir + timestamp + name
-        copyfile(filename[0], dir)
+        dir_ = self.dir_ + timestamp + name
+        copyfile(filename[0], dir_)
 
         if self.ui.risk_id_lb.text() == "":
             risk_id = self.next_risk_id()
@@ -1448,7 +1456,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
             query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?, 1)"""
-            record = (name, dir, 3, risk_id)
+            record = (name, dir_, 3, risk_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
             print('Document added')
