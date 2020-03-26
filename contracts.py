@@ -146,39 +146,59 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     # Show
     def show_dashboard(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.main_widget.setCurrentIndex(0)
 
     def show_contracts(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.update_contracts()
         self.ui.main_widget.setCurrentIndex(1)
 
     def show_people(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.update_people()
         self.ui.main_widget.setCurrentIndex(3)
 
     def show_companies(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.update_companies()
         self.ui.main_widget.setCurrentIndex(5)
 
     def show_reminders(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.update_reminders()
         self.ui.main_widget.setCurrentIndex(7)
 
     def show_risks(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.update_risks()
         self.ui.main_widget.setCurrentIndex(9)
 
     def show_todos(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.update_todos()
         self.ui.main_widget.setCurrentIndex(11)
 
     def show_library(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.main_widget.setCurrentIndex(13)
 
     def show_reports(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.main_widget.setCurrentIndex(14)
 
     def show_archives(self):
+        self.remove_unsaved()
+        self.restore_unsaved()
         self.ui.main_widget.setCurrentIndex(15)
 
     # New
@@ -212,15 +232,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             self.remove_unsaved()
+            self.restore_unsaved()
             self.show_contracts()
-
-
 
     def cancel_person(self):
         buttonReply = QMessageBox.question(self, 'Cancel', 'Cancel?',
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             self.remove_unsaved()
+            self.restore_unsaved()
             self.show_people()
 
     def cancel_company(self):
@@ -228,6 +248,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             self.remove_unsaved()
+            self.restore_unsaved()
             self.show_companies()
 
     def cancel_reminder(self):
@@ -235,6 +256,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             self.remove_unsaved()
+            self.restore_unsaved()
             self.show_reminders()
             
     def cancel_risk(self):
@@ -242,6 +264,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             self.remove_unsaved()
+            self.restore_unsaved()
             self.show_risks()
             
     def cancel_todo(self):
@@ -249,6 +272,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             self.remove_unsaved()
+            self.restore_unsaved()
             self.show_todos()
 
     # Save
@@ -301,6 +325,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, extension_limit=?, description=? WHERE id=?", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description, contract_id))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=1 AND owner_id=? ", (contract_id,))
                 self.run_query("UPDATE people_contracts SET temp=0 WHERE contract_id=?", (contract_id,))
+            self.confirm_delete()
             self.show_contracts()
 
     def save_person(self):
@@ -580,6 +605,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                             date_id, recur_id, until_date, until_key_id, deadline, next_recurrence, reminder_id))
             self.run_query("UPDATE documents SET temp=0 WHERE type_id=2 AND owner_id=? ", (reminder_id,))
             self.run_query("UPDATE people_reminders SET temp=0 WHERE reminder_id=?", (reminder_id,))
+        self.confirm_delete()
         self.show_reminders()
         
     def save_risk(self):
@@ -604,6 +630,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             else: # Edit contract
                 self.run_query("UPDATE risks SET name=?, contract_id=?, probability_id=?, impact_id=?, type_id=?, end_date=?, notes=?, mitigation=? WHERE id=?", (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation, risk_id))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=3 AND owner_id=? ", (risk_id,))
+            self.confirm_delete()
             self.show_risks()
     
     def save_todo(self):
@@ -633,6 +660,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     # Edit
     def edit_contract(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.contracts_tree.selectedIndexes() == []:
             return
         else:
@@ -643,6 +671,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def edit_person(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.people_tree.selectedIndexes() == []:
             return
         else:
@@ -653,6 +682,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def edit_person_from_contract(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.contract_parties.selectedIndexes() == []:
             return
         else:
@@ -663,6 +693,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     
     def edit_company(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.companies_tree.selectedIndexes() == []:
             return
         else:
@@ -673,6 +704,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     
     def edit_reminder(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.reminders_tree.selectedIndexes() == []:
             return
         else:
@@ -683,6 +715,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def edit_person_from_reminder(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.reminder_people.selectedIndexes() == []:
             return
         else:
@@ -693,6 +726,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             
     def edit_risk(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.risks_tree.selectedIndexes() == []:
             return
         else:
@@ -703,6 +737,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def edit_todo(self):
         self.remove_unsaved()
+        self.restore_unsaved()
         if self.ui.todos_tree.selectedIndexes() == []:
             return
         else:
@@ -1218,8 +1253,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         else:
             name_index = self.ui.contract_attachments.selectedIndexes()[1]
             name = self.ui.contract_attachments.model().itemData(name_index)[0]
-            url_index = self.ui.contract_attachments.selectedIndexes()[2]
-            url = self.ui.contract_attachments.model().itemData(url_index)[0]
             id_index = self.ui.contract_attachments.selectedIndexes()[0]
             attachment_id = self.ui.contract_attachments.model().itemData(id_index)[0]
 
@@ -1227,9 +1260,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                    os.remove(url)
-                self.run_query('DELETE FROM documents WHERE id=?', (attachment_id,))
+                self.run_query("UPDATE documents SET del=1 WHERE id=?", (attachment_id,))
                 if self.ui.contract_id_lb.text() == "":
                     self.ui.update_contract_attachments()
                 else:
@@ -1286,8 +1317,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         else:
             name_index = self.ui.reminder_attachments.selectedIndexes()[1]
             name = self.ui.reminder_attachments.model().itemData(name_index)[0]
-            url_index = self.ui.reminder_attachments.selectedIndexes()[2]
-            url = self.ui.reminder_attachments.model().itemData(url_index)[0]
             id_index = self.ui.reminder_attachments.selectedIndexes()[0]
             attachment_id = self.ui.reminder_attachments.model().itemData(id_index)[0]
 
@@ -1295,9 +1324,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                    os.remove(url)
-                self.run_query('DELETE FROM documents WHERE id=?', (attachment_id,))
+                self.run_query("UPDATE documents SET del=1 WHERE id=?", (attachment_id,))
                 if self.ui.reminder_id_lb.text() == "":
                     self.ui.update_reminder_attachments()
                 else:
@@ -1354,8 +1381,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         else:
             name_index = self.ui.risk_attachments.selectedIndexes()[1]
             name = self.ui.risk_attachments.model().itemData(name_index)[0]
-            url_index = self.ui.risk_attachments.selectedIndexes()[2]
-            url = self.ui.risk_attachments.model().itemData(url_index)[0]
             id_index = self.ui.risk_attachments.selectedIndexes()[0]
             attachment_id = self.ui.risk_attachments.model().itemData(id_index)[0]
 
@@ -1363,9 +1388,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
-                if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                    os.remove(url)
-                self.run_query('DELETE FROM documents WHERE id=?', (attachment_id,))
+                self.run_query("UPDATE documents SET del=1 WHERE id=?", (attachment_id,))
                 if self.ui.risk_id_lb.text() == "":
                     self.ui.update_risk_attachments()
                 else:
@@ -1406,14 +1429,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete Party', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
+                self.run_query("UPDATE people_contracts SET del=1 WHERE person_id=?", (person_id,))
                 if self.ui.contract_id_lb.text() == "":
-                    contract_id = self.next_contract_id()
-                    self.run_query('DELETE FROM people_contracts WHERE person_id=? AND contract_id=?', (person_id, contract_id))
                     self.ui.update_parties()
                 else:
                     contract_id = self.ui.contract_id_lb.text()
-                    self.run_query('DELETE FROM people_contracts WHERE person_id=? AND contract_id=?',
-                                   (person_id, contract_id))
                     self.ui.update_parties(contract_id)
 
     def reminder_person_window(self):
@@ -1452,15 +1472,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             buttonReply = QMessageBox.question(self, 'Delete reminder_person', prompt,
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.Yes:
+                self.run_query('UPDATE people_reminders SET del=1 WHERE person_id=?', (person_id,))
                 if self.ui.reminder_id_lb.text() == "":
-                    reminder_id = self.next_reminder_id()
-                    self.run_query('DELETE FROM people_reminders WHERE person_id=? AND reminder_id=?',
-                                   (person_id, reminder_id))
                     self.ui.update_reminder_people()
                 else:
                     reminder_id = self.ui.reminder_id_lb.text()
-                    self.run_query('DELETE FROM people_reminders WHERE person_id=? AND reminder_id=?',
-                                   (person_id, reminder_id))
                     self.ui.update_reminder_people(reminder_id)
 
     def add_responsible(self):
@@ -1481,13 +1497,32 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def remove_unsaved(self):
         # Remove attachments and parties if contract is cancelled
-        urls = self.fetch_query("SELECT url FROM documents WHERE temp=1")
+        # TODO: Here, docs are deleted in database but not in directory if added, removed, then added back
+        urls = self.fetch_query("SELECT url FROM documents WHERE temp=1 and del=0")
         for url in urls:
-            if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+            if self.fetch_query("SELECT count(url) FROM documents WHERE del=0 GROUP BY url HAVING url=?", (url,))[0] <= 1:
                 os.remove(url)
         self.run_query("DELETE FROM documents WHERE temp=1")
         self.run_query("DELETE FROM people_contracts WHERE temp=1")
         self.run_query("DELETE FROM people_reminders WHERE temp=1")
+
+    def restore_unsaved(self):
+        self.run_query("UPDATE documents SET del=0")
+        self.run_query("UPDATE people_contracts SET del=0")
+        self.run_query("UPDATE people_reminders SET del=0")
+
+    def confirm_delete(self):
+        # Attachments
+        urls = self.fetch_query("SELECT url FROM documents WHERE del=1")
+        for url in urls:
+            if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                os.remove(url)
+            self.run_query('DELETE FROM documents WHERE url=?', (url,))
+
+        # People
+        self.run_query("DELETE FROM people_contracts WHERE del=1")
+        self.run_query("DELETE FROM people_reminders WHERE del=1")
+
 
 class Calendar(QtWidgets.QWidget, calendarWidget.Ui_Form):
     select_signal = QtCore.pyqtSignal(QtCore.QDate)
