@@ -20,6 +20,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui = ui.Ui_MainWindow()
         self.ui.setupUi(self)
         self.dir = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
 
         # Menu Buttons
         self.ui.dashboard_btn.clicked.connect(self.show_dashboard)
