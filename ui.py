@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sqlite3
 import resources_rc
-import os
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -435,11 +434,12 @@ class Ui_MainWindow(object):
         elif self.contract_type_menu.currentIndex() == 2:
                 query_condition = "WHERE contracts.status_id=1"
         query.exec_(
-                "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
+                "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
         self.contract_model.setQuery(query)
         db.close()
 
         self.contracts_tree = QtWidgets.QTreeView(self.layoutWidget4)
+        self.contracts_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contracts_tree.setFont(font)
@@ -453,8 +453,9 @@ class Ui_MainWindow(object):
         self.contracts_tree.setColumnWidth(3, 135)
         self.contracts_tree.setColumnWidth(4, 134)
         self.contracts_tree.setColumnWidth(5, 133)
-        self.contracts_tree.setColumnWidth(6, 134)
-        self.contracts_tree.setColumnWidth(7, 55)
+        self.contracts_tree.setColumnWidth(6, 82)
+        self.contracts_tree.setColumnWidth(7, 34)
+        self.contracts_tree.setColumnWidth(8, 55)
         self.verticalLayout_51.addWidget(self.contracts_tree)
         self.horizontalLayout_33 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_33.setObjectName("horizontalLayout_33")
@@ -584,6 +585,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.contract_parties = QtWidgets.QTreeView(self.scrollAreaWidgetContents_8)
+        self.contract_parties.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.contract_parties.setModel(self.contract_party_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -1098,6 +1100,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.contract_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_8)
+        self.contract_attachments.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.contract_attachments.setModel(self.contract_attachment_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -1311,6 +1314,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.people_tree = QtWidgets.QTreeView(self.layoutWidget_2)
+        self.people_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.people_tree.setModel(self.person_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -1845,6 +1849,7 @@ class Ui_MainWindow(object):
         db.close()
         
         self.companies_tree = QtWidgets.QTreeView(self.layoutWidget_4)
+        self.companies_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.companies_tree.setModel(self.company_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -2426,6 +2431,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.reminders_tree = QtWidgets.QTreeView(self.layoutWidget_6)
+        self.reminders_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.reminders_tree.setModel(self.reminder_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -2540,6 +2546,7 @@ class Ui_MainWindow(object):
         db.close()
         
         self.reminder_people = QtWidgets.QTreeView(self.scrollAreaWidgetContents_11)
+        self.reminder_people.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.reminder_people.setModel(self.reminder_person_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -2716,6 +2723,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.reminder_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_11)
+        self.reminder_attachments.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.reminder_attachments.setModel(self.reminder_attachment_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -3118,7 +3126,22 @@ class Ui_MainWindow(object):
         self.risk_filename_search.setObjectName("risk_filename_search")
         self.horizontalLayout_83.addWidget(self.risk_filename_search)
         self.verticalLayout_56.addLayout(self.horizontalLayout_83)
+
+        # Risks Tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.risk_model = QtSql.QSqlRelationalTableModel()
+        query = QtSql.QSqlQuery()
+        query.exec_(
+                "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id")
+        self.risk_model.setQuery(query)
+        db.close()
+
         self.risks_tree = QtWidgets.QTreeView(self.layoutWidget_8)
+        self.risks_tree.setModel(self.risk_model)
+        self.risks_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risks_tree.setFont(font)
@@ -3472,6 +3495,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.risk_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_12)
+        self.risk_attachments.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.risk_attachments.setModel(self.risk_attachment_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -3711,6 +3735,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.todos_tree = QtWidgets.QTreeView(self.layoutWidget_18)
+        self.todos_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.todos_tree.setModel(self.todo_model)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -4397,7 +4422,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Contracts By Elvnosix"))
+        icon = QtGui.QIcon(":/images/images/icon - black.svg")
+        MainWindow.setWindowIcon(icon)
         self.contracts_search.setPlaceholderText(_translate("MainWindow", "Search contracts"))
         self.contracts_filter.setText(_translate("MainWindow", "Filters"))
         self.dashboard_btn.setText(_translate("MainWindow", "Dashboard"))
@@ -5134,7 +5161,7 @@ class Ui_MainWindow(object):
         self.contract_model.setTable('contracts')
         query = QtSql.QSqlQuery()
         query.exec_(
-               "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, status.name as Status FROM contracts JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
+               "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
         self.contract_model.setQuery(query)
         db.close()
         self.contracts_tree.setModel(self.contract_model)

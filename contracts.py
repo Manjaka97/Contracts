@@ -1,17 +1,18 @@
-from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from shutil import copyfile
 import ui, calendarWidget, person
 import sqlite3
 import os
 import re
 
-import webbrowser
-from shutil import copyfile
-
-# TODO: data validation when things used elsewhere are deleted
-# TODO: add del to attachments and wait until saved to permanently delete
+# TODO: Data validation when things used elsewhere are deleted (contracts, people, companies)
+# TODO: Automatizing stuff, especially based on dates (contract status, reminder alerts, automatic change of reminder date if recurring, risk expiration, todos status)
+# TODO: Implementing search filters
+# TODO: Exporting to csv based on filters
+# TODO: Implementing Dashboard, Library, Reports and Archives
 
 class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def __init__(self):
@@ -121,6 +122,14 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.complete_reminder_btn.clicked.connect(self.complete_reminder)
         self.ui.uncomplete_reminder_btn.clicked.connect(self.uncomplete_reminder)
         self.ui.snooze_reminder_btn.clicked.connect(self.snooze_reminder)
+
+    # Simple date validation method
+    def is_valid(self, date_text):
+        try:
+            datetime.strptime(date_text, '%m/%d/%Y')
+            return True
+        except ValueError:
+            return False
 
     # Sql Commands
     def run_query(self, query, values=()):
@@ -295,6 +304,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         review = self.ui.contract_review.text()
         limit = self.ui.contract_extension.text()
 
+        for date in [start, end, cancel, review]:
+            if date != '' and self.is_valid(date) is False:
+                self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
+                self.message.setText('Please make sure all dates are in MM/DD/YYYY format')
+                self.message.show()
+                return
+
         if self.ui.term_none.isChecked():
             term = 0
             start = ''
@@ -314,8 +332,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         if title == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Title cannot be empty')
             self.message.show()
+
         else:
             if contract_id == '': # New contract
                 self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
@@ -344,6 +365,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         if first == '' and last == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Name cannot be empty')
             self.message.show()
         else:
@@ -372,6 +395,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         if name == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Name cannot be empty')
             self.message.show()
         else:
@@ -405,6 +430,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         until_date = self.ui.recur_until_specific_2.text()
         until_key_id = self.ui.until_key_date.currentIndex()
 
+        # Data Validation
         if self.ui.specific_date_radio.isChecked():
             relative_date = ''
         else:
@@ -416,21 +442,35 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if self.ui.until_key_date_radio.isChecked() or self.ui.recur_indefinitely_radio.isChecked():
                 until_date = ''
 
-        # Data validation
+        for date in [specific_date, until_date]:
+            if date != '' and self.is_valid(date) is False:
+                self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
+                self.message.setText('Please make sure all dates are in MM/DD/YYYY format')
+                self.message.show()
+                return
+
         if name == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Name cannot be empty')
             self.message.show()
             return
 
         if self.ui.specific_date_radio.isChecked() and specific_date == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Please provide a reminder date')
             self.message.show()
             return
 
         if self.ui.relative_date_radio.isChecked() and relative_date == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Please provide a reminder date')
             self.message.show()
             return
@@ -438,6 +478,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         if self.ui.recur_radio.isChecked():
             if self.ui.recur_until_specific.isChecked() and until_date == '':
                 self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
                 self.message.setText('Please provide a reminder date')
                 self.message.show()
                 return
@@ -445,18 +487,24 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         if self.ui.recur_radio.isChecked():
             if self.ui.recur_until_specific.isChecked() and until_date == 'None':
                 self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
                 self.message.setText('Please provide a reminder date')
                 self.message.show()
                 return
 
         if self.ui.relative_date_radio.isChecked() and contract_id == 0:
                 self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
                 self.message.setText('Please select a contract to get a reminder date')
                 self.message.show()
                 return
 
         if self.ui.recur_radio.isChecked() and not self.ui.recur_until_specific.isChecked() and not self.ui.until_key_date_radio.isChecked() and not self.ui.recur_indefinitely_radio.isChecked():
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Please choose a recurrence type')
             self.message.show()
             return
@@ -478,6 +526,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
             if reference_date == []:
                 self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
                 self.message.setText('That contract does not have the Key date you selected. Please review your contract dates first.')
                 self.message.show()
                 return
@@ -618,9 +668,19 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         end_date = self.ui.risk_end.text()
         notes = self.ui.risk_notes.toPlainText()
         mitigation = self.ui.risk_mitigation.toPlainText()
-        
+
+        if end_date != '' and self.is_valid(end_date) is False:
+            self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
+            self.message.setText('Please make sure all dates are in MM/DD/YYYY format')
+            self.message.show()
+            return
+
         if name == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Name cannot be empty')
             self.message.show()
         else:
@@ -645,9 +705,20 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         contract_id = int(re.findall(r'\d+', self.ui.todo_contract.currentText())[0])
         company_id = int(re.findall(r'\d+', self.ui.todo_company.currentText())[0])
         description = self.ui.todo_description.toPlainText()
-        
+
+        for date in [start_date, deadline]:
+            if date != '' and self.is_valid(date) is False:
+                self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
+                self.message.setText('Please make sure all dates are in MM/DD/YYYY format')
+                self.message.show()
+                return
+
         if subject == '':
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             self.message.setText('Subject cannot be empty')
             self.message.show()
         else:
@@ -961,6 +1032,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.contracts_tree.selectedIndexes()[0]
             contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
             fav_status = self.fetch_query('SELECT favorite FROM contracts WHERE id=?', (contract_id,))[0]
@@ -969,7 +1042,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.setText('Marked as favorite')
             else:
                 self.run_query('UPDATE contracts SET favorite=0 WHERE id=?', (contract_id,))
-                self.message.setText('(Unmarked as favorite')
+                self.message.setText('Unmarked as favorite')
 
             self.message.show()
             self.ui.update_contracts()
@@ -979,6 +1052,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.people_tree.selectedIndexes()[0]
             person_id = self.ui.people_tree.model().itemData(id_index)[0]
             fav_status = self.fetch_query('SELECT favorite FROM people WHERE id=?', (person_id,))[0]
@@ -987,7 +1062,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.setText('Marked as favorite')
             else:
                 self.run_query('UPDATE people SET favorite=0 WHERE id=?', (person_id,))
-                self.message.setText('(Unmarked as favorite')
+                self.message.setText('Unmarked as favorite')
 
             self.message.show()
             self.ui.update_people()
@@ -997,6 +1072,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.companies_tree.selectedIndexes()[0]
             company_id = self.ui.companies_tree.model().itemData(id_index)[0]
             fav_status = self.fetch_query('SELECT favorite FROM companies WHERE id=?', (company_id,))[0]
@@ -1005,7 +1082,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.setText('Marked as favorite')
             else:
                 self.run_query('UPDATE companies SET favorite=0 WHERE id=?', (company_id,))
-                self.message.setText('(Unmarked as favorite')
+                self.message.setText('Unmarked as favorite')
 
             self.message.show()
             self.ui.update_companies()
@@ -1015,6 +1092,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.reminders_tree.selectedIndexes()[0]
             reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
             fav_status = self.fetch_query('SELECT favorite FROM reminders WHERE id=?',(reminder_id,))[0]
@@ -1023,7 +1102,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.setText('Marked as favorite')
             else:
                 self.run_query('UPDATE reminders SET favorite=0 WHERE id=?', (reminder_id,))
-                self.message.setText('(Unmarked as favorite')
+                self.message.setText('Unmarked as favorite')
             
             self.message.show()
             self.ui.update_reminders()\
@@ -1033,6 +1112,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.risks_tree.selectedIndexes()[0]
             risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
             fav_status = self.fetch_query('SELECT favorite FROM risks WHERE id=?', (risk_id,))[0]
@@ -1041,7 +1122,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.setText('Marked as favorite')
             else:
                 self.run_query('UPDATE risks SET favorite=0 WHERE id=?', (risk_id,))
-                self.message.setText('(Unmarked as favorite')
+                self.message.setText('Unmarked as favorite')
 
             self.message.show()
             self.ui.update_risks()
@@ -1051,6 +1132,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.reminders_tree.selectedIndexes()[0]
             reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
             complete_status = self.fetch_query('SELECT complete FROM reminders WHERE id=?',(reminder_id,))[0]
@@ -1068,6 +1151,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.reminders_tree.selectedIndexes()[0]
             reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
             complete_status = self.fetch_query('SELECT complete FROM reminders WHERE id=?', (reminder_id,))[0]
@@ -1085,6 +1170,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.reminders_tree.selectedIndexes()[0]
             reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
             snooze_status = self.fetch_query('SELECT snoozed FROM reminders WHERE id=?',(reminder_id,))[0]
@@ -1103,6 +1190,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             return
         else:
             self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
             id_index = self.ui.todos_tree.selectedIndexes()[0]
             todo_id = self.ui.todos_tree.model().itemData(id_index)[0]
             fav_status = self.fetch_query('SELECT favorite FROM todos WHERE id=?', (todo_id,))[0]
@@ -1111,7 +1200,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.setText('Marked as favorite')
             else:
                 self.run_query('UPDATE todos SET favorite=0 WHERE id=?', (todo_id,))
-                self.message.setText('(Unmarked as favorite')
+                self.message.setText('Unmarked as favorite')
 
             self.message.show()
             self.ui.update_todos()
