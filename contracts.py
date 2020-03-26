@@ -762,9 +762,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 # Remove associated documents
                 urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?',(1, contract_id))
                 for url in urls:
-                    if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                    # Check if url is unique. If it is not unique, same file is used elsewhere so only remove in the database, not the folder
-                        os.remove(url)
+                    os.remove(url)
                 self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
                 self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (1,contract_id))
                 # Remove parties
@@ -820,8 +818,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 # Remove associated documents
                 urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
                 for url in urls:
-                    if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                        os.remove(url)
+                    os.remove(url)
                 self.run_query('DELETE FROM reminders WHERE id=?', (reminder_id,))
                 self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
                 # Remove people
@@ -1207,7 +1204,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
         if name == '':
             return
-        dir = self.dir + name
+
+        # Adding a timestamp to make sure all urls are unique
+        timestamp = str(datetime.now())[:19]
+        timestamp = timestamp.replace(':','_')
+        dir = self.dir + timestamp + name
         copyfile(filename[0], dir)
 
         if self.ui.contract_id_lb.text() == "":
@@ -1271,7 +1272,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
         if name == '':
             return
-        dir = self.dir + name
+
+        # Adding a timestamp to make sure all urls are unique
+        timestamp = str(datetime.now())[:19]
+        timestamp = timestamp.replace(':', '_')
+        dir = self.dir + timestamp + name
         copyfile(filename[0], dir)
 
         if self.ui.reminder_id_lb.text() == "":
@@ -1335,7 +1340,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         name = QtCore.QUrl.fromLocalFile(filename[0]).fileName()
         if name == '':
             return
-        dir = self.dir + name
+
+        # Adding a timestamp to make sure all urls are unique
+        timestamp = str(datetime.now())[:19]
+        timestamp = timestamp.replace(':', '_')
+        dir = self.dir + timestamp + name
         copyfile(filename[0], dir)
 
         if self.ui.risk_id_lb.text() == "":
@@ -1497,11 +1506,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def remove_unsaved(self):
         # Remove attachments and parties if contract is cancelled
-        # TODO: Here, docs are deleted in database but not in directory if added, removed, then added back
-        urls = self.fetch_query("SELECT url FROM documents WHERE temp=1 and del=0")
+        urls = self.fetch_query("SELECT url FROM documents WHERE temp=1")
         for url in urls:
-            if self.fetch_query("SELECT count(url) FROM documents WHERE del=0 GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                os.remove(url)
+            os.remove(url)
         self.run_query("DELETE FROM documents WHERE temp=1")
         self.run_query("DELETE FROM people_contracts WHERE temp=1")
         self.run_query("DELETE FROM people_reminders WHERE temp=1")
@@ -1515,8 +1522,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Attachments
         urls = self.fetch_query("SELECT url FROM documents WHERE del=1")
         for url in urls:
-            if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                os.remove(url)
+            os.remove(url)
             self.run_query('DELETE FROM documents WHERE url=?', (url,))
 
         # People
