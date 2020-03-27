@@ -8,8 +8,6 @@ import sqlite3
 import os
 import re
 
-# TODO: Bug when adding attachment to new contract
-# TODO: Data validation when things used elsewhere are deleted (contracts, people, companies)
 # TODO: Automatizing stuff, especially based on dates (contract status, reminder alerts, automatic change of reminder date if recurring, risk expiration, todos status)
 # TODO: Implementing search filters
 # TODO: Exporting to csv based on filters
@@ -674,7 +672,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def save_risk(self):
         risk_id = self.ui.risk_id_lb.text()
         name = self.ui.risk_name.text()
-        contract_id = self.ui.risk_contract.currentIndex()
+        contract_id = int(re.findall(r'\d+', self.ui.risk_contract.currentText())[0])
         probability_id = self.ui.risk_probability.currentIndex()
         impact_id = self.ui.risk_impact.currentIndex()
         type_id = self.ui.risk_type.currentIndex()
@@ -832,121 +830,160 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.ui.main_widget.setCurrentIndex(12)
 
     # Delete
-    def delete_contract(self):
-        if self.ui.contracts_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.contracts_tree.selectedIndexes()[0]
-            contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
-            title_index = self.ui.contracts_tree.selectedIndexes()[1]
-            contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
-            prompt = 'Are you sure you want to delete ' + contract_title + '?'
-            buttonReply = QMessageBox.question(self, 'Delete Contract', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                # Remove associated documents
-                urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?',(1, contract_id))
-                for url in urls:
-                    os.remove(url)
-                self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
-                self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (1,contract_id))
-                # Remove parties
-                self.run_query('DELETE FROM people_contracts WHERE contract_id=?',
-                               (contract_id,))
-                self.ui.update_contracts()
+    def delete_contract(self, contract_id=None):
+        # Calling this method from button clicked signals defaults contract_id to False
+        if contract_id is False:
+            if self.ui.contracts_tree.selectedIndexes() == []:
+                return
+            else:
+                id_index = self.ui.contracts_tree.selectedIndexes()[0]
+                contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+                title_index = self.ui.contracts_tree.selectedIndexes()[1]
+                contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
+                prompt = 'Are you sure you want to delete ' + contract_title + '?\nAll reminders, risks and to-dos associated  with this contract will be deleted as well!'
+                buttonReply = QMessageBox.question(self, 'Delete Contract', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply != QMessageBox.Yes:
+                    return
 
-    def delete_person(self):
-        if self.ui.people_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.people_tree.selectedIndexes()[0]
-            person_id = self.ui.people_tree.model().itemData(id_index)[0]
-            first_index = self.ui.people_tree.selectedIndexes()[1]
-            first = self.ui.people_tree.model().itemData(first_index)[0]
-            last_index = self.ui.people_tree.selectedIndexes()[1]
-            last = self.ui.people_tree.model().itemData(last_index)[0]
-            prompt = 'Are you sure you want to delete' + first + ' ' + last + '?'
-            buttonReply = QMessageBox.question(self, 'Delete person', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM people WHERE id=?', (person_id,))
-                self.ui.update_people()
+        # Remove associated documents
+        urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (1, contract_id))
+        for url in urls:
+            os.remove(url)
+        self.run_query('DELETE FROM contracts WHERE id=?', (contract_id,))
+        self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (1, contract_id))
+        # Remove parties
+        self.run_query('DELETE FROM people_contracts WHERE contract_id=?',
+                       (contract_id,))
 
-    def delete_company(self):
-        if self.ui.companies_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.companies_tree.selectedIndexes()[0]
-            company_id = self.ui.companies_tree.model().itemData(id_index)[0]
-            name_index = self.ui.companies_tree.selectedIndexes()[1]
-            name = self.ui.companies_tree.model().itemData(name_index)[0]
+        # Delete dependent contracts, reminders, risks and todos
+        reminders = self.fetch_query('SELECT id FROM reminders WHERE contract_id=?', (contract_id,))
+        for reminder in reminders:
+            self.delete_reminder(reminder_id=reminder)
+        risks = self.fetch_query('SELECT id FROM risks WHERE contract_id=?', (contract_id,))
+        for risk in risks:
+            self.delete_risk(risk_id=risk)
+        todos = self.fetch_query('SELECT id FROM todos WHERE contract_id=?', (contract_id,))
+        for todo in todos:
+            self.delete_todo(todo_id=todo)
 
-            prompt = 'Are you sure you want to delete' + name + '?'
-            buttonReply = QMessageBox.question(self, 'Delete company', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM companies WHERE id=?', (company_id,))
-                self.ui.update_companies()
+        self.ui.update_contracts()
 
-    def delete_reminder(self):
-        if self.ui.reminders_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.reminders_tree.selectedIndexes()[0]
-            reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
-            name_index = self.ui.reminders_tree.selectedIndexes()[1]
-            reminder_name = self.ui.reminders_tree.model().itemData(name_index)[0]
-            prompt = 'Are you sure you want to delete ' + reminder_name + '?'
-            buttonReply = QMessageBox.question(self, 'Delete reminder', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                # Remove associated documents
-                urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
-                for url in urls:
-                    os.remove(url)
-                self.run_query('DELETE FROM reminders WHERE id=?', (reminder_id,))
-                self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
-                # Remove people
-                self.run_query('DELETE FROM people_reminders WHERE reminder_id=?',
-                               (reminder_id,))
-                self.ui.update_reminders()
+    def delete_person(self, person_id=None):
+        if person_id is False:
+            if self.ui.people_tree.selectedIndexes() == []:
+                return
+            else:
+                id_index = self.ui.people_tree.selectedIndexes()[0]
+                person_id = self.ui.people_tree.model().itemData(id_index)[0]
 
-    def delete_risk(self):
-        if self.ui.risks_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.risks_tree.selectedIndexes()[0]
-            risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
-            name_index = self.ui.risks_tree.selectedIndexes()[1]
-            risk_name = self.ui.risks_tree.model().itemData(name_index)[0]
-            prompt = 'Are you sure you want to delete ' + risk_name + '?'
-            buttonReply = QMessageBox.question(self, 'Delete risk', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                # Remove associated documents
-                urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
-                for url in urls:
-                    if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
-                        os.remove(url)
-                self.run_query('DELETE FROM risks WHERE id=?', (risk_id,))
-                self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
-                self.ui.update_risks()
+                first_index = self.ui.people_tree.selectedIndexes()[1]
+                first = self.ui.people_tree.model().itemData(first_index)[0]
+                last_index = self.ui.people_tree.selectedIndexes()[2]
+                last = self.ui.people_tree.model().itemData(last_index)[0]
+                prompt = 'Are you sure you want to delete ' + first + ' ' + last + '?\nAll to-dos assigned to this person will be deleted'
+                buttonReply = QMessageBox.question(self, 'Delete person', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply != QMessageBox.Yes:
+                    return
+        self.run_query('DELETE FROM people WHERE id=?', (person_id,))
+        # Remove todos
+        todos = self.fetch_query('SELECT id FROM todos WHERE responsible_id=?', (person_id,))
+        for todo in todos:
+            self.delete_todo(todo_id=todo)
+        self.ui.update_people()
 
-    def delete_todo(self):
-        if self.ui.todos_tree.selectedIndexes() == []:
-            return
-        else:
-            id_index = self.ui.todos_tree.selectedIndexes()[0]
-            todo_id = self.ui.todos_tree.model().itemData(id_index)[0]
-            name_index = self.ui.todos_tree.selectedIndexes()[1]
-            name = self.ui.todos_tree.model().itemData(name_index)[0]
+    def delete_company(self, company_id=None):
+        if company_id is False:
+            if self.ui.companies_tree.selectedIndexes() == []:
+                return
+            else:
+                id_index = self.ui.companies_tree.selectedIndexes()[0]
+                company_id = self.ui.companies_tree.model().itemData(id_index)[0]
 
-            prompt = 'Are you sure you want to delete' + name + '?'
-            buttonReply = QMessageBox.question(self, 'Delete todo', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('DELETE FROM todos WHERE id=?', (todo_id,))
-                self.ui.update_todos()
+                name_index = self.ui.companies_tree.selectedIndexes()[1]
+                name = self.ui.companies_tree.model().itemData(name_index)[0]
+
+                prompt = 'Are you sure you want to delete ' + name + '?\nAll reminders and to-dos associated with this company will be deleted as well!'
+                buttonReply = QMessageBox.question(self, 'Delete company', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply != QMessageBox.Yes:
+                    return
+        self.run_query('DELETE FROM companies WHERE id=?', (company_id,))
+
+        reminders = self.fetch_query('SELECT id FROM reminders WHERE company_id=?', (company_id,))
+        for reminder in reminders:
+            self.delete_reminder(reminder_id=reminder)
+        todos = self.fetch_query('SELECT id FROM todos WHERE company_id=?', (company_id,))
+        for todo in todos:
+            self.delete_todo(todo_id=todo)
+        self.ui.update_companies()
+
+    def delete_reminder(self, reminder_id=None):
+        if reminder_id is False:
+            if self.ui.reminders_tree.selectedIndexes() == []:
+                return
+            else:
+                id_index = self.ui.reminders_tree.selectedIndexes()[0]
+                reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
+                name_index = self.ui.reminders_tree.selectedIndexes()[1]
+                reminder_name = self.ui.reminders_tree.model().itemData(name_index)[0]
+                prompt = 'Are you sure you want to delete ' + reminder_name + '?'
+                buttonReply = QMessageBox.question(self, 'Delete reminder', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply != QMessageBox.Yes:
+                    return
+        # Remove associated documents
+        urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
+        for url in urls:
+            os.remove(url)
+        self.run_query('DELETE FROM reminders WHERE id=?', (reminder_id,))
+        self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (2, reminder_id))
+        # Remove people
+        self.run_query('DELETE FROM people_reminders WHERE reminder_id=?',
+                       (reminder_id,))
+        self.ui.update_reminders()
+
+    def delete_risk(self, risk_id=None):
+        if risk_id is False:
+            if self.ui.risks_tree.selectedIndexes() == []:
+                return
+            else:
+                id_index = self.ui.risks_tree.selectedIndexes()[0]
+                risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
+                name_index = self.ui.risks_tree.selectedIndexes()[1]
+                risk_name = self.ui.risks_tree.model().itemData(name_index)[0]
+                prompt = 'Are you sure you want to delete ' + risk_name + '?'
+                buttonReply = QMessageBox.question(self, 'Delete risk', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply != QMessageBox.Yes:
+                    return
+        # Remove associated documents
+        urls = self.fetch_query('SELECT url FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
+        for url in urls:
+            if self.fetch_query("SELECT count(url) FROM documents GROUP BY url HAVING url=?", (url,))[0] <= 1:
+                os.remove(url)
+        self.run_query('DELETE FROM risks WHERE id=?', (risk_id,))
+        self.run_query('DELETE FROM documents WHERE type_id=? AND owner_id=?', (3, risk_id))
+        self.ui.update_risks()
+
+    def delete_todo(self, todo_id=None):
+        if todo_id is False:
+            if self.ui.todos_tree.selectedIndexes() == []:
+                return
+            else:
+                id_index = self.ui.todos_tree.selectedIndexes()[0]
+                todo_id = self.ui.todos_tree.model().itemData(id_index)[0]
+                name_index = self.ui.todos_tree.selectedIndexes()[1]
+                name = self.ui.todos_tree.model().itemData(name_index)[0]
+
+                prompt = 'Are you sure you want to delete ' + name + '?'
+                buttonReply = QMessageBox.question(self, 'Delete todo', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    return
+        self.run_query('DELETE FROM todos WHERE id=?', (todo_id,))
+        self.ui.update_todos()
 
     # Archive
     def archive_contract(self):
@@ -1506,7 +1543,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     self.ui.update_risk_attachments()
                 else:
                     self.ui.update_risk_attachments(self.ui.risk_id_lb.text())
-                    
+
     # People
     def party_window(self):
         self.party_window = PersonDialog()
@@ -1526,7 +1563,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             contract_id = self.ui.contract_id_lb.text()
             self.run_query('INSERT INTO people_contracts(person_id,contract_id,temp) SELECT ?, ?, 1 WHERE NOT EXISTS(SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',(person_id, contract_id, person_id, contract_id))
             self.ui.update_parties(contract_id)
-        
+
     def delete_party(self):
         if self.ui.contract_parties.selectedIndexes() == []:
             return
@@ -1599,7 +1636,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def next_contract_id(self):
         next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0]) + 1
         return next_id
-    
+
     def next_reminder_id(self):
         next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0]) + 1
         return next_id

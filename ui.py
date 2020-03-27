@@ -5137,7 +5137,7 @@ class Ui_MainWindow(object):
                     c_id = 0
             self.reminder_contract.setCurrentIndex(c_id)
             
-            self.update_reminder_companies()
+            self.update_reminder_company()
             company_id = str(self.fetch_query('SELECT company_id FROM reminders WHERE id=?', (reminder_id,))[0]) + ' - '
             c_id = self.reminder_company.findText(company_id, QtCore.Qt.MatchStartsWith)
             if c_id < 0:
@@ -5179,7 +5179,7 @@ class Ui_MainWindow(object):
             self.risk_name.setText(str(self.fetch_query('SELECT name FROM risks WHERE id=?',(risk_id,))[0]))
             
             self.update_risk_contracts()
-            contract_id = str(self.fetch_query('SELECT contract_id FROM people WHERE id=?', (risk_id,))[0]) + ' - '
+            contract_id = str(self.fetch_query('SELECT contract_id FROM risks WHERE id=?', (risk_id,))[0]) + ' - '
             c_id = self.risk_contract.findText(contract_id, QtCore.Qt.MatchStartsWith)
             if c_id < 0:
                     c_id = 0
@@ -5197,7 +5197,12 @@ class Ui_MainWindow(object):
             self.todo_id_lb.setText(str(todo_id))
             self.todo_subject.setText(str(self.fetch_query('SELECT subject FROM todos WHERE id=?',(todo_id,))[0]))
             self.todo_status.setCurrentIndex(int(self.fetch_query('SELECT status_id FROM todos WHERE id=?',(todo_id,))[0]))
-            self.todo_responsible.setCurrentIndex(int(self.fetch_query('SELECT responsible_id FROM todos WHERE id=?',(todo_id,))[0]))
+
+            self.update_todo_people()
+            person_id = str(self.fetch_query('SELECT responsible_id FROM todos WHERE id=?',(todo_id,))[0]) + ' - '
+            p_id = self.todo_responsible.findText(person_id, QtCore.Qt.MatchStartsWith)
+            self.todo_responsible.setCurrentIndex(p_id)
+            
             self.todo_start_date.setText(str(self.fetch_query('SELECT start_date FROM todos WHERE id=?',(todo_id,))[0]))
             self.todo_resolutio_date.setText(str(self.fetch_query('SELECT deadline FROM todos WHERE id=?',(todo_id,))[0]))
             self.todo_priority.setCurrentIndex(int(self.fetch_query('SELECT priority_id FROM todos WHERE id=?',(todo_id,))[0]))
@@ -5211,7 +5216,7 @@ class Ui_MainWindow(object):
                     c_id = 0
             self.todo_contract.setCurrentIndex(c_id)
 
-            self.update_todo_companies()
+            self.update_todo_company()
             company_id = str(self.fetch_query('SELECT company_id FROM todos WHERE id=?', (todo_id,))[0]) + ' - '
             c_id = self.todo_company.findText(company_id, QtCore.Qt.MatchStartsWith)
             if c_id < 0:
