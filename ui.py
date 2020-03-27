@@ -554,15 +554,9 @@ class Ui_MainWindow(object):
         self.gridLayout_8.addWidget(self.label_86, 3, 0, 1, 1)
 
         # Contract Master
-        contracts_id = self.fetch_query('SELECT id FROM contracts')
-        contracts_title = self.fetch_query('SELECT title FROM contracts')
-        contracts = []
-        for c_id, c_title in zip(contracts_id, contracts_title):
-                c = str(c_id) + ' - ' + c_title
-                contracts.append(c)
         self.contract_master = QtWidgets.QComboBox(self.scrollAreaWidgetContents_8)
         self.contract_master.addItem('0 - No Master Contract')
-        for contract in contracts:
+        for contract in self.contract_list():
                 self.contract_master.addItem(contract)
         self.contract_master.setMinimumSize(QtCore.QSize(0, 35))
         font = QtGui.QFont()
@@ -3961,16 +3955,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_58.setObjectName("horizontalLayout_58")
         
         # To do contract
-        contracts_id = self.fetch_query('SELECT id FROM contracts')
-        contracts_title = self.fetch_query('SELECT title FROM contracts')
-        contracts = []
-        for c_id, c_title in zip(contracts_id, contracts_title):
-                c = str(c_id) + ' - ' + c_title
-                contracts.append(c)
         self.todo_contract = QtWidgets.QComboBox(self.scrollAreaWidgetContents_13)
-
         self.todo_contract.addItem('0 - No Master Contract')
-        for contract in contracts:
+        for contract in self.contract_list():
                 self.todo_contract.addItem(contract)
             
         self.todo_contract.setMinimumSize(QtCore.QSize(0, 35))
@@ -4920,6 +4907,35 @@ class Ui_MainWindow(object):
     def next_risk_id(self):
             next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0]) + 1
             return next_id
+    
+    # Lists
+    def contract_list(self):
+            contracts_id = self.fetch_query('SELECT id FROM contracts')
+            contracts_title = self.fetch_query('SELECT title FROM contracts')
+            contracts = []
+            for c_id, c_title in zip(contracts_id, contracts_title):
+                    c = str(c_id) + ' - ' + c_title
+                    contracts.append(c)
+            return contracts
+    
+    def company_list(self):
+            companies_id = self.fetch_query('SELECT id FROM companies')
+            companies_title = self.fetch_query('SELECT name FROM companies')
+            companies = []
+            for c_id, c_title in zip(companies_id, companies_title):
+                    c = str(c_id) + ' - ' + c_title
+                    companies.append(c)
+            return companies
+
+    def person_list(self):
+            people_id = self.fetch_query('SELECT id FROM people')
+            first = self.fetch_query('SELECT first FROM people')
+            last = self.fetch_query('SELECT last FROM people')
+            people = []
+            for p_id, p_first, p_last in zip(people_id, first, last):
+                    c = str(p_id) + ' - ' + p_first + ' ' + p_last
+                    people.append(c)
+            return people
 
     # New windows
     def new_contract_window(self):
@@ -4931,6 +4947,8 @@ class Ui_MainWindow(object):
         self.contract_reference.clear()
         self.contract_account.clear()
         self.contract_status.setCurrentIndex(0)
+        self.update_contract_masters()
+        self.contract_master.setCurrentIndex(0)
         self.contract_value.clear()
         self.contract_currency.setCurrentIndex(0)
         self.term_none.setChecked(True)
@@ -4950,6 +4968,7 @@ class Ui_MainWindow(object):
         self.last_name.clear()
         self.gender.setCurrentIndex(0)
         self.job.clear()
+        self.update_person_company()
         self.company.setCurrentIndex(0)
         self.person_type.clear()
         self.phone.clear()
@@ -4977,7 +4996,9 @@ class Ui_MainWindow(object):
     def new_reminder_window(self):
         self.reminder_id_lb.clear()
         self.reminder_name.clear()
+        self.update_reminder_contracts()
         self.reminder_contract.setCurrentIndex(0)
+        self.update_reminder_company()
         self.reminder_company.setCurrentIndex(0)
         self.update_reminder_attachments()
         self.reminder_description.clear()
@@ -5003,6 +5024,7 @@ class Ui_MainWindow(object):
     def new_risk_window(self):
         self.risk_id_lb.clear()
         self.risk_name.clear()
+        self.update_risk_contracts()
         self.risk_contract.setCurrentIndex(0)
         self.risk_probability.setCurrentIndex(0)
         self.risk_impact.setCurrentIndex(0)
@@ -5016,12 +5038,15 @@ class Ui_MainWindow(object):
         self.todo_id_lb.clear()
         self.todo_subject.clear()
         self.todo_status.setCurrentIndex(0)
+        self.update_todo_people()
         self.todo_responsible.setCurrentIndex(0)
         self.todo_start_date.clear()
         self.todo_resolutio_date.clear()
         self.todo_priority.setCurrentIndex(0)
         self.todo_severity.setCurrentIndex(0)
+        self.update_todo_contracts()
         self.todo_contract.setCurrentIndex(0)
+        self.update_todo_company()
         self.todo_company.setCurrentIndex(0)
         self.todo_description.clear()
 
@@ -5034,6 +5059,14 @@ class Ui_MainWindow(object):
         self.contract_classification.setCurrentIndex(int(self.fetch_query('SELECT classification_id from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_reference.setText(str(self.fetch_query('SELECT reference from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_account.setText(str(self.fetch_query('SELECT account_reference from contracts WHERE id=?',(contract_id,))[0]))
+
+        self.update_contract_masters()
+        master_id = str(self.fetch_query('SELECT master_contract_id FROM contracts WHERE id=?', (contract_id,))[0]) + ' - '
+        m_id = self.contract_master.findText(master_id, QtCore.Qt.MatchStartsWith)
+        if m_id < 0:
+                m_id = 0
+        self.contract_master.setCurrentIndex(m_id)
+
         self.contract_status.setCurrentIndex(int(self.fetch_query('SELECT status_id from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_value.setText(str(self.fetch_query('SELECT value from contracts WHERE id=?',(contract_id,))[0]))
         self.contract_currency.setCurrentIndex(int(self.fetch_query('SELECT currency_id from contracts WHERE id=?',(contract_id,))[0]))
@@ -5062,7 +5095,14 @@ class Ui_MainWindow(object):
         self.last_name.setText(str(self.fetch_query('SELECT last FROM people WHERE id=?',(person_id,))[0]))
         self.gender.setCurrentIndex(int(self.fetch_query('SELECT gender_id FROM people WHERE id=?',(person_id,))[0]))
         self.job.setText(str(self.fetch_query('SELECT job FROM people WHERE id=?',(person_id,))[0]))
-        self.company.setCurrentIndex(int(self.fetch_query('SELECT company_id FROM people WHERE id=?',(person_id,))[0]))
+
+        self.update_person_company()
+        company_id = str(self.fetch_query('SELECT company_id FROM people WHERE id=?',(person_id,))[0]) + ' - '
+        c_id = self.company.findText(company_id, QtCore.Qt.MatchStartsWith)
+        if c_id < 0:
+                c_id = 0
+        self.company.setCurrentIndex(c_id)
+
         self.person_type.setText(str(self.fetch_query('SELECT type FROM people WHERE id=?',(person_id,))[0]))
         self.phone.setText(str(self.fetch_query('SELECT phone FROM people WHERE id=?',(person_id,))[0]))
         self.mobile.setText(str(self.fetch_query('SELECT mobile FROM people WHERE id=?',(person_id,))[0]))
@@ -5089,8 +5129,21 @@ class Ui_MainWindow(object):
     def edit_reminder_window(self, reminder_id):
             self.reminder_id_lb.setText(str(reminder_id))
             self.reminder_name.setText(str(self.fetch_query('SELECT name FROM reminders WHERE id=?',(reminder_id,))[0]))
-            self.reminder_contract.setCurrentIndex(int(self.fetch_query('SELECT contract_id FROM reminders WHERE id=?',(reminder_id,))[0]))
-            self.reminder_company.setCurrentIndex(int(self.fetch_query('SELECT company_id FROM reminders WHERE id=?',(reminder_id,))[0]))
+            
+            self.update_reminder_contracts()
+            contract_id = str(self.fetch_query('SELECT contract_id FROM reminders WHERE id=?', (reminder_id,))[0]) + ' - '
+            c_id = self.reminder_contract.findText(contract_id, QtCore.Qt.MatchStartsWith)
+            if c_id < 0:
+                    c_id = 0
+            self.reminder_contract.setCurrentIndex(c_id)
+            
+            self.update_reminder_companies()
+            company_id = str(self.fetch_query('SELECT company_id FROM reminders WHERE id=?', (reminder_id,))[0]) + ' - '
+            c_id = self.reminder_company.findText(company_id, QtCore.Qt.MatchStartsWith)
+            if c_id < 0:
+                    c_id = 0
+            self.reminder_company.setCurrentIndex(c_id)
+           
             self.update_reminder_attachments()
             self.reminder_description.setText(str(self.fetch_query('SELECT description FROM reminders WHERE id=?',(reminder_id,))[0]))
             self.update_reminder_people()
@@ -5124,7 +5177,14 @@ class Ui_MainWindow(object):
     def edit_risk_window(self, risk_id):
             self.risk_id_lb.setText(str(risk_id))
             self.risk_name.setText(str(self.fetch_query('SELECT name FROM risks WHERE id=?',(risk_id,))[0]))
-            self.risk_contract.setCurrentIndex(int(self.fetch_query('SELECT contract_id FROM risks WHERE id=?',(risk_id,))[0]))
+            
+            self.update_risk_contracts()
+            contract_id = str(self.fetch_query('SELECT contract_id FROM people WHERE id=?', (risk_id,))[0]) + ' - '
+            c_id = self.risk_contract.findText(contract_id, QtCore.Qt.MatchStartsWith)
+            if c_id < 0:
+                    c_id = 0
+            self.risk_contract.setCurrentIndex(c_id)
+            
             self.risk_probability.setCurrentIndex(int(self.fetch_query('SELECT probability_id FROM risks WHERE id=?',(risk_id,))[0]))
             self.risk_impact.setCurrentIndex(int(self.fetch_query('SELECT impact_id FROM risks WHERE id=?',(risk_id,))[0]))
             self.risk_type.setCurrentIndex(int(self.fetch_query('SELECT type_id FROM risks WHERE id=?',(risk_id,))[0]))
@@ -5142,8 +5202,22 @@ class Ui_MainWindow(object):
             self.todo_resolutio_date.setText(str(self.fetch_query('SELECT deadline FROM todos WHERE id=?',(todo_id,))[0]))
             self.todo_priority.setCurrentIndex(int(self.fetch_query('SELECT priority_id FROM todos WHERE id=?',(todo_id,))[0]))
             self.todo_severity.setCurrentIndex(int(self.fetch_query('SELECT severity_id FROM todos WHERE id=?',(todo_id,))[0]))
-            self.todo_contract.setCurrentIndex(int(self.fetch_query('SELECT contract_id FROM todos WHERE id=?',(todo_id,))[0]))
-            self.todo_company.setCurrentIndex(int(self.fetch_query('SELECT company_id FROM todos WHERE id=?',(todo_id,))[0]))
+            
+            self.update_todo_contracts()
+            contract_id = str(
+                    self.fetch_query('SELECT contract_id FROM todos WHERE id=?', (todo_id,))[0]) + ' - '
+            c_id = self.todo_contract.findText(contract_id, QtCore.Qt.MatchStartsWith)
+            if c_id < 0:
+                    c_id = 0
+            self.todo_contract.setCurrentIndex(c_id)
+
+            self.update_todo_companies()
+            company_id = str(self.fetch_query('SELECT company_id FROM todos WHERE id=?', (todo_id,))[0]) + ' - '
+            c_id = self.todo_company.findText(company_id, QtCore.Qt.MatchStartsWith)
+            if c_id < 0:
+                    c_id = 0
+            self.todo_company.setCurrentIndex(c_id)
+            
             self.todo_description.setText(str(self.fetch_query('SELECT description FROM todos WHERE id=?',(todo_id,))[0]))
 
     # Updates
@@ -5242,6 +5316,53 @@ class Ui_MainWindow(object):
 
             self.todos_tree.setModel(self.todo_model)
 
+    def update_contract_masters(self):
+            self.contract_master.clear()
+            self.contract_master.addItem('0 - No Master Contract')
+            for contract in self.contract_list():
+                    self.contract_master.addItem(contract)
+
+    def update_reminder_contracts(self):
+            self.reminder_contract.clear()
+            self.reminder_contract.addItem('0 - No Contract')
+            for contract in self.contract_list():
+                    self.reminder_contract.addItem(contract)
+
+    def update_person_company(self):
+            self.company.clear()
+            self.company.addItem('0 - No Company')
+            for company in self.company_list():
+                    self.company.addItem(company)
+
+    def update_reminder_company(self):
+            self.reminder_company.clear()
+            self.reminder_company.addItem('0 - No Company')
+            for company in self.company_list():
+                    self.reminder_company.addItem(company)
+
+    def update_risk_contracts(self):
+            self.risk_contract.clear()
+            self.risk_contract.addItem('0 - No Contract')
+            for contract in self.contract_list():
+                    self.risk_contract.addItem(contract)
+
+    def update_todo_people(self):
+        self.todo_responsible.clear()
+        for person in self.person_list():
+                self.todo_responsible.addItem(person)
+
+    def update_todo_contracts(self):
+            self.todo_contract.clear()
+            self.todo_contract.addItem('0 - No Contract')
+            for contract in self.contract_list():
+                    self.todo_contract.addItem(contract)
+            
+    def update_todo_company(self):
+            self.todo_company.clear()
+            self.todo_company.addItem('0 - No Company')
+            for company in self.company_list():
+                    self.todo_company.addItem(company)
+            
     # Attachments
     def update_contract_attachments(self, contract_id=None):
         if contract_id is None:
