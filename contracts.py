@@ -21,7 +21,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.setupUi(self)
         # Using dir_ because dir is a reserved keyword
         # The line below does not work after freezing the app
-        #self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
+        # self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
         if getattr(sys, 'frozen', False):
             # frozen
             self.dir_ = os.path.dirname(sys.executable) + "\\documents\\"
@@ -1592,15 +1592,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     # Next IDs
     def next_contract_id(self):
-        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
+        next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0]) + 1
         return next_id
     
     def next_reminder_id(self):
-        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0] + 1
+        next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0]) + 1
         return next_id
 
     def next_risk_id(self):
-        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0] + 1
+        next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0]) + 1
         return next_id
 
     def remove_unsaved(self):

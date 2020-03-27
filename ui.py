@@ -4910,19 +4910,15 @@ class Ui_MainWindow(object):
 
     # Next IDs
     def next_contract_id(self):
-        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0] + 1
-        return next_id
-
-    def next_person_id(self):
-        next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='people'")[0] + 1
+        next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='contracts'")[0]) + 1
         return next_id
 
     def next_reminder_id(self):
-            next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0] + 1
+            next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='reminders'")[0]) + 1
             return next_id
 
     def next_risk_id(self):
-            next_id = self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0] + 1
+            next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0]) + 1
             return next_id
 
     # New windows
