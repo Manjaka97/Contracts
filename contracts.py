@@ -8,6 +8,7 @@ import sqlite3
 import os
 import re
 
+# TODO: Bug when adding attachment to new contract
 # TODO: Data validation when things used elsewhere are deleted (contracts, people, companies)
 # TODO: Automatizing stuff, especially based on dates (contract status, reminder alerts, automatic change of reminder date if recurring, risk expiration, todos status)
 # TODO: Implementing search filters
@@ -21,13 +22,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.setupUi(self)
         # Using dir_ because dir is a reserved keyword
         # The line below does not work after freezing the app
-        # self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
-        if getattr(sys, 'frozen', False):
-            # frozen
-            self.dir_ = os.path.dirname(sys.executable) + "\\documents\\"
-        else:
-            # unfrozen
-            dir_ = os.path.dirname(os.path.realpath(__file__))
+        self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
+        # if getattr(sys, 'frozen', False):
+        #     # frozen
+        #     self.dir_ = os.path.dirname(sys.executable) + "\\documents\\"
+        # else:
+        #     # unfrozen
+        #     dir_ = os.path.dirname(os.path.realpath(__file__))
         if not os.path.exists(self.dir_):
             os.makedirs(self.dir_)
 
@@ -349,9 +350,10 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         else:
             if contract_id == '': # New contract
+                contract_id = self.next_contract_id()
                 self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
-                self.run_query("UPDATE documents SET temp=0 WHERE type_id=1 AND owner_id=? ",(self.next_contract_id(),))
-                self.run_query("UPDATE people_contracts SET temp=0 WHERE contract_id=?", (self.next_contract_id(),))
+                self.run_query("UPDATE documents SET temp=0 WHERE type_id=1 AND owner_id=? ", (contract_id,))
+                self.run_query("UPDATE people_contracts SET temp=0 WHERE contract_id=?", (contract_id,))
             else: # Edit contract
                 self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, extension_limit=?, description=? WHERE id=?", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description, contract_id))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=1 AND owner_id=? ", (contract_id,))
@@ -638,6 +640,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         # Saving or Updating
         if reminder_id == '': # New reminder
+            reminder_id = self.next_reminder_id()
             self.run_query("INSERT INTO reminders (name, contract_id, company_id, description, complete, snoozed, "
                            "specific_radio, relative_radio, do_not_recur_radio, recur_radio, "
                            "until_specific_radio, until_key_radio, indefinitely_radio, specific_date, "
@@ -649,8 +652,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                                                    until_key_radio, indefinitely_radio,
                                                                    specific_date, relative_date, time_id, before_after,
                                                                    date_id, recur_id, until_date, until_key_id, deadline, next_recurrence))
-            self.run_query("UPDATE documents SET temp=0 WHERE type_id=2 AND owner_id=? ", (self.next_reminder_id(),))
-            self.run_query("UPDATE people_reminders SET temp=0 WHERE reminder_id=?", (self.next_reminder_id(),))
+            self.run_query("UPDATE documents SET temp=0 WHERE type_id=2 AND owner_id=? ", (reminder_id,))
+            self.run_query("UPDATE people_reminders SET temp=0 WHERE reminder_id=?", (reminder_id,))
         else: # Edit reminder
             self.run_query("UPDATE reminders SET name=?, contract_id=?, company_id=?, description=?, complete=?, snoozed=?, "
                            "specific_radio=?, relative_radio=?, do_not_recur_radio=?, recur_radio=?, "
@@ -695,8 +698,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.message.show()
         else:
             if risk_id == '': # New risk
+                risk_id = self.next_risk_id()
                 self.run_query("INSERT INTO risks (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation, date_created) VALUES(?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation))
-                self.run_query("UPDATE documents SET temp=0 WHERE type_id=3 AND owner_id=? ", (self.next_risk_id(),))
+                self.run_query("UPDATE documents SET temp=0 WHERE type_id=3 AND owner_id=? ", (risk_id,))
             else: # Edit contract
                 self.run_query("UPDATE risks SET name=?, contract_id=?, probability_id=?, impact_id=?, type_id=?, end_date=?, notes=?, mitigation=? WHERE id=?", (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation, risk_id))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=3 AND owner_id=? ", (risk_id,))
@@ -943,6 +947,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             if buttonReply == QMessageBox.Yes:
                 self.run_query('DELETE FROM todos WHERE id=?', (todo_id,))
                 self.ui.update_todos()
+
     # Archive
     def archive_contract(self):
         if self.ui.contracts_tree.selectedIndexes() == []:
@@ -1603,6 +1608,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         next_id = int(self.fetch_query("SELECT seq FROM sqlite_sequence WHERE name='risks'")[0]) + 1
         return next_id
 
+    # Cleaning
     def remove_unsaved(self):
         # Remove attachments and parties if contract is cancelled
         urls = self.fetch_query("SELECT url FROM documents WHERE temp=1")
