@@ -709,7 +709,10 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         todo_id = self.ui.todo_id_lb.text()
         subject = self.ui.todo_subject.text()
         status_id = self.ui.todo_status.currentIndex()
-        responsible_id = int(re.findall(r'\d+', self.ui.todo_responsible.currentText())[0])
+        if int(self.ui.todo_responsible.currentIndex() ) < 0:
+            responsible_id = 0
+        else:
+            responsible_id = int(re.findall(r'\d+', self.ui.todo_responsible.currentText())[0])
         start_date = self.ui.todo_start_date.text()
         deadline = self.ui.todo_resolutio_date.text()
         priority_id = self.ui.todo_priority.currentIndex()
@@ -732,6 +735,12 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
             self.message.setWindowTitle('Contracts')
             self.message.setText('Subject cannot be empty')
+            self.message.show()
+        elif responsible_id == 0:
+            self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Contracts')
+            self.message.setText('Please assign the todo to someone')
             self.message.show()
         else:
             if todo_id == '': # New to do
