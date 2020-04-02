@@ -1004,13 +1004,22 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
             title_index = self.ui.contracts_tree.selectedIndexes()[1]
             contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
-            prompt = 'Are you sure you want to archive' + contract_title + '?'
-            buttonReply = QMessageBox.question(self, 'Archive Contract', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('UPDATE contracts SET archived=1 WHERE id=?', (contract_id,))
-                self.ui.update_contracts()
-
+            arc_status = int(self.fetch_query('SELECT archived FROM contracts WHERE id=?', (contract_id,))[0])
+            if arc_status == 0:
+                prompt = 'Are you sure you want to archive ' + contract_title + '?'
+                buttonReply = QMessageBox.question(self, 'Archive contract', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE contracts SET archived=1 WHERE id=?', (contract_id,))
+                    self.ui.update_contracts()
+            else:
+                prompt = 'Are you sure you want to restore ' + contract_title + '?'
+                buttonReply = QMessageBox.question(self, 'Archive contract', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE contracts SET archived=0 WHERE id=?', (contract_id,))
+                    self.ui.update_contracts()
+                    
     def archive_person(self):
         if self.ui.people_tree.selectedIndexes() == []:
             return
@@ -1021,12 +1030,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             first = self.ui.people_tree.model().itemData(first_index)[0]
             last_index = self.ui.people_tree.selectedIndexes()[1]
             last = self.ui.people_tree.model().itemData(last_index)[0]
-            prompt = 'Are you sure you want to archive' + first + ' ' + last + '?'
-            buttonReply = QMessageBox.question(self, 'Archive person', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('UPDATE people SET archived=1 WHERE id=?', (person_id,))
-                self.ui.update_people()
+            arc_status = int(self.fetch_query('SELECT archived FROM people WHERE id=?', (person_id,))[0])
+            if arc_status == 0:
+                prompt = 'Are you sure you want to archive ' + first + ' ' + last + '?'
+                buttonReply = QMessageBox.question(self, 'Archive person', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE people SET archived=1 WHERE id=?', (person_id,))
+                    self.ui.update_people()
+            else:
+                prompt = 'Are you sure you want to restore ' + first + ' ' + last + '?'
+                buttonReply = QMessageBox.question(self, 'Archive person', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE people SET archived=0 WHERE id=?', (person_id,))
+                    self.ui.update_people()      
 
     def archive_company(self):
         if self.ui.companies_tree.selectedIndexes() == []:
@@ -1036,12 +1054,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             company_id = self.ui.companies_tree.model().itemData(id_index)[0]
             name_index = self.ui.companies_tree.selectedIndexes()[1]
             company_name = self.ui.companies_tree.model().itemData(name_index)[0]
-            prompt = 'Are you sure you want to archive' + company_name + '?'
-            buttonReply = QMessageBox.question(self, 'Archive company', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('UPDATE companies SET archived=1 WHERE id=?', (company_id,))
-                self.ui.update_companies()
+            arc_status = int(self.fetch_query('SELECT archived FROM companies WHERE id=?', (company_id,))[0])
+            if arc_status == 0:
+                prompt = 'Are you sure you want to archive ' + company_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive company', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE companies SET archived=1 WHERE id=?', (company_id,))
+                    self.ui.update_companies()
+            else:
+                prompt = 'Are you sure you want to restore ' + company_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive company', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE companies SET archived=0 WHERE id=?', (company_id,))
+                    self.ui.update_companies()
 
     def archive_reminder(self):
         if self.ui.reminders_tree.selectedIndexes() == []:
@@ -1051,12 +1078,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
             name_index = self.ui.reminders_tree.selectedIndexes()[1]
             reminder_name = self.ui.reminders_tree.model().itemData(name_index)[0]
-            prompt = 'Are you sure you want to archive' + reminder_name + '?'
-            buttonReply = QMessageBox.question(self, 'Archive reminder', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('UPDATE reminders SET archived=1 WHERE id=?', (reminder_id,))
-                self.ui.update_reminders()
+            arc_status = int(self.fetch_query('SELECT archived FROM reminders WHERE id=?', (reminder_id,))[0])
+            if arc_status == 0:
+                prompt = 'Are you sure you want to archive ' + reminder_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive reminder', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE reminders SET archived=1 WHERE id=?', (reminder_id,))
+                    self.ui.update_reminders()
+            else:
+                prompt = 'Are you sure you want to restore ' + reminder_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive reminder', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE reminders SET archived=0 WHERE id=?', (reminder_id,))
+                    self.ui.update_reminders()
 
     def archive_risk(self):
         if self.ui.risks_tree.selectedIndexes() == []:
@@ -1066,13 +1102,22 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
             name_index = self.ui.risks_tree.selectedIndexes()[1]
             risk_name = self.ui.risks_tree.model().itemData(name_index)[0]
-            prompt = 'Are you sure you want to archive' + risk_name + '?'
-            buttonReply = QMessageBox.question(self, 'Archive risk', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('UPDATE risks SET archived=1 WHERE id=?', (risk_id,))
-                self.ui.update_risks()
-
+            arc_status = int(self.fetch_query('SELECT archived FROM risks WHERE id=?', (risk_id,))[0])
+            if arc_status == 0:
+                prompt = 'Are you sure you want to archive ' + risk_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive risk', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE risks SET archived=1 WHERE id=?', (risk_id,))
+                    self.ui.update_risks()
+            else:
+                prompt = 'Are you sure you want to restore ' + risk_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive risk', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE risks SET archived=0 WHERE id=?', (risk_id,))
+                    self.ui.update_risks()
+    
     def archive_todo(self):
         if self.ui.todos_tree.selectedIndexes() == []:
             return
@@ -1081,12 +1126,21 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             todo_id = self.ui.todos_tree.model().itemData(id_index)[0]
             name_index = self.ui.todos_tree.selectedIndexes()[1]
             todo_name = self.ui.todos_tree.model().itemData(name_index)[0]
-            prompt = 'Are you sure you want to archive' + todo_name + '?'
-            buttonReply = QMessageBox.question(self, 'Archive todo', prompt,
-                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply == QMessageBox.Yes:
-                self.run_query('UPDATE todos SET archived=1 WHERE id=?', (todo_id,))
-                self.ui.update_todos()
+            arc_status = int(self.fetch_query('SELECT archived FROM todos WHERE id=?', (todo_id,))[0])
+            if arc_status == 0:
+                prompt = 'Are you sure you want to archive ' + todo_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive todo', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE todos SET archived=1 WHERE id=?', (todo_id,))
+                    self.ui.update_todos()
+            else:
+                prompt = 'Are you sure you want to restore ' + todo_name + '?'
+                buttonReply = QMessageBox.question(self, 'Archive todo', prompt,
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    self.run_query('UPDATE todos SET archived=0 WHERE id=?', (todo_id,))
+                    self.ui.update_todos()
 
     # Favorite
     def favorite_contract(self):
