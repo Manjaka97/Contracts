@@ -40,7 +40,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.todos_btn.clicked.connect(self.show_todos)
         self.ui.library_btn.clicked.connect(self.show_library)
         self.ui.reports_btn.clicked.connect(self.show_reports)
-        self.ui.archive_btn.clicked.connect(self.show_archives)
 
         # New Buttons
         self.ui.new_contract.clicked.connect(self.new_contract)
@@ -132,6 +131,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.uncomplete_reminder_btn.clicked.connect(self.uncomplete_reminder)
         self.ui.snooze_reminder_btn.clicked.connect(self.snooze_reminder)
 
+        # Dropdown filters
+        self.ui.contract_type_menu.currentIndexChanged.connect(self.show_contracts)
     # Simple date validation method
     def is_valid(self, date_text):
         try:

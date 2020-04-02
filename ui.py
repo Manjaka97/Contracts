@@ -205,20 +205,6 @@ class Ui_MainWindow(object):
         self.reports_btn.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.reports_btn.setObjectName("reports_btn")
         self.verticalLayout.addWidget(self.reports_btn)
-        self.archive_btn = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.archive_btn.sizePolicy().hasHeightForWidth())
-        self.archive_btn.setSizePolicy(sizePolicy)
-        self.archive_btn.setMinimumSize(QtCore.QSize(0, 30))
-        self.archive_btn.setMaximumSize(QtCore.QSize(16777215, 56.25))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.archive_btn.setFont(font)
-        self.archive_btn.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.archive_btn.setObjectName("archive_btn")
-        self.verticalLayout.addWidget(self.archive_btn)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
@@ -293,6 +279,7 @@ class Ui_MainWindow(object):
         self.contract_type_menu.setStyleSheet("background-color: rgb(255,255,255);\n"
 "")
         self.contract_type_menu.setObjectName("contract_type_menu")
+        self.contract_type_menu.addItem("")
         self.contract_type_menu.addItem("")
         self.contract_type_menu.addItem("")
         self.contract_type_menu.addItem("")
@@ -1195,6 +1182,7 @@ class Ui_MainWindow(object):
         self.people_type_menu.addItem("")
         self.people_type_menu.addItem("")
         self.people_type_menu.addItem("")
+        self.people_type_menu.addItem("")
         self.horizontalLayout_66.addWidget(self.people_type_menu)
         self.horizontalLayout_67 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_67.setObjectName("horizontalLayout_67")
@@ -1722,6 +1710,7 @@ class Ui_MainWindow(object):
         self.company_type_menu.setStyleSheet("background-color: rgb(255,255,255);\n"
 "")
         self.company_type_menu.setObjectName("company_type_menu")
+        self.company_type_menu.addItem("")
         self.company_type_menu.addItem("")
         self.company_type_menu.addItem("")
         self.company_type_menu.addItem("")
@@ -2306,6 +2295,7 @@ class Ui_MainWindow(object):
         self.reminder_type_menu.setStyleSheet("background-color: rgb(255,255,255);\n"
 "")
         self.reminder_type_menu.setObjectName("reminder_type_menu")
+        self.reminder_type_menu.addItem("")
         self.reminder_type_menu.addItem("")
         self.reminder_type_menu.addItem("")
         self.reminder_type_menu.addItem("")
@@ -3028,6 +3018,7 @@ class Ui_MainWindow(object):
         self.risk_type_menu.addItem("")
         self.risk_type_menu.addItem("")
         self.risk_type_menu.addItem("")
+        self.risk_type_menu.addItem("")
         self.horizontalLayout_81.addWidget(self.risk_type_menu)
         self.horizontalLayout_82 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_82.setObjectName("horizontalLayout_82")
@@ -3595,6 +3586,7 @@ class Ui_MainWindow(object):
         self.todos_type_menu.setStyleSheet("background-color: rgb(255,255,255);\n"
 "")
         self.todos_type_menu.setObjectName("todos_type_menu")
+        self.todos_type_menu.addItem("")
         self.todos_type_menu.addItem("")
         self.todos_type_menu.addItem("")
         self.todos_type_menu.addItem("")
@@ -4413,7 +4405,6 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.risks_btn, self.todos_btn)
         MainWindow.setTabOrder(self.todos_btn, self.library_btn)
         MainWindow.setTabOrder(self.library_btn, self.reports_btn)
-        MainWindow.setTabOrder(self.reports_btn, self.archive_btn)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -4431,7 +4422,6 @@ class Ui_MainWindow(object):
         self.todos_btn.setText(_translate("MainWindow", "To-Dos"))
         self.library_btn.setText(_translate("MainWindow", "Library"))
         self.reports_btn.setText(_translate("MainWindow", "Reports"))
-        self.archive_btn.setText(_translate("MainWindow", "Archive"))
         self.dashboard_lb.setText(_translate("MainWindow", "Dashboard"))
         self.contracts_lb.setText(_translate("MainWindow", "Contracts"))
         self.contract_type_menu.setItemText(0, _translate("MainWindow", "All Contracts"))
@@ -4449,6 +4439,7 @@ class Ui_MainWindow(object):
         self.contract_type_menu.setItemText(12, _translate("MainWindow", "Created This Year"))
         self.contract_type_menu.setItemText(13, _translate("MainWindow", "Created Last Month"))
         self.contract_type_menu.setItemText(14, _translate("MainWindow", "Created Last Year"))
+        self.contract_type_menu.setItemText(15, _translate("MainWindow", "Archived"))
         self.edit_contract_btn.setText(_translate("MainWindow", "Edit"))
         self.delete_contract_btn.setText(_translate("MainWindow", "Delete"))
         self.archive_contract_btn.setText(_translate("MainWindow", "Archive"))
@@ -4557,6 +4548,7 @@ class Ui_MainWindow(object):
         self.people_type_menu.setItemText(7, _translate("MainWindow", "Created This Year"))
         self.people_type_menu.setItemText(8, _translate("MainWindow", "Created Last Month"))
         self.people_type_menu.setItemText(9, _translate("MainWindow", "Created Last Year"))
+        self.people_type_menu.setItemText(10, _translate("MainWindow", "Archived"))
         self.edit_person_btn.setText(_translate("MainWindow", "Edit"))
         self.delete_person_btn.setText(_translate("MainWindow", "Delete"))
         self.archive_person_btn.setText(_translate("MainWindow", "Archive"))
@@ -4604,6 +4596,7 @@ class Ui_MainWindow(object):
         self.company_type_menu.setItemText(5, _translate("MainWindow", "Created This Year"))
         self.company_type_menu.setItemText(6, _translate("MainWindow", "Created Last Month"))
         self.company_type_menu.setItemText(7, _translate("MainWindow", "Created Last Year"))
+        self.company_type_menu.setItemText(8, _translate("MainWindow", "Archived"))
         self.edit_company_btn.setText(_translate("MainWindow", "Edit"))
         self.delete_company_btn.setText(_translate("MainWindow", "Delete"))
         self.archive_company_btn.setText(_translate("MainWindow", "Archive"))
@@ -4654,6 +4647,7 @@ class Ui_MainWindow(object):
         self.reminder_type_menu.setItemText(5, _translate("MainWindow", "Completed Reminders"))
         self.reminder_type_menu.setItemText(6, _translate("MainWindow", "Upcoming This Week"))
         self.reminder_type_menu.setItemText(7, _translate("MainWindow", "Upcoming This Month"))
+        self.reminder_type_menu.setItemText(8, _translate("MainWindow", "Archived"))
         self.edit_reminder_btn.setText(_translate("MainWindow", "Edit"))
         self.delete_reminder_btn.setText(_translate("MainWindow", "Delete"))
         self.archive_reminder_btn.setText(_translate("MainWindow", "Archive"))
@@ -4740,6 +4734,7 @@ class Ui_MainWindow(object):
         self.risk_type_menu.setItemText(7, _translate("MainWindow", "Created This Year"))
         self.risk_type_menu.setItemText(8, _translate("MainWindow", "Created Last Month"))
         self.risk_type_menu.setItemText(9, _translate("MainWindow", "Created Last Year"))
+        self.risk_type_menu.setItemText(10, _translate("MainWindow", "Archived"))
         self.edit_risk_btn.setText(_translate("MainWindow", "Edit"))
         self.delete_risk_btn.setText(_translate("MainWindow", "Delete"))
         self.archive_risk_btn.setText(_translate("MainWindow", "Archive"))
@@ -4804,6 +4799,7 @@ class Ui_MainWindow(object):
         self.todos_type_menu.setItemText(7, _translate("MainWindow", "Created This Year"))
         self.todos_type_menu.setItemText(8, _translate("MainWindow", "Created Last Month"))
         self.todos_type_menu.setItemText(9, _translate("MainWindow", "Created Last Year"))
+        self.todos_type_menu.setItemText(10, _translate("MainWindow", "Archived"))
         self.edit_todo_btn.setText(_translate("MainWindow", "Edit"))
         self.delete_todo_btn.setText(_translate("MainWindow", "Delete"))
         self.archive_todo_btn.setText(_translate("MainWindow", "Archive"))
@@ -5243,8 +5239,41 @@ class Ui_MainWindow(object):
         self.contract_model = QtSql.QSqlRelationalTableModel()
         self.contract_model.setTable('contracts')
         query = QtSql.QSqlQuery()
-        query.exec_(
-               "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
+
+        if self.contract_type_menu.currentIndex() == 0:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE archived=0"
+        elif self.contract_type_menu.currentIndex() == 1:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.status_id=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 2:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE NOT contracts.status_id=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 3:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status, people_contracts.person_id FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 4:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status, people_contracts.person_id FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND contracts.status_id=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 5:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status, people_contracts.person_id FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND NOT contracts.status_id=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 6:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.status_id=1 AND contracts.classification_id=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 7:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE NOT contracts.status_id=1 AND contracts.classification_id=2 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 8:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.favorite=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 9:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.date_created=DATE('now') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 10:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) >= DATE('now', 'weekday 0','-7 days') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 11:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) >= DATE('now', 'start of month') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 12:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) >= DATE('now', 'start of year') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 13:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') and DATE('now', 'start of month') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 14:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year' and DATE('now', 'start of year') AND archived=0"
+        else:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE archived=1"
+
+        query.exec_(s)
         self.contract_model.setQuery(query)
         db.close()
         self.contracts_tree.setModel(self.contract_model)
@@ -5257,8 +5286,10 @@ class Ui_MainWindow(object):
             print('Db not open')
         self.person_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people")
+
+        if self.people_type_menu.currentIndex() == 0:
+                query.exec_(
+                        "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people")
         self.person_model.setQuery(query)
         db.close()
         self.people_tree.setModel(self.person_model)
