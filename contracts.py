@@ -133,6 +133,12 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
         # Dropdown filters
         self.ui.contract_type_menu.currentIndexChanged.connect(self.show_contracts)
+        self.ui.people_type_menu.currentIndexChanged.connect(self.show_people)
+        self.ui.company_type_menu.currentIndexChanged.connect(self.show_companies)
+        self.ui.reminder_type_menu.currentIndexChanged.connect(self.show_reminders)
+        self.ui.risk_type_menu.currentIndexChanged.connect(self.show_risks)
+        self.ui.todos_type_menu.currentIndexChanged.connect(self.show_todos)
+
     # Simple date validation method
     def is_valid(self, date_text):
         try:

@@ -2303,7 +2303,6 @@ class Ui_MainWindow(object):
         self.reminder_type_menu.addItem("")
         self.reminder_type_menu.addItem("")
         self.reminder_type_menu.addItem("")
-        self.reminder_type_menu.addItem("")
         self.horizontalLayout_76.addWidget(self.reminder_type_menu)
         self.horizontalLayout_77 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_77.setObjectName("horizontalLayout_77")
@@ -4640,14 +4639,13 @@ class Ui_MainWindow(object):
         self.state.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);"))
         self.reminder_lb.setText(_translate("MainWindow", "Reminders"))
         self.reminder_type_menu.setItemText(0, _translate("MainWindow", "All Reminders"))
-        self.reminder_type_menu.setItemText(1, _translate("MainWindow", "Favorites"))
-        self.reminder_type_menu.setItemText(2, _translate("MainWindow", "Current Reminders"))
-        self.reminder_type_menu.setItemText(3, _translate("MainWindow", "Reminders Requiring Action"))
-        self.reminder_type_menu.setItemText(4, _translate("MainWindow", "Upcoming Reminders"))
-        self.reminder_type_menu.setItemText(5, _translate("MainWindow", "Completed Reminders"))
-        self.reminder_type_menu.setItemText(6, _translate("MainWindow", "Upcoming This Week"))
-        self.reminder_type_menu.setItemText(7, _translate("MainWindow", "Upcoming This Month"))
-        self.reminder_type_menu.setItemText(8, _translate("MainWindow", "Archived"))
+        self.reminder_type_menu.setItemText(1, _translate("MainWindow", "Current Reminders"))
+        self.reminder_type_menu.setItemText(2, _translate("MainWindow", "Snoozed"))
+        self.reminder_type_menu.setItemText(3, _translate("MainWindow", "Upcoming Reminders"))
+        self.reminder_type_menu.setItemText(4, _translate("MainWindow", "Completed Reminders"))
+        self.reminder_type_menu.setItemText(5, _translate("MainWindow", "Upcoming This Week"))
+        self.reminder_type_menu.setItemText(6, _translate("MainWindow", "Upcoming This Month"))
+        self.reminder_type_menu.setItemText(7, _translate("MainWindow", "Archived"))
         self.edit_reminder_btn.setText(_translate("MainWindow", "Edit"))
         self.delete_reminder_btn.setText(_translate("MainWindow", "Delete"))
         self.archive_reminder_btn.setText(_translate("MainWindow", "Archive"))
@@ -5259,7 +5257,7 @@ class Ui_MainWindow(object):
         elif self.contract_type_menu.currentIndex() == 8:
                 s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.favorite=1 AND archived=0"
         elif self.contract_type_menu.currentIndex() == 9:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.date_created=DATE('now') AND archived=0"
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2)=DATE('now') AND archived=0"
         elif self.contract_type_menu.currentIndex() == 10:
                 s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) >= DATE('now', 'weekday 0','-7 days') AND archived=0"
         elif self.contract_type_menu.currentIndex() == 11:
@@ -5269,7 +5267,7 @@ class Ui_MainWindow(object):
         elif self.contract_type_menu.currentIndex() == 13:
                 s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') and DATE('now', 'start of month') AND archived=0"
         elif self.contract_type_menu.currentIndex() == 14:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year' and DATE('now', 'start of year') AND archived=0"
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') and DATE('now', 'start of year') AND archived=0"
         else:
                 s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE archived=1"
 
@@ -5288,8 +5286,29 @@ class Ui_MainWindow(object):
         query = QtSql.QSqlQuery()
 
         if self.people_type_menu.currentIndex() == 0:
-                query.exec_(
-                        "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people")
+                s = "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE archived=0"
+        elif self.people_type_menu.currentIndex() == 1:
+                s = "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE id=1 AND archived=0"
+        elif self.people_type_menu.currentIndex() == 2:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people JOIN people_contracts ON people.id=people_contracts.person_id AND archived=0"
+        elif self.people_type_menu.currentIndex() == 3:
+                s = "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE favorite=1 AND archived=0"
+        elif self.people_type_menu.currentIndex() == 4:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2)=DATE('now') AND archived=0"
+        elif self.people_type_menu.currentIndex() == 5:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'weekday 0','-7 days') AND archived=0"
+        elif self.people_type_menu.currentIndex() == 6:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of month') AND archived=0"
+        elif self.people_type_menu.currentIndex() == 7:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of year') AND archived=0"
+        elif self.people_type_menu.currentIndex() == 8:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') and DATE('now', 'start of month') AND archived=0"
+        elif self.people_type_menu.currentIndex() == 9:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') and DATE('now', 'start of year') AND archived=0"
+        else:
+                s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE archived=1"
+
+        query.exec_(s)
         self.person_model.setQuery(query)
         db.close()
         self.people_tree.setModel(self.person_model)
@@ -5301,8 +5320,27 @@ class Ui_MainWindow(object):
                     print('Db not open')
             self.company_model = QtSql.QSqlRelationalTableModel()
             query = QtSql.QSqlQuery()
-            query.exec_(
-                    "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies")
+
+            if self.company_type_menu.currentIndex() == 0:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE archived=0"
+            elif self.company_type_menu.currentIndex() == 1:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE favorite=1 and archived=0"
+            elif self.company_type_menu.currentIndex() == 2:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2)=DATE('now') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 3:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'weekday 0','-7 days') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 4:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of month') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 5:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of year') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 6:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') and DATE('now', 'start of month') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 7:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') and DATE('now', 'start of year') AND archived=0"
+            else:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE archived=1"
+
+            query.exec_(s)
             self.company_model.setQuery(query)
             db.close()
 
@@ -5315,8 +5353,25 @@ class Ui_MainWindow(object):
                     print('Db not open')
             self.reminder_model = QtSql.QSqlRelationalTableModel()
             query = QtSql.QSqlQuery()
-            query.exec_(
-                    "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id")
+
+            if self.reminder_type_menu.currentIndex() == 0:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0"
+            elif self.reminder_type_menu.currentIndex() == 1:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)=DATE('now') AND r.archived=0"
+            elif self.reminder_type_menu.currentIndex() == 2:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.snoozed=1 AND r.archived=0"
+            elif self.reminder_type_menu.currentIndex() == 3:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)>DATE('now') AND r.archived=0"
+            elif self.reminder_type_menu.currentIndex() == 4:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.complete=1 AND r.archived=0"
+            elif self.reminder_type_menu.currentIndex() == 5:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'weekday 0') AND r.archived=0"
+            elif self.reminder_type_menu.currentIndex() == 6:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'start of month', '+1 month') AND r.archived=0"
+            else:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=1"
+
+            query.exec_(s)
             self.reminder_model.setQuery(query)
             db.close()
 
@@ -5329,8 +5384,30 @@ class Ui_MainWindow(object):
                     print('Db not open')
             self.risk_model = QtSql.QSqlRelationalTableModel()
             query = QtSql.QSqlQuery()
-            query.exec_(
-                    "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id")
+            if self.risk_type_menu.currentIndex() == 0:
+                s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 1:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.expired=0 AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 2:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.expired=1 AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 3:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.favorite=1 AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 4:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2)=DATE('now') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 5:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) >= DATE('now', 'weekday 0', '-7 days') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 6:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) >= DATE('now', 'start of month') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 7:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) >= DATE('now', 'start of year') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 8:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') AND DATE('now', 'start of month') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 9:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') AND DATE('now', 'start of year') AND r.archived=0"
+            else:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.archived=1"
+
+            query.exec_(s)
             self.risk_model.setQuery(query)
             db.close()
 
@@ -5353,8 +5430,30 @@ class Ui_MainWindow(object):
                     print('Db not open')
             self.todo_model = QtSql.QSqlRelationalTableModel()
             query = QtSql.QSqlQuery()
-            query.exec_(
-                    "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id")
+            if self.todos_type_menu.currentIndex() == 0:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 1:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE NOT t.status_id=3 AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 2:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.deadline, 7, 4) || '-' || substr(t.deadline, 1, 2) || '-' || substr(t.deadline, 4,2)<=DATE('now') AND NOT t.deadline='' AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 3:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE t.favorite=1 AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 4:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2)=DATE('now') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 5:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) >= DATE('now', 'weekday 0', '-7 days') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 6:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) >= DATE('now', 'start of month') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 7:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) >= DATE('now', 'start of year') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 8:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') AND DATE('now', 'start of month') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 9:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') AND DATE('now', 'start of year') AND t.archived=0"
+            else:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE t.archived=1"
+
+            query.exec_(s)
             self.todo_model.setQuery(query)
             db.close()
 
