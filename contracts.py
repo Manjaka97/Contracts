@@ -7,6 +7,7 @@ import ui, calendarWidget, person
 import sqlite3
 import os
 import re
+import schedule
 
 # TODO: Automatizing stuff, especially based on dates (contract status, reminder alerts, automatic change of reminder date if recurring, risk expiration, todos status)
 # TODO: Implementing search filters
