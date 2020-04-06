@@ -518,6 +518,14 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message.show()
                 return
 
+        if not self.ui.do_not_recur_radio.isChecked() and self.ui.until_key_date_radio.isChecked() and contract_id == 0:
+                self.message = QMessageBox()
+                self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                self.message.setWindowTitle('Contracts')
+                self.message.setText("Please select a contract or check ''Do not recur''")
+                self.message.show()
+                return
+
         if self.ui.recur_radio.isChecked() and not self.ui.recur_until_specific.isChecked() and not self.ui.until_key_date_radio.isChecked() and not self.ui.recur_indefinitely_radio.isChecked():
             self.message = QMessageBox()
             self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
@@ -571,106 +579,53 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     deadline_object = reference_date_object + relativedelta(years=int(relative_date))
             deadline = deadline_object.strftime('%m/%d/%Y')
 
-        # Calculation for next recurrence
+        # Calculation for last recurrence
         if self.ui.do_not_recur_radio.isChecked():
-            next_recurrence = ''
+            last_recurrence = ''
+
         else:
             if self.ui.recur_until_specific.isChecked():
-                if recur_id == 0:
-                    if deadline_object + timedelta(days=1) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + timedelta(days=1)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 1:
-                    if deadline_object + timedelta(weeks=1) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + timedelta(weeks=1)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 2:
-                    if deadline_object + timedelta(weeks=2) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + timedelta(weeks=2)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 3:
-                    if deadline_object + relativedelta(months=1) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(months=1)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 4:
-                    if deadline_object + relativedelta(months=3) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(months=3)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 5:
-                    if deadline_object + relativedelta(months=6) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(months=6)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 6:
-                    if deadline_object + relativedelta(years=1) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(years=1)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 7:
-                    if deadline_object + relativedelta(years=2) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(years=2)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 8:
-                    if deadline_object + relativedelta(years=3) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(years=3)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 9:
-                    if deadline_object + relativedelta(years=4) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(years=4)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
-                if recur_id == 10:
-                    if deadline_object + relativedelta(years=5) > datetime.strptime(until_date, '%m/%d/%Y'):
-                        next_recurrence_object = deadline_object + relativedelta(years=5)
-                        next_recurrence = datetime.strftime(next_recurrence_object, '%m/%d/%Y')
-                    else:
-                        next_recurrence = ''
+                last_recurrence = self.ui.recur_until_specific_2.text()
 
+            elif self.ui.until_key_date_radio.isChecked():
+                if self.ui.until_key_date.currentIndex() == 0:
+                    last_recurrence = self.fetch_query("SELECT start_date FROM contracts WHERE id=?", (contract_id,))[0]
+                elif self.ui.until_key_date.currentIndex() == 1:
+                    last_recurrence = self.fetch_query("SELECT end_date FROM contracts WHERE id=?", (contract_id,))[0]
+                elif self.ui.until_key_date.currentIndex() == 2:
+                    last_recurrence = self.fetch_query("SELECT cancel_date FROM contracts WHERE id=?", (contract_id,))[0]
+                else:
+                    last_recurrence = self.fetch_query("SELECT cancel_date FROM contracts WHERE id=?", (contract_id,))[0]
+            else:
+                last_recurrence = ''
         # Saving or Updating
         if reminder_id == '': # New reminder
             reminder_id = self.next_reminder_id()
             self.run_query("INSERT INTO reminders (name, contract_id, company_id, description, complete, snoozed, "
                            "specific_radio, relative_radio, do_not_recur_radio, recur_radio, "
                            "until_specific_radio, until_key_radio, indefinitely_radio, specific_date, "
-                           "relative_date, time_id, before_after, date_id, recur_id, until_date, until_key_id, deadline, next_recurrence, date_created) "
+                           "relative_date, time_id, before_after, date_id, recur_id, until_date, until_key_id, deadline, last_recurrence, date_created) "
                            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, contract_id, company_id, description,
                                                                    complete, snoozed, specific_radio,
                                                                    relative_radio, do_not_recur_radio,
                                                                    recur_radio, until_specific_radio,
                                                                    until_key_radio, indefinitely_radio,
                                                                    specific_date, relative_date, time_id, before_after,
-                                                                   date_id, recur_id, until_date, until_key_id, deadline, next_recurrence))
+                                                                   date_id, recur_id, until_date, until_key_id, deadline, last_recurrence))
             self.run_query("UPDATE documents SET temp=0 WHERE type_id=2 AND owner_id=? ", (reminder_id,))
             self.run_query("UPDATE people_reminders SET temp=0 WHERE reminder_id=?", (reminder_id,))
         else: # Edit reminder
             self.run_query("UPDATE reminders SET name=?, contract_id=?, company_id=?, description=?, complete=?, snoozed=?, "
                            "specific_radio=?, relative_radio=?, do_not_recur_radio=?, recur_radio=?, "
                            "until_specific_radio=?, until_key_radio=?, indefinitely_radio=?, specific_date=?, "
-                           "relative_date=?, time_id=?, before_after=?, date_id=?, recur_id=?, until_date=?, until_key_id=?, deadline=?, next_recurrence=? WHERE id=?",
+                           "relative_date=?, time_id=?, before_after=?, date_id=?, recur_id=?, until_date=?, until_key_id=?, deadline=?, last_recurrence=? WHERE id=?",
                            (name, contract_id, company_id, description,
                             complete, snoozed, specific_radio,
                             relative_radio, do_not_recur_radio,
                             recur_radio, until_specific_radio,
                             until_key_radio, indefinitely_radio,
                             specific_date, relative_date, time_id, before_after,
-                            date_id, recur_id, until_date, until_key_id, deadline, next_recurrence, reminder_id))
+                            date_id, recur_id, until_date, until_key_id, deadline, last_recurrence, reminder_id))
             self.run_query("UPDATE documents SET temp=0 WHERE type_id=2 AND owner_id=? ", (reminder_id,))
             self.run_query("UPDATE people_reminders SET temp=0 WHERE reminder_id=?", (reminder_id,))
         self.confirm_delete()

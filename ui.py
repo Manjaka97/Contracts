@@ -1,6 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sqlite3
 from datetime import datetime, timedelta
+
+from dateutil.relativedelta import relativedelta
+
 import resources_rc
 
 class Ui_MainWindow(object):
@@ -5355,6 +5358,8 @@ class Ui_MainWindow(object):
             self.reminder_model = QtSql.QSqlRelationalTableModel()
             query = QtSql.QSqlQuery()
 
+            self.update_reminders_dates()
+
             t = datetime.today() + timedelta(days=1)
             t2 = datetime.today() + timedelta(days=2)
             y = datetime.today() - timedelta(days=1)
@@ -5364,9 +5369,10 @@ class Ui_MainWindow(object):
             tmr2 = datetime.strftime(t2, '%m/%d/%Y')
             ytd = datetime.strftime(y, '%m/%d/%Y')
             ytd2 = datetime.strftime(y2, '%m/%d/%Y')
+            today = datetime.strftime(datetime.today(), '%m/%d/%Y')
 
             if self.reminder_type_menu.currentIndex() == 0:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN \'" + today + "\' THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0"
             elif self.reminder_type_menu.currentIndex() == 1:
                     s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)=DATE('now') AND r.archived=0"
             elif self.reminder_type_menu.currentIndex() == 2:
@@ -5387,6 +5393,246 @@ class Ui_MainWindow(object):
             db.close()
 
             self.reminders_tree.setModel(self.reminder_model)
+
+    def update_reminders_dates(self):
+            ids = self.fetch_query("SELECT id FROM reminders WHERE recur_radio=1 AND substr(deadline, 7, 4)||'-'||substr (deadline, 1,2)||'-'||substr(deadline, 4,2)<DATE('now')")
+            if ids == []:
+                    return
+            for reminder_id in ids:
+                    recur_id = self.fetch_query("SELECT recur_id FROM reminders WHERE id=?", (reminder_id,))[0]
+                    prev_deadline = self.fetch_query("SELECT deadline FROM reminders WHERE id=?", (reminder_id,))[0]
+                    prev_deadline_object =datetime.strptime(prev_deadline, '%m/%d/%Y')
+                    last_recurrence = self.fetch_query("SELECT last_recurrence FROM reminders WHERE id=?", (reminder_id,))[0]
+                    next_recurrence = 'temp'
+                    if last_recurrence != '':
+                            i = 1
+                            if recur_id == 0:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + timedelta(days=1*i) < datetime.strptime(last_recurrence,
+                                                                                                       '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + timedelta(days=1*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 1:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + timedelta(weeks=1*i) < datetime.strptime(last_recurrence,
+                                                                                                        '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + timedelta(weeks=1*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 2:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + timedelta(weeks=2*i) < datetime.strptime(last_recurrence,
+                                                                                                '%m/%d/%Y'):
+                                                next_recurrence_object = prev_deadline_object + timedelta(weeks=2*i)
+                                                next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                                i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 3:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(months=1*i) < datetime.strptime(last_recurrence,
+                                                                                                     '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(months=1*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 4:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(months=3*i) < datetime.strptime(last_recurrence,
+                                                                                                     '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(months=3*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 5:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(months=6*i) < datetime.strptime(last_recurrence,
+                                                                                                     '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(months=6*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 6:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(years=1*i) < datetime.strptime(last_recurrence,
+                                                                                                    '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(years=1*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 7:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(years=2*i) < datetime.strptime(last_recurrence,
+                                                                                                    '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(years=2*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 8:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(years=3*i) < datetime.strptime(last_recurrence,
+                                                                                                    '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(years=3*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 9:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(years=4*i) < datetime.strptime(last_recurrence,
+                                                                                                    '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(years=4*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 10:
+                                    while next_recurrence != '':
+                                            if prev_deadline_object + relativedelta(years=5*i) < datetime.strptime(last_recurrence,
+                                                                                                    '%m/%d/%Y'):
+                                                    next_recurrence_object = prev_deadline_object + relativedelta(years=5*i)
+                                                    next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                        '%m/%d/%Y')
+                                                    i += 1
+                                            else:
+                                                    next_recurrence = ''
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                    else:
+                            i = 1
+                            if recur_id == 0:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + timedelta(days=1*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 1:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + timedelta(weeks=1*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 2:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + timedelta(weeks=2*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 3:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(months=1*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 4:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(months=3*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 5:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(months=6*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 6:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(years=1*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 7:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(years=2*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 8:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(years=3*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 9:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(years=4*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+                            elif recur_id == 10:
+                                    while next_recurrence != '':
+                                            next_recurrence_object = prev_deadline_object + relativedelta(years=5*i)
+                                            next_recurrence = datetime.strftime(next_recurrence_object,
+                                                                                '%m/%d/%Y')
+                                            i += 1
+                                            if   next_recurrence == '' or next_recurrence_object >= datetime.today():
+                                                    break
+
+                    if next_recurrence == '':
+                            self.run_query("UPDATE reminders SET recur_radio=0, last_recurrence='' WHERE id=?", (reminder_id,))
+                    else:
+                            self.run_query("UPDATE reminders SET deadline=? WHERE id=?",
+                                           (next_recurrence, reminder_id))
 
     def update_risks(self):
             db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
