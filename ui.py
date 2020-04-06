@@ -5395,6 +5395,7 @@ class Ui_MainWindow(object):
             self.reminders_tree.setModel(self.reminder_model)
 
     def update_reminders_dates(self):
+            print('Updating reminders dates')
             ids = self.fetch_query("SELECT id FROM reminders WHERE recur_radio=1 AND substr(deadline, 7, 4)||'-'||substr (deadline, 1,2)||'-'||substr(deadline, 4,2)<DATE('now')")
             if ids == []:
                     return

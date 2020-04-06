@@ -7,7 +7,8 @@ import ui, calendarWidget, person
 import sqlite3
 import os
 import re
-import schedule
+import schedule, time
+import threading
 
 # TODO: Automatizing stuff, especially based on dates (contract status, reminder alerts, automatic change of reminder date if recurring, risk expiration, todos status)
 # TODO: Implementing search filters
@@ -15,6 +16,7 @@ import schedule
 # TODO: Implementing Dashboard, Library, Reports and Archives
 
 class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
+    refresh_signal = QtCore.pyqtSignal()
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui.Ui_MainWindow()
@@ -139,6 +141,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.reminder_type_menu.currentIndexChanged.connect(self.show_reminders)
         self.ui.risk_type_menu.currentIndexChanged.connect(self.show_risks)
         self.ui.todos_type_menu.currentIndexChanged.connect(self.show_todos)
+
+        self.refresh_signal.connect(self.ui.update_reminders_dates)
+
+        # Update reminders everytime app is launched
+        self.ui.update_reminders_dates()
 
     # Simple date validation method
     def is_valid(self, date_text):
@@ -1697,6 +1704,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.run_query("DELETE FROM people_contracts WHERE del=1")
         self.run_query("DELETE FROM people_reminders WHERE del=1")
 
+    def refresh(self):
+        self.refresh_signal.emit()
 
 class Calendar(QtWidgets.QWidget, calendarWidget.Ui_Form):
     select_signal = QtCore.pyqtSignal(QtCore.QDate)
@@ -1743,5 +1752,15 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     Window = Main()
     Window.show()
+
+    def refresh():
+        schedule.every().day.at("00:00").do(Window.refresh)
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    t = threading.Thread(target=refresh)
+    t.start()
 
     sys.exit(app.exec_())
