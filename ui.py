@@ -5653,6 +5653,16 @@ class Ui_MainWindow(object):
                     self.reminders_btn.setStyleSheet("background-color: rgb(255, 255, 255);")
 
     def update_risks(self):
+            ids = self.fetch_query("SELECT id FROM risks WHERE  substr(end_date, 7, 4)||'-'||substr (end_date, 1,2)||'-'||substr(end_date, 4,2)<DATE('now') AND expired=0")
+            if ids != []:
+                    for risk_id in ids:
+                            self.run_query("UPDATE risks SET expired=1 WHERE id=?", (risk_id,))
+            ids = self.fetch_query(
+                    "SELECT id FROM risks WHERE  (substr(end_date, 7, 4)||'-'||substr (end_date, 1,2)||'-'||substr(end_date, 4,2)>=DATE('now') AND expired=1) OR end_date=''")
+            if ids != []:
+                    for risk_id in ids:
+                            self.run_query("UPDATE risks SET expired=0 WHERE id=?", (risk_id,))
+
             db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
             db.setDatabaseName('data.db')
             if not db.open():

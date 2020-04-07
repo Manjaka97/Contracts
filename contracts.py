@@ -10,7 +10,7 @@ import re
 import schedule, time
 import threading
 
-# TODO: Automatizing stuff, especially based on dates (contract status, reminder alerts, automatic change of reminder date if recurring, risk expiration, todos status)
+# TODO: Automatizing stuff, especially based on dates (contract status, risk expiration, todos status)
 # TODO: Implementing search filters
 # TODO: Exporting to csv based on filters
 # TODO: Implementing Dashboard, Library, Reports and Archives
