@@ -5374,7 +5374,7 @@ class Ui_MainWindow(object):
             if self.reminder_type_menu.currentIndex() == 0:
                     s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN \'" + today + "\' THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 1:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)=DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)<=DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 2:
                     s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.snoozed=1 AND r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 3:
@@ -5398,7 +5398,7 @@ class Ui_MainWindow(object):
             print('Updating reminders dates')
             ids = self.fetch_query("SELECT id FROM reminders WHERE recur_radio=1 AND substr(deadline, 7, 4)||'-'||substr (deadline, 1,2)||'-'||substr(deadline, 4,2)<DATE('now')")
             if ids == []:
-                    count = self.fetch_query("SELECT count(id) FROM reminders WHERE substr(deadline, 7, 4) || '-' || substr(deadline, 1, 2) || '-' || substr(deadline, 4, 2)<=DATE('now') AND complete=0")[0]
+                    count = self.fetch_query("SELECT count(id) FROM reminders WHERE substr(deadline, 7, 4) || '-' || substr(deadline, 1, 2) || '-' || substr(deadline, 4, 2)<=DATE('now') AND complete=0 AND snoozed=0")[0]
                     if count > 0:
                             self.reminders_btn.setText('Reminders (' + str(count) + ')')
                             self.reminders_btn.setStyleSheet("background-color: rgb(240, 10, 70);")
@@ -5643,7 +5643,7 @@ class Ui_MainWindow(object):
                                            (next_recurrence, reminder_id))
 
             count = self.fetch_query(
-                    "SELECT count(id) FROM reminders WHERE substr(deadline, 7, 4) || '-' || substr(deadline, 1, 2) || '-' || substr(deadline, 4, 2)<=DATE('now') AND complete=0")[
+                    "SELECT count(id) FROM reminders WHERE substr(deadline, 7, 4) || '-' || substr(deadline, 1, 2) || '-' || substr(deadline, 4, 2)<=DATE('now') AND complete=0 AND snoozed=0")[
                     0]
             if count > 0:
                     self.reminders_btn.setText('Reminders (' + str(count) + ')')
