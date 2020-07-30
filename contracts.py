@@ -10,7 +10,7 @@ import re
 import schedule, time
 import threading
 
-# TODO: Automatizing stuff, especially based on dates (contract status, risk expiration, todos status)
+# TODO: Automatizing stuff, especially based on dates (todos status)
 # TODO: Implementing search filters
 # TODO: Exporting to csv based on filters
 # TODO: Implementing Dashboard, Library, Reports and Archives
@@ -24,14 +24,14 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Using dir_ because dir is a reserved keyword
         # The line below does not work after freezing the app
         self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
-        # if getattr(sys, 'frozen', False):
-        #     # frozen
-        #     self.dir_ = os.path.dirname(sys.executable) + "\\documents\\"
-        # else:
-        #     # unfrozen
-        #     dir_ = os.path.dirname(os.path.realpath(__file__))
-        if not os.path.exists(self.dir_):
-            os.makedirs(self.dir_)
+        if getattr(sys, 'frozen', False):
+            # frozen
+            self.dir_ = os.path.dirname(sys.executable) + "\\documents\\"
+        else:
+            # unfrozen
+            dir_ = os.path.dirname(os.path.realpath(__file__))
+        # if not os.path.exists(self.dir_):
+        #     os.makedirs(self.dir_)
 
         # Menu Buttons
         self.ui.dashboard_btn.clicked.connect(self.show_dashboard)
@@ -142,10 +142,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.risk_type_menu.currentIndexChanged.connect(self.show_risks)
         self.ui.todos_type_menu.currentIndexChanged.connect(self.show_todos)
 
+        # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
+        self.refresh_signal.connect(self.ui.update_status)
 
-        # Update reminders everytime app is launched
+        # Updates everytime app is launched
         self.ui.update_reminders_dates()
+        self.ui.update_status()
 
     # Simple date validation method
     def is_valid(self, date_text):
@@ -373,6 +376,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query("UPDATE people_contracts SET temp=0 WHERE contract_id=?", (contract_id,))
             self.confirm_delete()
             self.show_contracts()
+        if status == 0:
+            print('Status updated')
+            self.ui.update_status()
 
     def save_person(self):
         person_id = self.ui.person_id_lb.text()

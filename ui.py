@@ -411,25 +411,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_51.addLayout(self.horizontalLayout_34)
 
         # Contracts Tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.contract_model = QtSql.QSqlRelationalTableModel()
-        self.contract_model.setTable('contracts')
-        query = QtSql.QSqlQuery()
-        if self.contract_type_menu.currentIndex() == 0:
-                query_condition = ""
-        elif self.contract_type_menu.currentIndex() == 1:
-                query_condition = "WHERE contracts.status_id=1"
-        elif self.contract_type_menu.currentIndex() == 2:
-                query_condition = "WHERE contracts.status_id=1"
-        query.exec_(
-                "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id")
-        self.contract_model.setQuery(query)
-        db.close()
-
         self.contracts_tree = QtWidgets.QTreeView(self.layoutWidget4)
+        self.update_contracts()
         self.contracts_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -558,18 +541,8 @@ class Ui_MainWindow(object):
         self.gridLayout_8.addWidget(self.contract_master, 5, 6, 1, 1)
 
         # Contract Parties
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.contract_party_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_contracts JOIN people on people_contracts.person_id=people.id WHERE people_contracts.contract_id=" + str(self.next_contract_id()))
-        self.contract_party_model.setQuery(query)
-        db.close()
-
         self.contract_parties = QtWidgets.QTreeView(self.scrollAreaWidgetContents_8)
+        self.update_parties()
         self.contract_parties.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.contract_parties.setModel(self.contract_party_model)
         font = QtGui.QFont()
@@ -1073,19 +1046,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_33.addWidget(self.label_102)
 
         # Contracts Attachments
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.contract_attachment_model = QtSql.QSqlRelationalTableModel()
-        self.contract_attachment_model.setTable('documents')
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=1 AND owner_id=" + str(self.next_contract_id()))
-        self.contract_attachment_model.setQuery(query)
-        db.close()
-
         self.contract_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_8)
+        self.update_contract_attachments()
         self.contract_attachments.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.contract_attachments.setModel(self.contract_attachment_model)
         font = QtGui.QFont()
@@ -1291,18 +1253,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_53.addLayout(self.horizontalLayout_68)
 
         # People Tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.person_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people")
-        self.person_model.setQuery(query)
-        db.close()
-
         self.people_tree = QtWidgets.QTreeView(self.layoutWidget_2)
+        self.update_people()
         self.people_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.people_tree.setModel(self.person_model)
         font = QtGui.QFont()
@@ -1827,18 +1779,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_54.addLayout(self.horizontalLayout_73)
 
         # Companies Tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.company_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies")
-        self.company_model.setQuery(query)
-        db.close()
-        
         self.companies_tree = QtWidgets.QTreeView(self.layoutWidget_4)
+        self.update_companies()
         self.companies_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.companies_tree.setModel(self.company_model)
         font = QtGui.QFont()
@@ -2409,18 +2351,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_55.addLayout(self.horizontalLayout_78)
 
         # Reminders tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.reminder_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT r.id as Id, r.name as Name, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id")
-        self.reminder_model.setQuery(query)
-        db.close()
-
         self.reminders_tree = QtWidgets.QTreeView(self.layoutWidget_6)
+        self.update_reminders()
         self.reminders_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.reminders_tree.setModel(self.reminder_model)
         font = QtGui.QFont()
@@ -2523,19 +2455,8 @@ class Ui_MainWindow(object):
         self.gridLayout_11.addWidget(self.label_140, 0, 0, 1, 1)
         
         # Reminder people tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.reminder_person_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT people.id as ID, people.first as 'First Name', people.last as 'Last Name', people.email as 'Email Address' FROM people_reminders JOIN people ON people_reminders.person_id=people.id WHERE people_reminders.reminder_id=" + str(
-                        self.next_reminder_id))
-        self.reminder_person_model.setQuery(query)
-        db.close()
-        
         self.reminder_people = QtWidgets.QTreeView(self.scrollAreaWidgetContents_11)
+        self.update_reminder_people()
         self.reminder_people.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.reminder_people.setModel(self.reminder_person_model)
         font = QtGui.QFont()
@@ -2701,19 +2622,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_40.addWidget(self.label_146)
 
         # Reminder attachments
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.reminder_attachment_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE type_id=2 AND owner_id=" + str(
-                        self.next_reminder_id))
-        self.reminder_attachment_model.setQuery(query)
-        db.close()
-
         self.reminder_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_11)
+        self.update_reminder_attachments()
         self.reminder_attachments.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.reminder_attachments.setModel(self.reminder_attachment_model)
         font = QtGui.QFont()
@@ -3122,18 +3032,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_56.addLayout(self.horizontalLayout_83)
 
         # Risks Tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.risk_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id")
-        self.risk_model.setQuery(query)
-        db.close()
-
         self.risks_tree = QtWidgets.QTreeView(self.layoutWidget_8)
+        self.update_risks()
         self.risks_tree.setModel(self.risk_model)
         self.risks_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         font = QtGui.QFont()
@@ -3489,6 +3389,7 @@ class Ui_MainWindow(object):
         db.close()
 
         self.risk_attachments = QtWidgets.QTreeView(self.scrollAreaWidgetContents_12)
+        self.update_risk_attachments()
         self.risk_attachments.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.risk_attachments.setModel(self.risk_attachment_model)
         font = QtGui.QFont()
@@ -3720,18 +3621,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_57.addLayout(self.horizontalLayout_91)
 
         # Todos tree
-        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        db.setDatabaseName('data.db')
-        if not db.open():
-                print('Db not open')
-        self.todo_model = QtSql.QSqlRelationalTableModel()
-        query = QtSql.QSqlQuery()
-        query.exec_(
-                "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id")
-        self.todo_model.setQuery(query)
-        db.close()
-
         self.todos_tree = QtWidgets.QTreeView(self.layoutWidget_18)
+        self.update_todos()
         self.todos_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.todos_tree.setModel(self.todo_model)
         font = QtGui.QFont()
@@ -4781,8 +4672,8 @@ class Ui_MainWindow(object):
         self.risk_contract.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);"))
         self.label_157.setText(_translate("MainWindow", "Contract"))
         self.risk_name.setStyleSheet(_translate("MainWindow", "background-color: rgb(255, 255, 255);"))
-        self.label_159.setText(_translate("MainWindow", "Notes"))
-        self.label_160.setText(_translate("MainWindow", "Mitigation"))
+        self.label_159.setText(_translate("MainWindow", "Description"))
+        self.label_160.setText(_translate("MainWindow", "Mitigation Measures"))
         self.label_162.setText(_translate("MainWindow", "Attachments"))
         self.risk_add_attachment_3.setText(_translate("MainWindow", "Add"))
         self.risk_open_attachment_3.setText(_translate("MainWindow", "Open"))
@@ -5233,6 +5124,9 @@ class Ui_MainWindow(object):
 
     # Updates
     def update_contracts(self):
+        self.run_query("CREATE VIEW IF NOT EXISTS contracts_view AS SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', CASE WHEN status_id = 0 THEN status_.name ELSE status.name END as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE archived=0")
+        self.run_query("CREATE VIEW IF NOT EXISTS my_contracts_view AS SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', CASE WHEN status_id = 0 THEN status_.name ELSE status.name END as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND archived=0")
+
         # Contracts Tree
         db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName('data.db')
@@ -5243,21 +5137,21 @@ class Ui_MainWindow(object):
         query = QtSql.QSqlQuery()
 
         if self.contract_type_menu.currentIndex() == 0:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE archived=0"
+                s = "SELECT * FROM contracts_view"
         elif self.contract_type_menu.currentIndex() == 1:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.status_id=1 AND archived=0"
+                s = "SELECT * FROM contracts_view WHERE status = 'Active'"
         elif self.contract_type_menu.currentIndex() == 2:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE NOT contracts.status_id=1 AND archived=0"
+                s = "SELECT * FROM contracts_view WHERE status != 'Active'"
         elif self.contract_type_menu.currentIndex() == 3:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND archived=0"
+                s = "SELECT * FROM my_contracts_view"
         elif self.contract_type_menu.currentIndex() == 4:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND contracts.status_id=1 AND archived=0"
+                s = "SELECT * FROM my_contracts_view WHERE status = 'Active'"
         elif self.contract_type_menu.currentIndex() == 5:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND NOT contracts.status_id=1 AND archived=0"
+                s = "SELECT * FROM my_contracts_view WHERE status != 'Active'"
         elif self.contract_type_menu.currentIndex() == 6:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.status_id=1 AND contracts.classification_id=1 AND archived=0"
+                s = "SELECT * FROM contracts_view WHERE status = 'Active' AND Classification = 'Customer'"
         elif self.contract_type_menu.currentIndex() == 7:
-                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE NOT contracts.status_id=1 AND contracts.classification_id=2 AND archived=0"
+                s = "SELECT * FROM contracts_view WHERE status = 'Active' AND Classification = 'Supplier'"
         elif self.contract_type_menu.currentIndex() == 8:
                 s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.favorite=1 AND archived=0"
         elif self.contract_type_menu.currentIndex() == 9:
@@ -5279,6 +5173,11 @@ class Ui_MainWindow(object):
         self.contract_model.setQuery(query)
         db.close()
         self.contracts_tree.setModel(self.contract_model)
+
+    def update_status(self):
+        self.run_query("UPDATE contracts SET status_id_ = 1 WHERE status_id = 0 AND (((term_id = 1 OR term_id = 2) AND DATE('now') BETWEEN substr(start_date, 7, 4)||'-'||substr (start_date, 1,2)||'-'||substr(start_date, 4,2) and substr(end_date, 7, 4)||'-'||substr (end_date, 1,2)||'-'||substr(end_date, 4,2)) OR (term_id = 3 AND DATE('now') >= substr(start_date, 7, 4)||'-'||substr (start_date, 1,2)||'-'||substr(start_date, 4,2)))")
+        self.run_query("UPDATE contracts SET status_id_ = 2 WHERE status_id = 0 AND ( (term_id = 1 OR term_id = 2) AND DATE('now') >= substr(end_date, 7, 4)||'-'||substr (end_date, 1,2)||'-'||substr(end_date, 4,2))")
+        self.run_query("UPDATE contracts SET status_id_ = 5 WHERE status_id = 0 AND ( (term_id = 1 OR term_id = 2) AND DATE('now') < substr(start_date, 7, 4)||'-'||substr (start_date, 1,2)||'-'||substr(start_date, 4,2))")
 
     def update_people(self):
         # People Tree
