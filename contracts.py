@@ -10,7 +10,6 @@ import re
 import schedule, time
 import threading
 
-# TODO: Automatizing stuff, especially based on dates (todos status)
 # TODO: Implementing search filters
 # TODO: Exporting to csv based on filters
 # TODO: Implementing Dashboard, Library, Reports and Archives
@@ -142,6 +141,17 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.risk_type_menu.currentIndexChanged.connect(self.show_risks)
         self.ui.todos_type_menu.currentIndexChanged.connect(self.show_todos)
 
+        # Search Bars
+        self.ui.contract_id_search.textChanged.connect(self.search_contract)
+        self.ui.contract_title_search.textChanged.connect(self.search_contract)
+        self.ui.contract_type_search.textChanged.connect(self.search_contract)
+        self.ui.contract_classificatiion_type.textChanged.connect(self.search_contract)
+        # TODO: Fix search dates
+       # self.ui.contract_start_type.textChanged.connect(self.search_contract)
+       # self.ui.contract_end_search.textChanged.connect(self.search_contract)
+        self.ui.contract_value_search.textChanged.connect(self.search_contract)
+        self.ui.contract_status_menu.currentIndexChanged.connect(self.search_contract)
+
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
         self.refresh_signal.connect(self.ui.update_status)
@@ -149,6 +159,10 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Updates everytime app is launched
         self.ui.update_reminders_dates()
         self.ui.update_status()
+
+    # Searches
+    def search_contract(self):
+        self.ui.search_contract()
 
     # Simple date validation method
     def is_valid(self, date_text):

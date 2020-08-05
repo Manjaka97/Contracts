@@ -337,6 +337,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_34 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_34.setObjectName("horizontalLayout_34")
         self.contract_id_search = QtWidgets.QLineEdit(self.layoutWidget4)
+        self.contract_id_search.setPlaceholderText('Search Id')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_id_search.setFont(font)
@@ -345,6 +346,7 @@ class Ui_MainWindow(object):
         self.contract_id_search.setObjectName("contract_id_search")
         self.horizontalLayout_34.addWidget(self.contract_id_search)
         self.contract_title_search = QtWidgets.QLineEdit(self.layoutWidget4)
+        self.contract_title_search.setPlaceholderText('Search Title')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_title_search.setFont(font)
@@ -353,6 +355,7 @@ class Ui_MainWindow(object):
         self.contract_title_search.setObjectName("contract_title_search")
         self.horizontalLayout_34.addWidget(self.contract_title_search)
         self.contract_type_search = QtWidgets.QLineEdit(self.layoutWidget4)
+        self.contract_type_search.setPlaceholderText('Search Type')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_type_search.setFont(font)
@@ -361,6 +364,7 @@ class Ui_MainWindow(object):
         self.contract_type_search.setObjectName("contract_type_search")
         self.horizontalLayout_34.addWidget(self.contract_type_search)
         self.contract_classificatiion_type = QtWidgets.QLineEdit(self.layoutWidget4)
+        self.contract_classificatiion_type.setPlaceholderText('Search Classification')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_classificatiion_type.setFont(font)
@@ -369,6 +373,7 @@ class Ui_MainWindow(object):
         self.contract_classificatiion_type.setObjectName("contract_classificatiion_type")
         self.horizontalLayout_34.addWidget(self.contract_classificatiion_type)
         self.contract_start_type = QtWidgets.QLineEdit(self.layoutWidget4)
+        self.contract_start_type.setPlaceholderText('Search Start Date')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_start_type.setFont(font)
@@ -377,6 +382,7 @@ class Ui_MainWindow(object):
         self.contract_start_type.setObjectName("contract_start_type")
         self.horizontalLayout_34.addWidget(self.contract_start_type)
         self.contract_end_search = QtWidgets.QLineEdit(self.layoutWidget4)
+        self.contract_end_search.setPlaceholderText('Search End Date')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_end_search.setFont(font)
@@ -385,6 +391,7 @@ class Ui_MainWindow(object):
         self.contract_end_search.setObjectName("contract_end_search")
         self.horizontalLayout_34.addWidget(self.contract_end_search)
         self.contract_value_search = QtWidgets.QLineEdit(self.layoutWidget4)
+        self.contract_value_search.setPlaceholderText('Search Value')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.contract_value_search.setFont(font)
@@ -399,7 +406,6 @@ class Ui_MainWindow(object):
         self.contract_status_menu.setFont(font)
         self.contract_status_menu.setStyleSheet("background-color: rgb(255,255,255)")
         self.contract_status_menu.setObjectName("contract_status_menu")
-        self.contract_status_menu.addItem("")
         self.contract_status_menu.addItem("")
         self.contract_status_menu.addItem("")
         self.contract_status_menu.addItem("")
@@ -4339,13 +4345,12 @@ class Ui_MainWindow(object):
         self.archive_contract_btn.setText(_translate("MainWindow", "Archive"))
         self.favorite_contract_btn.setText(_translate("MainWindow", "Mark As Favorite"))
         self.contract_status_menu.setItemText(0, _translate("MainWindow", "Any"))
-        self.contract_status_menu.setItemText(1, _translate("MainWindow", "Auto"))
-        self.contract_status_menu.setItemText(2, _translate("MainWindow", "Active"))
-        self.contract_status_menu.setItemText(3, _translate("MainWindow", "Expired"))
-        self.contract_status_menu.setItemText(4, _translate("MainWindow", "Draft"))
-        self.contract_status_menu.setItemText(5, _translate("MainWindow", "Due"))
-        self.contract_status_menu.setItemText(6, _translate("MainWindow", "Future"))
-        self.contract_status_menu.setItemText(7, _translate("MainWindow", "Closed"))
+        self.contract_status_menu.setItemText(1, _translate("MainWindow", "Active"))
+        self.contract_status_menu.setItemText(2, _translate("MainWindow", "Expired"))
+        self.contract_status_menu.setItemText(3, _translate("MainWindow", "Draft"))
+        self.contract_status_menu.setItemText(4, _translate("MainWindow", "Due"))
+        self.contract_status_menu.setItemText(5, _translate("MainWindow", "Future"))
+        self.contract_status_menu.setItemText(6, _translate("MainWindow", "Closed"))
         self.previous_contracts.setText(_translate("MainWindow", "Previous"))
         self.next_contracts.setText(_translate("MainWindow", "Next"))
         self.new_contract.setText(_translate("MainWindow", "New"))
@@ -5779,5 +5784,82 @@ class Ui_MainWindow(object):
             db.close()
             self.reminder_people.setModel(self.reminder_person_model)
 
+    # Searches
+    def search_contract(self):
+        id = self.contract_id_search.text()
+        title = self.contract_title_search.text()
+        type = self.contract_type_search.text()
+        classification = self.contract_classificatiion_type.text()
+        start = self.contract_start_type.text()
+        end = self.contract_end_search.text()
+        value = self.contract_value_search.text()
+        status = self.contract_status_menu.currentText()
 
+        self.run_query(
+                "CREATE VIEW IF NOT EXISTS contracts_view AS SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', CASE WHEN status_id = 0 THEN status_.name ELSE status.name END as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE archived=0")
+        self.run_query(
+                "CREATE VIEW IF NOT EXISTS my_contracts_view AS SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', CASE WHEN status_id = 0 THEN status_.name ELSE status.name END as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status.id JOIN contract_types ON contracts.type_id=contract_types.id JOIN people_contracts on people_contracts.contract_id=contracts.id WHERE person_id=1 AND archived=0")
+
+        # Contracts Tree
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName('data.db')
+        if not db.open():
+                print('Db not open')
+        self.contract_model = QtSql.QSqlRelationalTableModel()
+        self.contract_model.setTable('contracts')
+        query = QtSql.QSqlQuery()
+
+        if self.contract_type_menu.currentIndex() == 0:
+                s = "SELECT * FROM contracts_view"
+        elif self.contract_type_menu.currentIndex() == 1:
+                s = "SELECT * FROM contracts_view WHERE status = 'Active'"
+        elif self.contract_type_menu.currentIndex() == 2:
+                s = "SELECT * FROM contracts_view WHERE status != 'Active'"
+        elif self.contract_type_menu.currentIndex() == 3:
+                s = "SELECT * FROM my_contracts_view"
+        elif self.contract_type_menu.currentIndex() == 4:
+                s = "SELECT * FROM my_contracts_view WHERE status = 'Active'"
+        elif self.contract_type_menu.currentIndex() == 5:
+                s = "SELECT * FROM my_contracts_view WHERE status != 'Active'"
+        elif self.contract_type_menu.currentIndex() == 6:
+                s = "SELECT * FROM contracts_view WHERE status = 'Active' AND Classification = 'Customer'"
+        elif self.contract_type_menu.currentIndex() == 7:
+                s = "SELECT * FROM contracts_view WHERE status = 'Active' AND Classification = 'Supplier'"
+        elif self.contract_type_menu.currentIndex() == 8:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.favorite=1 AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 9:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2)=DATE('now') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 10:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) >= DATE('now', 'weekday 0','-7 days') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 11:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) >= DATE('now', 'start of month') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 12:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) >= DATE('now', 'start of year') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 13:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') and DATE('now', 'start of month') AND archived=0"
+        elif self.contract_type_menu.currentIndex() == 14:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE substr(contracts.date_created, 7, 4)||'-'||substr (contracts.date_created, 1,2)||'-'||substr(contracts.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') and DATE('now', 'start of year') AND archived=0"
+        else:
+                s = "SELECT contracts.id as ID, title as Title, contract_types.name as Type, classifications.name as Classification, start_date as 'Start Date', end_date as 'End Date', value as Value, currencies.symbol as '', status.name as Status FROM contracts JOIN currencies ON contracts.currency_id=currencies.id JOIN classifications ON contracts.classification_id=classifications.id JOIN status ON contracts.status_id=status.id JOIN contract_types ON contracts.type_id=contract_types.id WHERE archived=1"
+
+        if id:
+            s = "SELECT * FROM (" + s +") WHERE CAST(ID AS text) LIKE '" + id +"%'"
+        if title:
+            s = "SELECT * FROM (" + s +") WHERE CAST(Title AS text) LIKE '" + title +"%'"
+        if type:
+            s = "SELECT * FROM (" + s +") WHERE CAST(Type AS text) LIKE '" + type +"%'"
+        if classification:
+            s = "SELECT * FROM (" + s +") WHERE CAST(Classification AS text) LIKE '" + classification +"%'"
+        if start:
+            s = "SELECT * FROM (" + s +") WHERE 'Start Date' LIKE '" + start +"%'"
+        if end:
+            s = "SELECT * FROM (" + s +") WHERE 'End Date' LIKE '" + end +"%'"
+        if value:
+            s = "SELECT * FROM (" + s +") WHERE CAST(Value AS text) LIKE '" + value +"%'"
+        if status != 'Any':
+            s = "SELECT * FROM (" + s + ") WHERE Status = '" + status + "'"
+        query.exec_(s)
+        self.contract_model.setQuery(query)
+        db.close()
+        self.contracts_tree.setModel(self.contract_model)
 
