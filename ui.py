@@ -1727,6 +1727,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_73 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_73.setObjectName("horizontalLayout_73")
         self.company_id_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_id_search.setPlaceholderText('Search Id')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_id_search.setFont(font)
@@ -1735,6 +1736,7 @@ class Ui_MainWindow(object):
         self.company_id_search.setObjectName("company_id_search")
         self.horizontalLayout_73.addWidget(self.company_id_search)
         self.company_name_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_name_search.setPlaceholderText('Search Name')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_name_search.setFont(font)
@@ -1743,6 +1745,7 @@ class Ui_MainWindow(object):
         self.company_name_search.setObjectName("company_name_search")
         self.horizontalLayout_73.addWidget(self.company_name_search)
         self.company_address_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_address_search.setPlaceholderText('Search Address')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_address_search.setFont(font)
@@ -1751,6 +1754,7 @@ class Ui_MainWindow(object):
         self.company_address_search.setObjectName("company_address_search")
         self.horizontalLayout_73.addWidget(self.company_address_search)
         self.company_city_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_city_search.setPlaceholderText('Search City')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_city_search.setFont(font)
@@ -1759,6 +1763,7 @@ class Ui_MainWindow(object):
         self.company_city_search.setObjectName("company_city_search")
         self.horizontalLayout_73.addWidget(self.company_city_search)
         self.company_state_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_state_search.setPlaceholderText('Search State')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_state_search.setFont(font)
@@ -1767,6 +1772,7 @@ class Ui_MainWindow(object):
         self.company_state_search.setObjectName("company_state_search")
         self.horizontalLayout_73.addWidget(self.company_state_search)
         self.company_zip_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_zip_search.setPlaceholderText('Search Zip')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_zip_search.setFont(font)
@@ -1775,6 +1781,7 @@ class Ui_MainWindow(object):
         self.company_zip_search.setObjectName("company_zip_search")
         self.horizontalLayout_73.addWidget(self.company_zip_search)
         self.company_country_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_country_search.setPlaceholderText('Search Country')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_country_search.setFont(font)
@@ -1783,6 +1790,7 @@ class Ui_MainWindow(object):
         self.company_country_search.setObjectName("company_country_search")
         self.horizontalLayout_73.addWidget(self.company_country_search)
         self.company_website_search = QtWidgets.QLineEdit(self.layoutWidget_4)
+        self.company_website_search.setPlaceholderText('Search Website')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.company_website_search.setFont(font)
@@ -5933,3 +5941,61 @@ class Ui_MainWindow(object):
             db.close()
             self.people_tree.setModel(self.person_model)
 
+    def search_company(self):
+            id = self.company_id_search.text()
+            name = self.company_name_search.text()
+            address = self.company_address_search.text()
+            city = self.company_city_search.text()
+            state = self.company_state_search.text()
+            zip = self.company_zip_search.text()
+            country = self.company_country_search.text()
+            website = self.company_website_search.text()
+
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.company_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+
+            if self.company_type_menu.currentIndex() == 0:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE archived=0"
+            elif self.company_type_menu.currentIndex() == 1:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE favorite=1 and archived=0"
+            elif self.company_type_menu.currentIndex() == 2:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2)=DATE('now') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 3:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'weekday 0','-7 days') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 4:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of month') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 5:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of year') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 6:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') and DATE('now', 'start of month') AND archived=0"
+            elif self.company_type_menu.currentIndex() == 7:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') and DATE('now', 'start of year') AND archived=0"
+            else:
+                    s = "SELECT id as Id, name as Name, address1 as Address, city as City, state as State, zip as 'Zip Code', country as 'Country', website as Website FROM companies WHERE archived=1"
+
+            if id:
+                    s = "SELECT * FROM (" + s + ") WHERE CAST(ID as text) LIKE '" + id + "%'"
+            if name:
+                    s = "SELECT * FROM (" + s + ") WHERE Name LIKE '" + name + "%'"
+            if address:
+                    s = "SELECT * FROM (" + s + ") WHERE Address LIKE '" + address + "%'"
+            if city:
+                    s = "SELECT * FROM (" + s + ") WHERE City LIKE '" + city + "%'"
+            if state:
+                    s = "SELECT * FROM (" + s + ") WHERE State LIKE '" + state + "%'"
+            if zip:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Zip Code\" LIKE '" + zip + "%'"
+            if country:
+                    s = "SELECT * FROM (" + s + ") WHERE Country LIKE '" + country + "%'"
+            if website:
+                    s = "SELECT * FROM (" + s + ") WHERE Website LIKE '" + website + "%'"
+
+            query.exec_(s)
+            self.company_model.setQuery(query)
+            db.close()
+
+            self.companies_tree.setModel(self.company_model)

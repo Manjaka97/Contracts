@@ -160,6 +160,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.person_job_search.textChanged.connect(self.ui.search_person)
         self.ui.person_type_search.textChanged.connect(self.ui.search_person)
 
+        self.ui.company_id_search.textChanged.connect(self.ui.search_company)
+        self.ui.company_name_search.textChanged.connect(self.ui.search_company)
+        self.ui.company_address_search.textChanged.connect(self.ui.search_company)
+        self.ui.company_city_search.textChanged.connect(self.ui.search_company)
+        self.ui.company_state_search.textChanged.connect(self.ui.search_company)
+        self.ui.company_zip_search.textChanged.connect(self.ui.search_company)
+        self.ui.company_country_search.textChanged.connect(self.ui.search_company)
+        self.ui.company_website_search.textChanged.connect(self.ui.search_company)
+
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
         self.refresh_signal.connect(self.ui.update_status)
