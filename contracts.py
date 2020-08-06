@@ -142,15 +142,23 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.todos_type_menu.currentIndexChanged.connect(self.show_todos)
 
         # Search Bars
-        self.ui.contract_id_search.textChanged.connect(self.search_contract)
-        self.ui.contract_title_search.textChanged.connect(self.search_contract)
-        self.ui.contract_type_search.textChanged.connect(self.search_contract)
-        self.ui.contract_classificatiion_type.textChanged.connect(self.search_contract)
-        # TODO: Fix search dates
-       # self.ui.contract_start_type.textChanged.connect(self.search_contract)
-       # self.ui.contract_end_search.textChanged.connect(self.search_contract)
-        self.ui.contract_value_search.textChanged.connect(self.search_contract)
-        self.ui.contract_status_menu.currentIndexChanged.connect(self.search_contract)
+        self.ui.contract_id_search.textChanged.connect(self.ui.search_contract)
+        self.ui.contract_title_search.textChanged.connect(self.ui.search_contract)
+        self.ui.contract_type_search.textChanged.connect(self.ui.search_contract)
+        self.ui.contract_classificatiion_type.textChanged.connect(self.ui.search_contract)
+        self.ui.contract_start_type.textChanged.connect(self.ui.search_contract)
+        self.ui.contract_end_search.textChanged.connect(self.ui.search_contract)
+        self.ui.contract_value_search.textChanged.connect(self.ui.search_contract)
+        self.ui.contract_status_menu.currentIndexChanged.connect(self.ui.search_contract)
+
+        self.ui.person_id_search.textChanged.connect(self.ui.search_person)
+        self.ui.person_first_search.textChanged.connect(self.ui.search_person)
+        self.ui.person_last_search.textChanged.connect(self.ui.search_person)
+        self.ui.person_email_search.textChanged.connect(self.ui.search_person)
+        self.ui.person_phone_search.textChanged.connect(self.ui.search_person)
+        self.ui.person_mobile_search.textChanged.connect(self.ui.search_person)
+        self.ui.person_job_search.textChanged.connect(self.ui.search_person)
+        self.ui.person_type_search.textChanged.connect(self.ui.search_person)
 
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
@@ -159,10 +167,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Updates everytime app is launched
         self.ui.update_reminders_dates()
         self.ui.update_status()
-
-    # Searches
-    def search_contract(self):
-        self.ui.search_contract()
 
     # Simple date validation method
     def is_valid(self, date_text):

@@ -5859,9 +5859,9 @@ class Ui_MainWindow(object):
         if classification:
             s = "SELECT * FROM (" + s +") WHERE CAST(Classification AS text) LIKE '" + classification +"%'"
         if start:
-            s = "SELECT * FROM (" + s +") WHERE 'Start Date' LIKE '" + start +"%'"
+            s = "SELECT * FROM (" + s +") WHERE \"Start Date\" LIKE '" + start +"%'"
         if end:
-            s = "SELECT * FROM (" + s +") WHERE 'End Date' LIKE '" + end +"%'"
+            s = "SELECT * FROM (" + s +") WHERE \"End Date\" LIKE '" + end +"%'"
         if value:
             s = "SELECT * FROM (" + s +") WHERE CAST(Value AS text) LIKE '" + value +"%'"
         if status != 'Any':
@@ -5870,4 +5870,66 @@ class Ui_MainWindow(object):
         self.contract_model.setQuery(query)
         db.close()
         self.contracts_tree.setModel(self.contract_model)
+
+    def search_person(self):
+            id = self.person_id_search.text()
+            first = self.person_first_search.text()
+            last = self.person_last_search.text()
+            email = self.person_email_search.text()
+            phone = self.person_phone_search.text()
+            mobile = self.person_mobile_search.text()
+            job = self.person_job_search.text()
+            type = self.person_type_search.text()
+
+            # People Tree
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.person_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+
+            if self.people_type_menu.currentIndex() == 0:
+                    s = "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE archived=0"
+            elif self.people_type_menu.currentIndex() == 1:
+                    s = "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE id=1 AND archived=0"
+            elif self.people_type_menu.currentIndex() == 2:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people JOIN people_contracts ON people.id=people_contracts.person_id AND archived=0"
+            elif self.people_type_menu.currentIndex() == 3:
+                    s = "SELECT id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE favorite=1 AND archived=0"
+            elif self.people_type_menu.currentIndex() == 4:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2)=DATE('now') AND archived=0"
+            elif self.people_type_menu.currentIndex() == 5:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'weekday 0','-7 days') AND archived=0"
+            elif self.people_type_menu.currentIndex() == 6:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of month') AND archived=0"
+            elif self.people_type_menu.currentIndex() == 7:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) >= DATE('now', 'start of year') AND archived=0"
+            elif self.people_type_menu.currentIndex() == 8:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') and DATE('now', 'start of month') AND archived=0"
+            elif self.people_type_menu.currentIndex() == 9:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE substr(date_created, 7, 4)||'-'||substr (date_created, 1,2)||'-'||substr(date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') and DATE('now', 'start of year') AND archived=0"
+            else:
+                    s = "SELECT people.id as ID, first as 'First Name', last as 'Last Name', email as 'Email Address', phone as 'Phone Number', mobile as 'Mobile Number', job as 'Job', type as Type FROM people WHERE archived=1"
+
+            if id:
+                    s = "SELECT * FROM (" + s + ") WHERE CAST(ID as text) LIKE '" + id + "%'"
+            if first:
+                    s = "SELECT * FROM (" + s + ") WHERE \"First Name\" LIKE '" + first + "%'"
+            if last:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Last Name\" LIKE '" + last + "%'"
+            if email:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Email Address\" LIKE '" + email + "%'"
+            if phone:
+                    s = "SELECT * FROM (" + s + ") WHERE CAST(\"Phone Number\" as text) LIKE '" + phone + "%'"
+            if mobile:
+                    s = "SELECT * FROM (" + s + ") WHERE CAST(\"Mobile Number\" as text) LIKE '" + mobile + "%'"
+            if job:
+                    s = "SELECT * FROM (" + s + ") WHERE Job LIKE '" + job + "%'"
+            if type:
+                    s = "SELECT * FROM (" + s + ") WHERE Type LIKE '" + type + "%'"
+            query.exec_(s)
+            self.person_model.setQuery(query)
+            db.close()
+            self.people_tree.setModel(self.person_model)
 
