@@ -169,6 +169,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.company_country_search.textChanged.connect(self.ui.search_company)
         self.ui.company_website_search.textChanged.connect(self.ui.search_company)
 
+        self.ui.reminder_id_search.textChanged.connect(self.ui.search_reminder)
+        self.ui.reminder_name_search.textChanged.connect(self.ui.search_reminder)
+        self.ui.reminder_description_search.textChanged.connect(self.ui.search_reminder)
+        self.ui.reminder_date_search.textChanged.connect(self.ui.search_reminder)
+        self.ui.reminder_complete_search.textChanged.connect(self.ui.search_reminder)
+        self.ui.reminder_snoozed_search.textChanged.connect(self.ui.search_reminder)
+
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
         self.refresh_signal.connect(self.ui.update_status)

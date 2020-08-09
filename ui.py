@@ -2323,6 +2323,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_78 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_78.setObjectName("horizontalLayout_78")
         self.reminder_id_search = QtWidgets.QLineEdit(self.layoutWidget_6)
+        self.reminder_id_search.setPlaceholderText('Search Id')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_id_search.setFont(font)
@@ -2331,6 +2332,7 @@ class Ui_MainWindow(object):
         self.reminder_id_search.setObjectName("reminder_id_search")
         self.horizontalLayout_78.addWidget(self.reminder_id_search)
         self.reminder_name_search = QtWidgets.QLineEdit(self.layoutWidget_6)
+        self.reminder_name_search.setPlaceholderText('Search Name')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_name_search.setFont(font)
@@ -2339,6 +2341,7 @@ class Ui_MainWindow(object):
         self.reminder_name_search.setObjectName("reminder_name_search")
         self.horizontalLayout_78.addWidget(self.reminder_name_search)
         self.reminder_description_search = QtWidgets.QLineEdit(self.layoutWidget_6)
+        self.reminder_description_search.setPlaceholderText('Search Description')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_description_search.setFont(font)
@@ -2347,6 +2350,7 @@ class Ui_MainWindow(object):
         self.reminder_description_search.setObjectName("reminder_description_search")
         self.horizontalLayout_78.addWidget(self.reminder_description_search)
         self.reminder_date_search = QtWidgets.QLineEdit(self.layoutWidget_6)
+        self.reminder_date_search.setPlaceholderText('Search Reminder Date')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_date_search.setFont(font)
@@ -2355,6 +2359,7 @@ class Ui_MainWindow(object):
         self.reminder_date_search.setObjectName("reminder_date_search")
         self.horizontalLayout_78.addWidget(self.reminder_date_search)
         self.reminder_complete_search = QtWidgets.QLineEdit(self.layoutWidget_6)
+        self.reminder_complete_search.setPlaceholderText('Search Complete')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_complete_search.setFont(font)
@@ -2363,6 +2368,7 @@ class Ui_MainWindow(object):
         self.reminder_complete_search.setObjectName("reminder_complete_search")
         self.horizontalLayout_78.addWidget(self.reminder_complete_search)
         self.reminder_snoozed_search = QtWidgets.QLineEdit(self.layoutWidget_6)
+        self.reminder_snoozed_search.setPlaceholderText('Search Snoozed')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.reminder_snoozed_search.setFont(font)
@@ -5292,21 +5298,21 @@ class Ui_MainWindow(object):
             today = datetime.strftime(datetime.today(), '%m/%d/%Y')
 
             if self.reminder_type_menu.currentIndex() == 0:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN \'" + today + "\' THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN \'" + today + "\' THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 1:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)<=DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)<=DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 2:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.snoozed=1 AND r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.snoozed=1 AND r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 3:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)>DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)>DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 4:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.complete=1 AND r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.complete=1 AND r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 5:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'weekday 0') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'weekday 0') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             elif self.reminder_type_menu.currentIndex() == 6:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'start of month', '+1 month') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'start of month', '+1 month') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
             else:
-                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete ?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=1 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=1 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
 
             query.exec_(s)
             self.reminder_model.setQuery(query)
@@ -5999,3 +6005,67 @@ class Ui_MainWindow(object):
             db.close()
 
             self.companies_tree.setModel(self.company_model)
+
+    def search_reminder(self):
+            id = self.reminder_id_search.text()
+            name = self.reminder_name_search.text()
+            description = self.reminder_description_search.text()
+            date = self.reminder_date_search.text()
+            complete = self.reminder_complete_search.text()
+            snoozed = self.reminder_snoozed_search.text()
+
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.reminder_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+
+            self.update_reminders_dates()
+
+            t = datetime.today() + timedelta(days=1)
+            t2 = datetime.today() + timedelta(days=2)
+            y = datetime.today() - timedelta(days=1)
+            y2 = datetime.today() - timedelta(days=2)
+
+            tmr = datetime.strftime(t, '%m/%d/%Y')
+            tmr2 = datetime.strftime(t2, '%m/%d/%Y')
+            ytd = datetime.strftime(y, '%m/%d/%Y')
+            ytd2 = datetime.strftime(y2, '%m/%d/%Y')
+            today = datetime.strftime(datetime.today(), '%m/%d/%Y')
+
+            if self.reminder_type_menu.currentIndex() == 0:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN \'" + today + "\' THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+            elif self.reminder_type_menu.currentIndex() == 1:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)<=DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+            elif self.reminder_type_menu.currentIndex() == 2:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.snoozed=1 AND r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+            elif self.reminder_type_menu.currentIndex() == 3:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)>DATE('now') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+            elif self.reminder_type_menu.currentIndex() == 4:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.complete=1 AND r.archived=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+            elif self.reminder_type_menu.currentIndex() == 5:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'weekday 0') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+            elif self.reminder_type_menu.currentIndex() == 6:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2) BETWEEN DATE('now', '+1 day') AND DATE('now', 'start of month', '+1 month') AND r.archived=0 AND r.complete=0 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+            else:
+                    s = "SELECT r.id as Id, r.name as Name, r.description as Description, CASE r.deadline WHEN strftime('%m/%d/%Y','now') THEN 'Today' WHEN \'" + tmr + "\' THEN 'Tomorrow' WHEN \'" + tmr2 + "\' THEN 'In 2 days' WHEN \'" + ytd + "\' THEN 'Yesterday' WHEN \'" + ytd2 + "\' THEN '2 days ago' ELSE r.deadline END 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r JOIN yes_no a ON r.complete=a.id JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=1 ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+
+            if id:
+                    s = "SELECT * FROM (" + s + ") WHERE CAST(ID AS text) LIKE '" + id + "%'"
+            if name:
+                    s = "SELECT * FROM (" + s + ") WHERE Name LIKE '" + name + "%'"
+            if description:
+                    s = "SELECT * FROM (" + s + ") WHERE Description LIKE '" + description + "%'"
+            if date:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Reminder Date\" LIKE '" + date + "%'"
+            if complete:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Complete?\" LIKE '" + complete + "%'"
+            if snoozed:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Snoozed?\" LIKE '" + snoozed + "%'"
+
+            query.exec_(s)
+            self.reminder_model.setQuery(query)
+            db.close()
+
+            self.reminders_tree.setModel(self.reminder_model)
