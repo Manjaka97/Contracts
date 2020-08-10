@@ -2998,6 +2998,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_83 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_83.setObjectName("horizontalLayout_83")
         self.risk_id_search = QtWidgets.QLineEdit(self.layoutWidget_8)
+        self.risk_id_search.setPlaceholderText('Search Id')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risk_id_search.setFont(font)
@@ -3006,6 +3007,7 @@ class Ui_MainWindow(object):
         self.risk_id_search.setObjectName("risk_id_search")
         self.horizontalLayout_83.addWidget(self.risk_id_search)
         self.risk_name_search = QtWidgets.QLineEdit(self.layoutWidget_8)
+        self.risk_name_search.setPlaceholderText('Search Name')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risk_name_search.setFont(font)
@@ -3014,6 +3016,7 @@ class Ui_MainWindow(object):
         self.risk_name_search.setObjectName("risk_name_search")
         self.horizontalLayout_83.addWidget(self.risk_name_search)
         self.risk_type_search = QtWidgets.QLineEdit(self.layoutWidget_8)
+        self.risk_type_search.setPlaceholderText('Search Type')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risk_type_search.setFont(font)
@@ -3034,6 +3037,7 @@ class Ui_MainWindow(object):
         self.risk_severity_search.addItem("")
         self.horizontalLayout_83.addWidget(self.risk_severity_search)
         self.risk_end_search = QtWidgets.QLineEdit(self.layoutWidget_8)
+        self.risk_end_search.setPlaceholderText('Search Impact')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risk_end_search.setFont(font)
@@ -3042,6 +3046,7 @@ class Ui_MainWindow(object):
         self.risk_end_search.setObjectName("risk_end_search")
         self.horizontalLayout_83.addWidget(self.risk_end_search)
         self.risk_expired_search = QtWidgets.QLineEdit(self.layoutWidget_8)
+        self.risk_expired_search.setPlaceholderText('Search End Date')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risk_expired_search.setFont(font)
@@ -3050,6 +3055,7 @@ class Ui_MainWindow(object):
         self.risk_expired_search.setObjectName("risk_expired_search")
         self.horizontalLayout_83.addWidget(self.risk_expired_search)
         self.risk_filename_search = QtWidgets.QLineEdit(self.layoutWidget_8)
+        self.risk_filename_search.setPlaceholderText('Search Expired Search')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.risk_filename_search.setFont(font)
@@ -3567,6 +3573,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_91 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_91.setObjectName("horizontalLayout_91")
         self.todo_id_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.todo_id_search.setPlaceholderText('Search Id')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.todo_id_search.setFont(font)
@@ -3575,6 +3582,7 @@ class Ui_MainWindow(object):
         self.todo_id_search.setObjectName("todo_id_search")
         self.horizontalLayout_91.addWidget(self.todo_id_search)
         self.todo_subject_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.todo_subject_search.setPlaceholderText('Search Subject')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.todo_subject_search.setFont(font)
@@ -3583,6 +3591,7 @@ class Ui_MainWindow(object):
         self.todo_subject_search.setObjectName("todo_subject_search")
         self.horizontalLayout_91.addWidget(self.todo_subject_search)
         self.todo_responsible_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.todo_responsible_search.setPlaceholderText('Search Assigned To')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.todo_responsible_search.setFont(font)
@@ -3631,6 +3640,7 @@ class Ui_MainWindow(object):
         self.todo_severity_search.addItem("")
         self.horizontalLayout_91.addWidget(self.todo_severity_search)
         self.todo_type_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.todo_type_search.setPlaceholderText('Search Start Date')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.todo_type_search.setFont(font)
@@ -3639,6 +3649,7 @@ class Ui_MainWindow(object):
         self.todo_type_search.setObjectName("todo_type_search")
         self.horizontalLayout_91.addWidget(self.todo_type_search)
         self.todo_resolution_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.todo_resolution_search.setPlaceholderText('Search Resolution Date')
         font = QtGui.QFont()
         font.setPointSize(10)
         self.todo_resolution_search.setFont(font)
@@ -6069,3 +6080,82 @@ class Ui_MainWindow(object):
             db.close()
 
             self.reminders_tree.setModel(self.reminder_model)
+
+    def search_risk(self):
+            id = self.risk_id_search.text()
+            name = self.risk_name_search.text()
+            type = self.risk_type_search.text()
+            probability = self.risk_severity_search.currentText()
+            impact = self.risk_end_search.text()
+            end = self.risk_expired_search.text()
+            expired = self.risk_filename_search.text()
+
+            ids = self.fetch_query("SELECT id FROM risks WHERE  substr(end_date, 7, 4)||'-'||substr (end_date, 1,2)||'-'||substr(end_date, 4,2)<DATE('now') AND expired=0")
+            if ids != []:
+                    for risk_id in ids:
+                            self.run_query("UPDATE risks SET expired=1 WHERE id=?", (risk_id,))
+            ids = self.fetch_query(
+                    "SELECT id FROM risks WHERE  (substr(end_date, 7, 4)||'-'||substr (end_date, 1,2)||'-'||substr(end_date, 4,2)>=DATE('now') AND expired=1) OR end_date=''")
+            if ids != []:
+                    for risk_id in ids:
+                            self.run_query("UPDATE risks SET expired=0 WHERE id=?", (risk_id,))
+
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.risk_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+            if self.risk_type_menu.currentIndex() == 0:
+                s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 1:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.expired=0 AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 2:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.expired=1 AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 3:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.favorite=1 AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 4:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2)=DATE('now') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 5:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) >= DATE('now', 'weekday 0', '-7 days') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 6:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) >= DATE('now', 'start of month') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 7:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) >= DATE('now', 'start of year') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 8:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') AND DATE('now', 'start of month') AND r.archived=0"
+            elif self.risk_type_menu.currentIndex() == 9:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE substr(r.date_created, 7, 4)||'-'||substr (r.date_created, 1,2)||'-'||substr(r.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') AND DATE('now', 'start of year') AND r.archived=0"
+            else:
+                    s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.archived=1"
+
+            if id:
+                s = "SELECT * FROM (" + s + ") WHERE CAST(ID AS text) LIKE '" + id + "%'"
+            if name:
+                s = "SELECT * FROM (" + s + ") WHERE Name LIKE '" + name + "%'"
+            if type:
+                s = "SELECT * FROM (" + s + ") WHERE Type LIKE '" + type + "%'"
+            if probability:
+                s = "SELECT * FROM (" + s + ") WHERE Probability LIKE '" + probability + "%'"
+            if impact:
+                s = "SELECT * FROM (" + s + ") WHERE Impact LIKE '" + impact + "%'"
+            if end:
+                s = "SELECT * FROM (" + s + ") WHERE \"End Date\" LIKE '" + end + "%'"
+            if expired != 'Any':
+                s = "SELECT * FROM (" + s + ") WHERE \"Expired ?\" LIKE '" + expired + "%'"
+
+            query.exec_(s)
+            self.risk_model.setQuery(query)
+            db.close()
+
+            self.risks_tree.setModel(self.risk_model)
+
+            # All other tree views do not need this. I don't know why, but it works so I'll leave it here
+            self.risks_tree.setColumnWidth(0, 155*.75)
+            self.risks_tree.setColumnWidth(1, 155*.75)
+            self.risks_tree.setColumnWidth(2, 150*.75)
+            self.risks_tree.setColumnWidth(3, 100*.75)
+            self.risks_tree.setColumnWidth(4, 150*.75)
+            self.risks_tree.setColumnWidth(5, 150*.75)
+            self.risks_tree.setColumnWidth(6, 155*.75)
+            self.risks_tree.setColumnWidth(7, 155*.75)

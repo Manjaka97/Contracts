@@ -176,6 +176,14 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.reminder_complete_search.textChanged.connect(self.ui.search_reminder)
         self.ui.reminder_snoozed_search.textChanged.connect(self.ui.search_reminder)
 
+        self.ui.risk_id_search.textChanged.connect(self.ui.search_risk)
+        self.ui.risk_name_search.textChanged.connect(self.ui.search_risk)
+        self.ui.risk_type_search.textChanged.connect(self.ui.search_risk)
+        self.ui.risk_severity_search.currentIndexChanged.connect(self.ui.search_risk)
+        self.ui.risk_end_search.textChanged.connect(self.ui.search_risk)
+        self.ui.risk_expired_search.textChanged.connect(self.ui.search_risk)
+        self.ui.risk_filename_search.textChanged.connect(self.ui.search_risk)
+
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
         self.refresh_signal.connect(self.ui.update_status)
