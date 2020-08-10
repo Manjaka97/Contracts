@@ -10,7 +10,6 @@ import re
 import schedule, time
 import threading
 
-# TODO: Implementing search filters
 # TODO: Exporting to csv based on filters
 # TODO: Implementing Dashboard, Library, Reports and Archives
 
