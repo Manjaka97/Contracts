@@ -6130,18 +6130,18 @@ class Ui_MainWindow(object):
                     s = "SELECT r.id as Id, r.name as Name, risk_types.name as Type, a.name as Probability, b.name as Impact, r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r JOIN risk_types ON r.type_id=risk_types.id JOIN severities a on r.probability_id=a.id JOIN severities b ON r.impact_id=b.id JOIN yes_no c ON r.expired=c.id WHERE r.archived=1"
 
             if id:
-                s = "SELECT * FROM (" + s + ") WHERE CAST(ID AS text) LIKE '" + id + "%'"
+                s = "SELECT * FROM (" + s + ") WHERE CAST(Id AS text) LIKE '" + id + "%'"
             if name:
                 s = "SELECT * FROM (" + s + ") WHERE Name LIKE '" + name + "%'"
             if type:
                 s = "SELECT * FROM (" + s + ") WHERE Type LIKE '" + type + "%'"
-            if probability:
+            if probability != 'Any':
                 s = "SELECT * FROM (" + s + ") WHERE Probability LIKE '" + probability + "%'"
             if impact:
                 s = "SELECT * FROM (" + s + ") WHERE Impact LIKE '" + impact + "%'"
             if end:
                 s = "SELECT * FROM (" + s + ") WHERE \"End Date\" LIKE '" + end + "%'"
-            if expired != 'Any':
+            if expired:
                 s = "SELECT * FROM (" + s + ") WHERE \"Expired ?\" LIKE '" + expired + "%'"
 
             query.exec_(s)
@@ -6159,3 +6159,65 @@ class Ui_MainWindow(object):
             self.risks_tree.setColumnWidth(5, 150*.75)
             self.risks_tree.setColumnWidth(6, 155*.75)
             self.risks_tree.setColumnWidth(7, 155*.75)
+
+    def search_todo(self):
+            id = self.todo_id_search.text()
+            subject = self.todo_subject_search.text()
+            responsible = self.todo_responsible_search.text()
+            status = self.todo_status_search.currentText()
+            priority = self.todo_priority_search.currentText()
+            severity = self.todo_severity_search.currentText()
+            start = self.todo_type_search.text()
+            resolution = self.todo_resolution_search.text()
+
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.todo_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+            if self.todos_type_menu.currentIndex() == 0:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 1:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE NOT t.status_id=3 AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 2:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.deadline, 7, 4) || '-' || substr(t.deadline, 1, 2) || '-' || substr(t.deadline, 4,2)<=DATE('now') AND NOT t.deadline='' AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 3:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE t.favorite=1 AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 4:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2)=DATE('now') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 5:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) >= DATE('now', 'weekday 0', '-7 days') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 6:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) >= DATE('now', 'start of month') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 7:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) >= DATE('now', 'start of year') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 8:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) BETWEEN DATE('now', 'start of month', '-1 month') AND DATE('now', 'start of month') AND t.archived=0"
+            elif self.todos_type_menu.currentIndex() == 9:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE substr(t.date_created, 7, 4)||'-'||substr (t.date_created, 1,2)||'-'||substr(t.date_created, 4,2) BETWEEN DATE('now', 'start of year', '-1 year') AND DATE('now', 'start of year') AND t.archived=0"
+            else:
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date' FROM todos t JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id JOIN people d ON t.responsible_id=d.id WHERE t.archived=1"
+
+            if id:
+                    s = "SELECT * FROM (" + s + ") WHERE CAST(Id AS text) LIKE '" + id + "%'"
+            if subject:
+                    s = "SELECT * FROM (" + s + ") WHERE Subject LIKE '" + subject + "%'"
+            if responsible:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Assigned To\" LIKE '" + responsible + "%'"
+            if status != 'Any':
+                    s = "SELECT * FROM (" + s + ") WHERE Status LIKE '" + status + "%'"
+            if priority != 'Any':
+                    s = "SELECT * FROM (" + s + ") WHERE Priority LIKE '" + priority + "%'"
+            if severity != 'Any':
+                    s = "SELECT * FROM (" + s + ") WHERE Severity LIKE '" + severity + "%'"
+            if start:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Start Date\" LIKE '" + start + "%'"
+            if resolution:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Resolution Date\" LIKE '" + resolution + "%'"
+
+            query.exec_(s)
+            self.todo_model.setQuery(query)
+            db.close()
+
+            self.todos_tree.setModel(self.todo_model)

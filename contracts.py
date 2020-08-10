@@ -184,6 +184,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.risk_expired_search.textChanged.connect(self.ui.search_risk)
         self.ui.risk_filename_search.textChanged.connect(self.ui.search_risk)
 
+        self.ui.todo_id_search.textChanged.connect(self.ui.search_todo)
+        self.ui.todo_subject_search.textChanged.connect(self.ui.search_todo)
+        self.ui.todo_responsible_search.textChanged.connect(self.ui.search_todo)
+        self.ui.todo_status_search.currentIndexChanged.connect(self.ui.search_todo)
+        self.ui.todo_priority_search.currentIndexChanged.connect(self.ui.search_todo)
+        self.ui.todo_severity_search.currentIndexChanged.connect(self.ui.search_todo)
+        self.ui.todo_type_search.textChanged.connect(self.ui.search_todo)
+        self.ui.todo_resolution_search.textChanged.connect(self.ui.search_todo)
+
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
         self.refresh_signal.connect(self.ui.update_status)
