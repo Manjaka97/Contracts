@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from shutil import copyfile
@@ -9,6 +9,7 @@ import os
 import re
 import schedule, time
 import threading
+import pandas as pd
 
 # TODO: Exporting to csv based on filters
 # TODO: Implementing Dashboard, Library, Reports and Archives
@@ -192,6 +193,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.todo_type_search.textChanged.connect(self.ui.search_todo)
         self.ui.todo_resolution_search.textChanged.connect(self.ui.search_todo)
 
+        # Export & Print
+        self.ui.export_contracts.clicked.connect(self.export_contract)
+
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
         self.refresh_signal.connect(self.ui.update_status)
@@ -199,6 +203,60 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Updates everytime app is launched
         self.ui.update_reminders_dates()
         self.ui.update_status()
+
+    def export_contract(self):
+        if self.ui.contracts_tree.selectedIndexes() == []:
+            buttonReply = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if buttonReply == QMessageBox.No:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    db_df = pd.read_sql_query(self.ui.contracts_query, conn)
+                    db_df.to_csv(fileName, index=False)
+
+            if buttonReply == QMessageBox.Yes:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, categories.name as Category, classifications.name as Classification, contracts.reference as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id LEFT JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.archived = 0"
+                    db_df = pd.read_sql_query(s, conn)
+                    db_df.to_csv(fileName, index=False)
+
+        else:
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Contract Only? \n(Press No to export the entire current view)',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.No:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, categories.name as Category, classifications.name as Classification, contracts.reference as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id LEFT JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.archived = 0"
+                    db_df = pd.read_sql_query(s, conn)
+                    db_df.to_csv(fileName, index=False)
+            if buttonReply == QMessageBox.Yes:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    id_index = self.ui.contracts_tree.selectedIndexes()[0]
+                    contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
+                    s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, categories.name as Category, classifications.name as Classification, contracts.reference as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id LEFT JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.archived = 0 AND contracts.id = " + str(contract_id)
+                    db_df = pd.read_sql_query(s, conn)
+                    db_df.to_csv(fileName, index=False)
+
+        if fileName:
+            self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Success')
+            self.message.setText('Contracts Exported To ' + fileName)
+            self.message.show()
 
     # Simple date validation method
     def is_valid(self, date_text):
@@ -1762,6 +1820,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
 
     def refresh(self):
         self.refresh_signal.emit()
+
 
 class Calendar(QtWidgets.QWidget, calendarWidget.Ui_Form):
     select_signal = QtCore.pyqtSignal(QtCore.QDate)
