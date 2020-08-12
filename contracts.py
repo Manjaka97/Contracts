@@ -196,6 +196,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         # Export & Print
         self.ui.export_contracts.clicked.connect(self.export_contract)
         self.ui.export_people.clicked.connect(self.export_person)
+        self.ui.export_companies.clicked.connect(self.export_company)
 
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
@@ -357,6 +358,87 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                         id_index = self.ui.people_tree.selectedIndexes()[0]
                         person_id = self.ui.people_tree.model().itemData(id_index)[0]
                         s = "SELECT people.id as ID, salutations.salutation as Saluation, first as 'First Name', last as 'Last Name', (CASE WHEN gender_id = 0 THEN 'Not Selected' WHEN gender_id = 1 THEN 'Male' ELSE 'Female' END) as Gender, companies.name as Company, people.email as 'Email Address', people.phone as 'Phone Number', people.mobile as 'Mobile Number', job as 'Job', people.type as Type FROM people LEFT JOIN salutations ON people.salutation_id = salutations.id LEFT JOIN companies ON companies.id = people.company_id WHERE people.archived=0 AND people.id= " + str(person_id)
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+
+        if fileName:
+            self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Success')
+            self.message.setText('Contracts Exported To ' + fileName)
+            self.message.show()
+
+    def export_company(self):
+        if self.ui.companies_tree.selectedIndexes() == []:
+            buttonReply = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if buttonReply == QMessageBox.No:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    db_df = pd.read_sql_query(self.ui.companies_query, conn)
+                    db_df.to_csv(fileName, index=False)
+
+            if buttonReply == QMessageBox.Yes:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.companies_query + ")")))
+                    s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as 'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', country as 'Country', segments.segment as Segment, number as 'Company Number', website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id IN " + id_list
+                    db_df = pd.read_sql_query(s, conn)
+                    db_df.to_csv(fileName, index=False)
+
+        else:
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Company Only? \n(Press No to export the entire current view)',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.No:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        db_df = pd.read_sql_query(self.ui.companies_query, conn)
+                        db_df.to_csv(fileName, index=False)
+
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.companies_query + ")")))
+                        s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as 'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', country as 'Country', segments.segment as Segment, number as 'Company Number', website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id IN " + id_list
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+            if buttonReply == QMessageBox.Yes:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.companies_tree.selectedIndexes()[0]
+                        company_id = self.ui.companies_tree.model().itemData(id_index)[0]
+                        db_df = pd.read_sql_query("SELECT * FROM (" + self.ui.companies_query + ") WHERE ID = " + str(company_id), conn)
+                        db_df.to_csv(fileName, index=False)
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.companies_tree.selectedIndexes()[0]
+                        company_id = self.ui.companies_tree.model().itemData(id_index)[0]
+                        s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as 'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', country as 'Country', segments.segment as Segment, number as 'Company Number', website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id= " + str(company_id)
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
 
