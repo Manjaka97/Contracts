@@ -5247,6 +5247,7 @@ class Ui_MainWindow(object):
         self.person_model.setQuery(query)
         db.close()
         self.people_tree.setModel(self.person_model)
+        self.people_query = s
 
     def update_companies(self):
             db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
