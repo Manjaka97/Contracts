@@ -5281,6 +5281,7 @@ class Ui_MainWindow(object):
             db.close()
 
             self.companies_tree.setModel(self.company_model)
+            self.companies_query = s
 
     def update_reminders(self):
             db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
@@ -5325,6 +5326,7 @@ class Ui_MainWindow(object):
             db.close()
 
             self.reminders_tree.setModel(self.reminder_model)
+            self.reminders_query = s
 
     def update_reminders_dates(self):
             print('Updating reminders dates')
@@ -5629,7 +5631,7 @@ class Ui_MainWindow(object):
             db.close()
 
             self.risks_tree.setModel(self.risk_model)
-
+            self.risks_query = s
             # All other tree views do not need this. I don't know why, but it works so I'll leave it here
             self.risks_tree.setColumnWidth(0, 155*.75)
             self.risks_tree.setColumnWidth(1, 155*.75)
@@ -5675,6 +5677,7 @@ class Ui_MainWindow(object):
             db.close()
 
             self.todos_tree.setModel(self.todo_model)
+            self.todos_query = s
 
     def update_contract_masters(self):
             self.contract_master.clear()
@@ -5890,6 +5893,7 @@ class Ui_MainWindow(object):
         self.contract_model.setQuery(query)
         db.close()
         self.contracts_tree.setModel(self.contract_model)
+        self.contracts_query = s
 
     def search_person(self):
             id = self.person_id_search.text()
@@ -5952,6 +5956,7 @@ class Ui_MainWindow(object):
             self.person_model.setQuery(query)
             db.close()
             self.people_tree.setModel(self.person_model)
+            self.people_query = s
 
     def search_company(self):
             id = self.company_id_search.text()
@@ -6011,6 +6016,7 @@ class Ui_MainWindow(object):
             db.close()
 
             self.companies_tree.setModel(self.company_model)
+            self.companies_query = s
 
     def search_reminder(self):
             id = self.reminder_id_search.text()
@@ -6075,6 +6081,7 @@ class Ui_MainWindow(object):
             db.close()
 
             self.reminders_tree.setModel(self.reminder_model)
+            self.reminders_query = s
 
     def search_risk(self):
             id = self.risk_id_search.text()
@@ -6144,6 +6151,7 @@ class Ui_MainWindow(object):
             db.close()
 
             self.risks_tree.setModel(self.risk_model)
+            self.risks_query = s
 
             # All other tree views do not need this. I don't know why, but it works so I'll leave it here
             self.risks_tree.setColumnWidth(0, 155*.75)
@@ -6216,3 +6224,4 @@ class Ui_MainWindow(object):
             db.close()
 
             self.todos_tree.setModel(self.todo_model)
+            self.todos_query = s
