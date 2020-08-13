@@ -11,8 +11,7 @@ import schedule, time
 import threading
 import pandas as pd
 
-# TODO: Exporting to csv based on filters
-# TODO: Implementing Dashboard, Library, Reports and Archives
+# TODO: Implementing Dashboard, Reports and Archives
 
 class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     refresh_signal = QtCore.pyqtSignal()
@@ -33,7 +32,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         #     os.makedirs(self.dir_)
 
         # Menu Buttons
-        self.ui.dashboard_btn.clicked.connect(self.show_dashboard)
+        # self.ui.dashboard_btn.clicked.connect(self.show_dashboard)
         self.ui.contracts_btn.clicked.connect(self.show_contracts)
         self.ui.people_btn.clicked.connect(self.show_people)
         self.ui.companies_btn.clicked.connect(self.show_companies)
@@ -41,7 +40,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.risks_btn.clicked.connect(self.show_risks)
         self.ui.todos_btn.clicked.connect(self.show_todos)
         self.ui.library_btn.clicked.connect(self.show_library)
-        self.ui.reports_btn.clicked.connect(self.show_reports)
+        # self.ui.reports_btn.clicked.connect(self.show_reports)
 
         # New Buttons
         self.ui.new_contract.clicked.connect(self.new_contract)
@@ -89,6 +88,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.risk_add_attachment_3.clicked.connect(self.add_risk_attachment)
         self.ui.risk_open_attachment_3.clicked.connect(self.open_risk_attachment)
         self.ui.risk_delete_attachment_3.clicked.connect(self.delete_risk_attachment)
+        self.ui.open_document.clicked.connect(self.open_document)
 
         # Parties
         self.ui.add_party.clicked.connect(self.party_window)
@@ -113,6 +113,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.delete_reminder_btn.clicked.connect(self.delete_reminder)
         self.ui.delete_risk_btn.clicked.connect(self.delete_risk)
         self.ui.delete_todo_btn.clicked.connect(self.delete_todo)
+        self.ui.delete_document.clicked.connect(self.delete_document)
 
         # Archives
         self.ui.archive_contract_btn.clicked.connect(self.archive_contract)
@@ -770,6 +771,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def show_library(self):
         self.remove_unsaved()
         self.restore_unsaved()
+        self.ui.update_library()
         self.ui.main_widget.setCurrentIndex(13)
 
     def show_reports(self):
@@ -2128,6 +2130,30 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 else:
                     self.ui.update_risk_attachments(self.ui.risk_id_lb.text())
 
+    def open_document(self):
+        if self.ui.library_tree.selectedIndexes() == []:
+            return
+        else:
+            url_index = self.ui.library_tree.selectedIndexes()[2]
+            url = self.ui.library_tree.model().itemData(url_index)[0]
+            os.startfile(url)
+            
+    def delete_document(self):
+        if self.ui.library_tree.selectedIndexes() == []:
+            return
+        else:
+            name_index = self.ui.library_tree.selectedIndexes()[1]
+            name = self.ui.library_tree.model().itemData(name_index)[0]
+            id_index = self.ui.library_tree.selectedIndexes()[0]
+            attachment_id = self.ui.library_tree.model().itemData(id_index)[0]
+
+            prompt = 'Are you sure you want to delete ' + name + '?'
+            buttonReply = QMessageBox.question(self, 'Delete Document', prompt,
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.Yes:
+                self.run_query("UPDATE documents SET del=1 WHERE id=?", (attachment_id,))
+                self.confirm_delete()
+                self.ui.update_library()
     # People
     def party_window(self):
         self.party_window = PersonDialog()
