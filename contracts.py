@@ -197,6 +197,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.export_contracts.clicked.connect(self.export_contract)
         self.ui.export_people.clicked.connect(self.export_person)
         self.ui.export_companies.clicked.connect(self.export_company)
+        self.ui.export_reminders.clicked.connect(self.export_reminder)
+        self.ui.export_risks.clicked.connect(self.export_risk)
+        self.ui.export_todos.clicked.connect(self.export_todo)
 
         # Refresh
         self.refresh_signal.connect(self.ui.update_reminders_dates)
@@ -449,6 +452,249 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.message.setText('Contracts Exported To ' + fileName)
             self.message.show()
 
+    def export_reminder(self):
+        if self.ui.reminders_tree.selectedIndexes() == []:
+            buttonReply = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if buttonReply == QMessageBox.No:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    db_df = pd.read_sql_query(self.ui.reminders_query, conn)
+                    db_df.to_csv(fileName, index=False)
+
+            if buttonReply == QMessageBox.Yes:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.reminders_query + ")")))
+                    s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as Company, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id = contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id IN " + id_list + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    db_df = pd.read_sql_query(s, conn)
+                    db_df.to_csv(fileName, index=False)
+
+        else:
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Reminder Only? \n(Press No to export the entire current view)',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.No:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        db_df = pd.read_sql_query(self.ui.reminders_query, conn)
+                        db_df.to_csv(fileName, index=False)
+
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.reminders_query + ")")))
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as Company, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id = contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id IN " + id_list + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+            if buttonReply == QMessageBox.Yes:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.reminders_tree.selectedIndexes()[0]
+                        reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
+                        db_df = pd.read_sql_query("SELECT * FROM (" + self.ui.reminders_query + ") WHERE ID = " + str(reminder_id), conn)
+                        db_df.to_csv(fileName, index=False)
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.reminders_tree.selectedIndexes()[0]
+                        reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as Company, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id = contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id= " + str(reminder_id) + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+
+        if fileName:
+            self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Success')
+            self.message.setText('Contracts Exported To ' + fileName)
+            self.message.show()
+            
+    def export_risk(self):
+        if self.ui.risks_tree.selectedIndexes() == []:
+            buttonReply = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if buttonReply == QMessageBox.No:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    db_df = pd.read_sql_query(self.ui.risks_query, conn)
+                    db_df.to_csv(fileName, index=False)
+
+            if buttonReply == QMessageBox.Yes:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.risks_query + ")")))
+                    s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as 'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 AND r.id IN " + id_list
+                    db_df = pd.read_sql_query(s, conn)
+                    db_df.to_csv(fileName, index=False)
+
+        else:
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected risk Only? \n(Press No to export the entire current view)',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.No:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        db_df = pd.read_sql_query(self.ui.risks_query, conn)
+                        db_df.to_csv(fileName, index=False)
+
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.risks_query + ")")))
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as 'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 AND r.id IN " + id_list
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+            if buttonReply == QMessageBox.Yes:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.risks_tree.selectedIndexes()[0]
+                        risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
+                        db_df = pd.read_sql_query("SELECT * FROM (" + self.ui.risks_query + ") WHERE ID = " + str(risk_id), conn)
+                        db_df.to_csv(fileName, index=False)
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.risks_tree.selectedIndexes()[0]
+                        risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as 'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 AND r.id= " + str(risk_id)
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+
+        if fileName:
+            self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Success')
+            self.message.setText('Contracts Exported To ' + fileName)
+            self.message.show()
+            
+    def export_todo(self):
+        if self.ui.todos_tree.selectedIndexes() == []:
+            buttonReply = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if buttonReply == QMessageBox.No:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    db_df = pd.read_sql_query(self.ui.todos_query, conn)
+                    db_df.to_csv(fileName, index=False)
+
+            if buttonReply == QMessageBox.Yes:
+                fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                          "CSV Files (*.csv)")
+                if fileName:
+                    conn = sqlite3.connect('data.db', isolation_level=None,
+                                           detect_types=sqlite3.PARSE_COLNAMES)
+                    id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.todos_query + ")")))
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date', contracts.title as Contract, companies.name as Company, t.description as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id IN " + id_list
+                    db_df = pd.read_sql_query(s, conn)
+                    db_df.to_csv(fileName, index=False)
+
+        else:
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected todo Only? \n(Press No to export the entire current view)',
+                                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if buttonReply == QMessageBox.No:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        db_df = pd.read_sql_query(self.ui.todos_query, conn)
+                        db_df.to_csv(fileName, index=False)
+
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.todos_query + ")")))
+                        s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date', contracts.title as Contract, companies.name as Company, t.description as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id IN " + id_list
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+            if buttonReply == QMessageBox.Yes:
+                buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
+                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if buttonReply2 == QMessageBox.No:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.todos_tree.selectedIndexes()[0]
+                        todo_id = self.ui.todos_tree.model().itemData(id_index)[0]
+                        db_df = pd.read_sql_query("SELECT * FROM (" + self.ui.todos_query + ") WHERE ID = " + str(todo_id), conn)
+                        db_df.to_csv(fileName, index=False)
+                if buttonReply2 == QMessageBox.Yes:
+                    fileName, _ = QFileDialog.getSaveFileName(self, "Save File", "",
+                                                              "CSV Files (*.csv)")
+                    if fileName:
+                        conn = sqlite3.connect('data.db', isolation_level=None,
+                                               detect_types=sqlite3.PARSE_COLNAMES)
+                        id_index = self.ui.todos_tree.selectedIndexes()[0]
+                        todo_id = self.ui.todos_tree.model().itemData(id_index)[0]
+                        s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date', contracts.title as Contract, companies.name as Company, t.description as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id= " + str(todo_id)
+                        db_df = pd.read_sql_query(s, conn)
+                        db_df.to_csv(fileName, index=False)
+
+        if fileName:
+            self.message = QMessageBox()
+            self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+            self.message.setWindowTitle('Success')
+            self.message.setText('Contracts Exported To ' + fileName)
+            self.message.show()
+            
     # Simple date validation method
     def is_valid(self, date_text):
         try:
