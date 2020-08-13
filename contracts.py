@@ -141,6 +141,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.reminder_type_menu.currentIndexChanged.connect(self.show_reminders)
         self.ui.risk_type_menu.currentIndexChanged.connect(self.show_risks)
         self.ui.todos_type_menu.currentIndexChanged.connect(self.show_todos)
+        self.ui.document_type_search.currentIndexChanged.connect(self.show_library)
 
         # Search Bars
         self.ui.contract_id_search.textChanged.connect(self.ui.search_contract)
@@ -193,6 +194,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.todo_severity_search.currentIndexChanged.connect(self.ui.search_todo)
         self.ui.todo_type_search.textChanged.connect(self.ui.search_todo)
         self.ui.todo_resolution_search.textChanged.connect(self.ui.search_todo)
+
+        self.ui.document_id_search.textChanged.connect(self.ui.search_library)
+        self.ui.document_name_search.textChanged.connect(self.ui.search_library)
+        self.ui.document_url_search.textChanged.connect(self.ui.search_library)
+        self.ui.document_date_search.textChanged.connect(self.ui.search_library)
 
         # Export & Print
         self.ui.export_contracts.clicked.connect(self.export_contract)

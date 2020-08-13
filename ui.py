@@ -4027,16 +4027,73 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
 
+        self.document_type = QtWidgets.QHBoxLayout()
+        self.document_type.setObjectName("document_type")
+        self.document_type.setAlignment(QtCore.Qt.AlignLeft)
+        self.document_type_search = QtWidgets.QComboBox(self.layoutWidget_18)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.document_type_search.setFont(font)
+        self.document_type_search.setStyleSheet("background-color: rgb(255,255,255)")
+        self.document_type_search.setFixedWidth(150)
+        for t in ['Any', 'Contracts', 'Reminders', 'Risks']:
+                self.document_type_search.addItem(t)
+        self.document_type.addWidget(self.document_type_search)
+        self.verticalLayout_3.addLayout(self.document_type)
+
+        self.library_searches = QtWidgets.QHBoxLayout()
+        self.library_searches.setObjectName("library_searches")
+        self.document_id_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.document_id_search.setFixedWidth(100 * .75)
+        self.document_id_search.setPlaceholderText('Search Id')
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.document_id_search.setFont(font)
+        self.document_id_search.setStyleSheet("background-color: rgb(255,255,255)")
+        self.document_id_search.setText("")
+        self.document_id_search.setObjectName("document_id_search")
+        self.library_searches.addWidget(self.document_id_search)
+
+        self.document_name_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.document_name_search.setFixedWidth(380 * .75)
+        self.document_name_search.setPlaceholderText('Search Name')
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.document_name_search.setFont(font)
+        self.document_name_search.setStyleSheet("background-color: rgb(255,255,255)")
+        self.document_name_search.setText("")
+        self.document_name_search.setObjectName("document_name_search")
+        self.library_searches.addWidget(self.document_name_search)
+
+        self.document_url_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.document_url_search.setFixedWidth(340 * .75)
+        self.document_url_search.setPlaceholderText('Search Url')
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.document_url_search.setFont(font)
+        self.document_url_search.setStyleSheet("background-color: rgb(255,255,255)")
+        self.document_url_search.setText("")
+        self.document_url_search.setObjectName("document_url_search")
+        self.library_searches.addWidget(self.document_url_search)
+
+        self.document_date_search = QtWidgets.QLineEdit(self.layoutWidget_18)
+        self.document_date_search.setPlaceholderText('Search Date')
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.document_date_search.setFont(font)
+        self.document_date_search.setStyleSheet("background-color: rgb(255,255,255)")
+        self.document_date_search.setText("")
+        self.document_date_search.setObjectName("document_date_search")
+        self.library_searches.addWidget(self.document_date_search)
+        
+        self.verticalLayout_3.addLayout(self.library_searches)
+
         # Library Tree
         self.library_tree = QtWidgets.QTreeView(self.layoutWidget6)
         self.library_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.library_tree.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.library_tree.setObjectName("library_tree")
         self.library_tree.setAlternatingRowColors(True)
-        self.library_tree.setColumnWidth(0, 100 * .75)
-        self.library_tree.setColumnWidth(1, 800 * .75)
-        self.library_tree.setColumnWidth(2, 400 * .75)
-        self.library_tree.setColumnWidth(3, 300 * .75)
         self.verticalLayout_3.addWidget(self.library_tree)
         self.horizontalLayout_86 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_86.setObjectName("horizontalLayout_86")
@@ -5694,8 +5751,12 @@ class Ui_MainWindow(object):
             print('Db not open')
         self.library_model = QtSql.QSqlRelationalTableModel()
         query = QtSql.QSqlQuery()
-        query.exec_(
-             "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE del=0")
+
+        s = "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE del=0"
+        if self.document_type_search.currentIndex() != 0:
+                s += " AND type_id = " + str(self.document_type_search.currentIndex())
+
+        query.exec_(s)
         self.library_model.setQuery(query)
         db.close()
 
@@ -6251,3 +6312,40 @@ class Ui_MainWindow(object):
 
             self.todos_tree.setModel(self.todo_model)
             self.todos_query = s
+
+    def search_library(self):
+            id = self.document_id_search.text()
+            name = self.document_name_search.text()
+            url = self.document_url_search.text()
+            date = self.document_date_search.text()
+
+            db = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            db.setDatabaseName('data.db')
+            if not db.open():
+                    print('Db not open')
+            self.library_model = QtSql.QSqlRelationalTableModel()
+            query = QtSql.QSqlQuery()
+
+            s = "SELECT id as ID, name as Name, url as Url, date_created as 'Date Created' FROM documents WHERE del=0"
+            if self.document_type_search.currentIndex() != 0:
+                    s += " AND type_id = " + str(self.document_type_search.currentIndex())
+
+            if id:
+                    s = "SELECT * FROM (" + s + ") WHERE ID LIKE '" + str(id) + "%'"
+            if name:
+                    s = "SELECT * FROM (" + s + ") WHERE Name LIKE '" + str(name) + "%'"
+            if url:
+                    s = "SELECT * FROM (" + s + ") WHERE  url LIKE '%" + str(url) + "%'"
+            if date:
+                    s = "SELECT * FROM (" + s + ") WHERE \"Date Created\" LIKE '" + str(date) + "%'"
+            query.exec_(s)
+            self.library_model.setQuery(query)
+            db.close()
+
+
+
+            self.library_tree.setModel(self.library_model)
+            self.library_tree.setColumnWidth(0, 100 * .75)
+            self.library_tree.setColumnWidth(1, 390 * .75)
+            self.library_tree.setColumnWidth(2, 350 * .75)
+            self.library_tree.setColumnWidth(3, 190 * .75)
