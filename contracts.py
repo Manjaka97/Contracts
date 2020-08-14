@@ -1,15 +1,21 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-from shutil import copyfile
-import ui, calendarWidget, person
-import sqlite3
 import os
 import re
-import schedule, time
+import sqlite3
 import threading
+from datetime import datetime, timedelta
+from shutil import copyfile
+
 import pandas as pd
+import schedule
+import time
+from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
+from dateutil.relativedelta import relativedelta
+
+import calendarWidget
+import person
+import ui
+
 
 # TODO: Implementing Dashboard, Reports and Archives
 
@@ -19,8 +25,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.ui = ui.Ui_MainWindow()
         self.ui.setupUi(self)
-        # Using dir_ because dir is a reserved keyword
+
+
+        # Comment out the section below to freeze the app
         # The line below does not work after freezing the app
+        # Using dir_ because dir is a reserved keyword
         self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
         if getattr(sys, 'frozen', False):
             # frozen
@@ -28,8 +37,12 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         else:
             # unfrozen
             dir_ = os.path.dirname(os.path.realpath(__file__))
+
+
+        # Comment out the section below to test the unfrozen app
         # if not os.path.exists(self.dir_):
         #     os.makedirs(self.dir_)
+
 
         # Menu Buttons
         # self.ui.dashboard_btn.clicked.connect(self.show_dashboard)
@@ -236,12 +249,27 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     conn = sqlite3.connect('data.db', isolation_level=None,
                                            detect_types=sqlite3.PARSE_COLNAMES)
                     id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.contracts_query + ")")))
-                    s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, categories.name as Category, classifications.name as Classification, contracts.reference as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id LEFT JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.archived = 0 AND contracts.ID IN " + id_list
+                    s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, " \
+                        "categories.name as Category, classifications.name as Classification, contracts.reference as " \
+                        "Reference, c2.title as 'Master Contract', contracts.account_reference as Account, " \
+                        "terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End Date', " \
+                        "contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation Date', " \
+                        "contracts.extension_limit as 'Extension Limit', contracts.value as Value, currencies.symbol " \
+                        "as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE status.name END as Status, " \
+                        "contracts.description as Description FROM contracts LEFT JOIN terms ON contracts.term_id = " \
+                        "terms.id LEFT JOIN contracts c2 on contracts.master_contract_id = c2.id LEFT JOIN categories " \
+                        "ON contracts.category_id = categories.id LEFT JOIN currencies ON " \
+                        "contracts.currency_id=currencies.id LEFT JOIN classifications ON " \
+                        "contracts.classification_id=classifications.id LEFT JOIN status ON " \
+                        "contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id " \
+                        "LEFT JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.archived = 0 " \
+                        "AND contracts.ID IN " + id_list
                     db_df = pd.read_sql_query(s, conn)
                     db_df.to_csv(fileName, index=False)
 
         else:
-            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Contract Only? \n(Press No to export the entire current view)',
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Contract Only? \n(Press No to export '
+                                                               'the entire current view)',
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.No:
                 buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
@@ -262,7 +290,22 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                         conn = sqlite3.connect('data.db', isolation_level=None,
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.contracts_query + ")")))
-                        s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, categories.name as Category, classifications.name as Classification, contracts.reference as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id LEFT JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.archived = 0 AND contracts.ID IN " + id_list
+                        s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, " \
+                            "categories.name as Category, classifications.name as Classification, contracts.reference " \
+                            "as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, " \
+                            "terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End " \
+                            "Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation " \
+                            "Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, " \
+                            "currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE " \
+                            "status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN " \
+                            "terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on " \
+                            "contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = " \
+                            "categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN " \
+                            "classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON " \
+                            "contracts.status_id=status.id LEFT JOIN status status_ ON " \
+                            "contracts.status_id_=status_.id LEFT JOIN contract_types ON " \
+                            "contracts.type_id=contract_types.id WHERE contracts.archived = 0 AND contracts.ID IN " +\
+                            id_list
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
             if buttonReply == QMessageBox.Yes:
@@ -286,7 +329,22 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_index = self.ui.contracts_tree.selectedIndexes()[0]
                         contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
-                        s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, categories.name as Category, classifications.name as Classification, contracts.reference as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON contracts.status_id=status.id LEFT JOIN status status_ ON contracts.status_id_=status_.id LEFT JOIN contract_types ON contracts.type_id=contract_types.id WHERE contracts.archived = 0 AND contracts.ID = " + str(contract_id)
+                        s = "SELECT contracts.id as ID, contracts.title as Title, contract_types.name as Type, " \
+                            "categories.name as Category, classifications.name as Classification, contracts.reference " \
+                            "as Reference, c2.title as 'Master Contract', contracts.account_reference as Account, " \
+                            "terms.name as Term, contracts.start_date as 'Start Date', contracts.end_date as 'End " \
+                            "Date', contracts.review_date as 'Review Date', contracts.cancel_date as 'Cancellation " \
+                            "Date', contracts.extension_limit as 'Extension Limit', contracts.value as Value, " \
+                            "currencies.symbol as '', CASE WHEN contracts.status_id = 0 THEN status_.name ELSE " \
+                            "status.name END as Status, contracts.description as Description FROM contracts LEFT JOIN " \
+                            "terms ON contracts.term_id = terms.id LEFT JOIN contracts c2 on " \
+                            "contracts.master_contract_id = c2.id LEFT JOIN categories ON contracts.category_id = " \
+                            "categories.id LEFT JOIN currencies ON contracts.currency_id=currencies.id LEFT JOIN " \
+                            "classifications ON contracts.classification_id=classifications.id LEFT JOIN status ON " \
+                            "contracts.status_id=status.id LEFT JOIN status status_ ON " \
+                            "contracts.status_id_=status_.id LEFT JOIN contract_types ON " \
+                            "contracts.type_id=contract_types.id WHERE contracts.archived = 0 AND contracts.ID = " + \
+                            str(contract_id)
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
 
@@ -317,12 +375,19 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     conn = sqlite3.connect('data.db', isolation_level=None,
                                            detect_types=sqlite3.PARSE_COLNAMES)
                     id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.people_query + ")")))
-                    s = "SELECT people.id as ID, salutations.salutation as Saluation, first as 'First Name', last as 'Last Name', (CASE WHEN gender_id = 0 THEN 'Not Selected' WHEN gender_id = 1 THEN 'Male' ELSE 'Female' END) as Gender, companies.name as Company, people.email as 'Email Address', people.phone as 'Phone Number', people.mobile as 'Mobile Number', job as 'Job', people.type as Type FROM people LEFT JOIN salutations ON people.salutation_id = salutations.id LEFT JOIN companies ON companies.id = people.company_id WHERE people.archived=0 AND people.id IN " + id_list
+                    s = "SELECT people.id as ID, salutations.salutation as Saluation, first as 'First Name', " \
+                        "last as 'Last Name', (CASE WHEN gender_id = 0 THEN 'Not Selected' WHEN gender_id = 1 THEN " \
+                        "'Male' ELSE 'Female' END) as Gender, companies.name as Company, people.email as 'Email " \
+                        "Address', people.phone as 'Phone Number', people.mobile as 'Mobile Number', job as 'Job', " \
+                        "people.type as Type FROM people LEFT JOIN salutations ON people.salutation_id = " \
+                        "salutations.id LEFT JOIN companies ON companies.id = people.company_id WHERE " \
+                        "people.archived=0 AND people.id IN " + id_list
                     db_df = pd.read_sql_query(s, conn)
                     db_df.to_csv(fileName, index=False)
 
         else:
-            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Person Only? \n(Press No to export the entire current view)',
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Person Only? \n(Press No to export '
+                                                               'the entire current view)',
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.No:
                 buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
@@ -343,7 +408,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                         conn = sqlite3.connect('data.db', isolation_level=None,
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.people_query + ")")))
-                        s = "SELECT people.id as ID, salutations.salutation as Saluation, first as 'First Name', last as 'Last Name', (CASE WHEN gender_id = 0 THEN 'Not Selected' WHEN gender_id = 1 THEN 'Male' ELSE 'Female' END) as Gender, companies.name as Company, people.email as 'Email Address', people.phone as 'Phone Number', people.mobile as 'Mobile Number', job as 'Job', people.type as Type FROM people LEFT JOIN salutations ON people.salutation_id = salutations.id LEFT JOIN companies ON companies.id = people.company_id WHERE people.archived=0 AND people.id IN " + id_list
+                        s = "SELECT people.id as ID, salutations.salutation as Saluation, first as 'First Name', " \
+                            "last as 'Last Name', (CASE WHEN gender_id = 0 THEN 'Not Selected' WHEN gender_id = 1 " \
+                            "THEN 'Male' ELSE 'Female' END) as Gender, companies.name as Company, people.email as " \
+                            "'Email Address', people.phone as 'Phone Number', people.mobile as 'Mobile Number', " \
+                            "job as 'Job', people.type as Type FROM people LEFT JOIN salutations ON " \
+                            "people.salutation_id = salutations.id LEFT JOIN companies ON companies.id = " \
+                            "people.company_id WHERE people.archived=0 AND people.id IN " + id_list
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
             if buttonReply == QMessageBox.Yes:
@@ -367,7 +438,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_index = self.ui.people_tree.selectedIndexes()[0]
                         person_id = self.ui.people_tree.model().itemData(id_index)[0]
-                        s = "SELECT people.id as ID, salutations.salutation as Saluation, first as 'First Name', last as 'Last Name', (CASE WHEN gender_id = 0 THEN 'Not Selected' WHEN gender_id = 1 THEN 'Male' ELSE 'Female' END) as Gender, companies.name as Company, people.email as 'Email Address', people.phone as 'Phone Number', people.mobile as 'Mobile Number', job as 'Job', people.type as Type FROM people LEFT JOIN salutations ON people.salutation_id = salutations.id LEFT JOIN companies ON companies.id = people.company_id WHERE people.archived=0 AND people.id= " + str(person_id)
+                        s = "SELECT people.id as ID, salutations.salutation as Saluation, first as 'First Name', " \
+                            "last as 'Last Name', (CASE WHEN gender_id = 0 THEN 'Not Selected' WHEN gender_id = 1 " \
+                            "THEN 'Male' ELSE 'Female' END) as Gender, companies.name as Company, people.email as " \
+                            "'Email Address', people.phone as 'Phone Number', people.mobile as 'Mobile Number', " \
+                            "job as 'Job', people.type as Type FROM people LEFT JOIN salutations ON " \
+                            "people.salutation_id = salutations.id LEFT JOIN companies ON companies.id = " \
+                            "people.company_id WHERE people.archived=0 AND people.id= " + str(person_id)
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
 
@@ -398,12 +475,18 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     conn = sqlite3.connect('data.db', isolation_level=None,
                                            detect_types=sqlite3.PARSE_COLNAMES)
                     id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.companies_query + ")")))
-                    s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as 'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', country as 'Country', segments.segment as Segment, number as 'Company Number', website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id IN " + id_list
+                    s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as 'Address " \
+                        "1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', country as " \
+                        "'Country', segments.segment as Segment, number as 'Company Number', website as Website, " \
+                        "email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM companies LEFT JOIN " \
+                        "segments ON companies.segment_id = segments.id LEFT JOIN company_types ON companies.type_id " \
+                        "= company_types.id WHERE archived=0 AND companies.id IN " + id_list
                     db_df = pd.read_sql_query(s, conn)
                     db_df.to_csv(fileName, index=False)
 
         else:
-            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Company Only? \n(Press No to export the entire current view)',
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Company Only? \n(Press No to export '
+                                                               'the entire current view)',
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.No:
                 buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
@@ -424,7 +507,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                         conn = sqlite3.connect('data.db', isolation_level=None,
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.companies_query + ")")))
-                        s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as 'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', country as 'Country', segments.segment as Segment, number as 'Company Number', website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id IN " + id_list
+                        s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as " \
+                            "'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', " \
+                            "country as 'Country', segments.segment as Segment, number as 'Company Number', " \
+                            "website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM " \
+                            "companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN " \
+                            "company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id " \
+                            "IN " + id_list
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
             if buttonReply == QMessageBox.Yes:
@@ -448,7 +537,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_index = self.ui.companies_tree.selectedIndexes()[0]
                         company_id = self.ui.companies_tree.model().itemData(id_index)[0]
-                        s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as 'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', country as 'Country', segments.segment as Segment, number as 'Company Number', website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id= " + str(company_id)
+                        s = "SELECT companies.id as Id, company_types.type as Type, name as Name,  address1 as " \
+                            "'Address 1', address2 as 'Address 2', city as City, state as State, zip as 'Zip Code', " \
+                            "country as 'Country', segments.segment as Segment, number as 'Company Number', " \
+                            "website as Website, email as 'Email Address', phone as 'Contact Number', Fax as Fax FROM " \
+                            "companies LEFT JOIN segments ON companies.segment_id = segments.id LEFT JOIN " \
+                            "company_types ON companies.type_id = company_types.id WHERE archived=0 AND companies.id= " \
+                            "" + str(company_id)
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
 
@@ -479,12 +574,20 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     conn = sqlite3.connect('data.db', isolation_level=None,
                                            detect_types=sqlite3.PARSE_COLNAMES)
                     id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.reminders_query + ")")))
-                    s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as Company, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id = contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id IN " + id_list + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                    s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as Company, " \
+                        "r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete?', " \
+                        "b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id = contracts.id " \
+                        "LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON r.complete=a.id " \
+                        "LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id IN " + id_list + " ORDER BY " \
+                                                                                                           "DATE(" \
+                                                                                                           "substr(" \
+                                                                                                           "r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC "
                     db_df = pd.read_sql_query(s, conn)
                     db_df.to_csv(fileName, index=False)
 
         else:
-            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Reminder Only? \n(Press No to export the entire current view)',
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected Reminder Only? \n(Press No to export '
+                                                               'the entire current view)',
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.No:
                 buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
@@ -505,7 +608,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                         conn = sqlite3.connect('data.db', isolation_level=None,
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.reminders_query + ")")))
-                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as Company, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id = contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id IN " + id_list + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as " \
+                            "Company, r.description as Description, r.deadline as 'Reminder Date', a.name as " \
+                            "'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id " \
+                            "= contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON " \
+                            "r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id IN " + \
+                            id_list + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1," \
+                                      "2)||'-'||substr(r.deadline, 4,2)) ASC "
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
             if buttonReply == QMessageBox.Yes:
@@ -529,7 +638,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_index = self.ui.reminders_tree.selectedIndexes()[0]
                         reminder_id = self.ui.reminders_tree.model().itemData(id_index)[0]
-                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as Company, r.description as Description, r.deadline as 'Reminder Date', a.name as 'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id = contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id= " + str(reminder_id) + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1,2)||'-'||substr(r.deadline, 4,2)) ASC"
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, companies.name as " \
+                            "Company, r.description as Description, r.deadline as 'Reminder Date', a.name as " \
+                            "'Complete?', b.name as 'Snoozed?' FROM reminders r LEFT JOIN contracts on r.contract_id " \
+                            "= contracts.id LEFT JOIN companies ON companies.id = r.company_id LEFT JOIN yes_no a ON " \
+                            "r.complete=a.id LEFT JOIN yes_no b ON r.snoozed=b.id WHERE r.archived=0 AND r.id= " + \
+                            str(reminder_id) + " ORDER BY DATE(substr(r.deadline, 7, 4)||'-'||substr (r.deadline, 1," \
+                                               "2)||'-'||substr(r.deadline, 4,2)) ASC "
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
 
@@ -560,12 +675,18 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     conn = sqlite3.connect('data.db', isolation_level=None,
                                            detect_types=sqlite3.PARSE_COLNAMES)
                     id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.risks_query + ")")))
-                    s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as 'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 AND r.id IN " + id_list
+                    s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, " \
+                        "a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as 'Mitigation " \
+                        "Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT JOIN contracts " \
+                        "ON contracts.id = r.contract_id LEFT JOIN risk_types ON r.type_id=risk_types.id LEFT JOIN " \
+                        "severities a on r.probability_id=a.id LEFT JOIN severities b ON r.impact_id=b.id LEFT JOIN " \
+                        "yes_no c ON r.expired=c.id WHERE r.archived=0 AND r.id IN " + id_list
                     db_df = pd.read_sql_query(s, conn)
                     db_df.to_csv(fileName, index=False)
 
         else:
-            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected risk Only? \n(Press No to export the entire current view)',
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected risk Only? \n(Press No to export the '
+                                                               'entire current view)',
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.No:
                 buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
@@ -586,7 +707,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                         conn = sqlite3.connect('data.db', isolation_level=None,
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.risks_query + ")")))
-                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as 'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 AND r.id IN " + id_list
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, " \
+                            "a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as " \
+                            "'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT " \
+                            "JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON " \
+                            "r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN " \
+                            "severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 " \
+                            "AND r.id IN " + id_list
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
             if buttonReply == QMessageBox.Yes:
@@ -610,7 +737,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_index = self.ui.risks_tree.selectedIndexes()[0]
                         risk_id = self.ui.risks_tree.model().itemData(id_index)[0]
-                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as 'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 AND r.id= " + str(risk_id)
+                        s = "SELECT r.id as Id, r.name as Name, contracts.title as Contract, risk_types.name as Type, " \
+                            "a.name as Probability, b.name as Impact, r.notes as Description, r.mitigation as " \
+                            "'Mitigation Measures', r.end_date as 'End Date', c.name as 'Expired ?' FROM risks r LEFT " \
+                            "JOIN contracts ON contracts.id = r.contract_id LEFT JOIN risk_types ON " \
+                            "r.type_id=risk_types.id LEFT JOIN severities a on r.probability_id=a.id LEFT JOIN " \
+                            "severities b ON r.impact_id=b.id LEFT JOIN yes_no c ON r.expired=c.id WHERE r.archived=0 " \
+                            "AND r.id= " + str(risk_id)
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
 
@@ -641,12 +774,19 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                     conn = sqlite3.connect('data.db', isolation_level=None,
                                            detect_types=sqlite3.PARSE_COLNAMES)
                     id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.todos_query + ")")))
-                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date', contracts.title as Contract, companies.name as Company, t.description as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id IN " + id_list
+                    s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, " \
+                        "b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as " \
+                        "'Resolution Date', contracts.title as Contract, companies.name as Company, t.description as " \
+                        "Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT JOIN " \
+                        "companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id JOIN " \
+                        "severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT JOIN people " \
+                        "d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id IN " + id_list
                     db_df = pd.read_sql_query(s, conn)
                     db_df.to_csv(fileName, index=False)
 
         else:
-            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected todo Only? \n(Press No to export the entire current view)',
+            buttonReply = QMessageBox.question(self, 'Export', 'Export Selected todo Only? \n(Press No to export the '
+                                                               'entire current view)',
                                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if buttonReply == QMessageBox.No:
                 buttonReply2 = QMessageBox.question(self, 'Export', 'Include Full Details to Export?',
@@ -667,7 +807,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                         conn = sqlite3.connect('data.db', isolation_level=None,
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_list = str(tuple(self.fetch_query("SELECT ID FROM (" + self.ui.todos_query + ")")))
-                        s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date', contracts.title as Contract, companies.name as Company, t.description as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id IN " + id_list
+                        s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, " \
+                            "b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as " \
+                            "'Resolution Date', contracts.title as Contract, companies.name as Company, t.description " \
+                            "as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT " \
+                            "JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id " \
+                            "JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT " \
+                            "JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id IN " + id_list
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
             if buttonReply == QMessageBox.Yes:
@@ -691,7 +837,13 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                                                detect_types=sqlite3.PARSE_COLNAMES)
                         id_index = self.ui.todos_tree.selectedIndexes()[0]
                         todo_id = self.ui.todos_tree.model().itemData(id_index)[0]
-                        s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as 'Resolution Date', contracts.title as Contract, companies.name as Company, t.description as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id= " + str(todo_id)
+                        s = "SELECT t.id as Id, t.subject as Subject, d.last as 'Assigned To', a.name as Status, " \
+                            "b.name as Priority, c.name as Severity, t.start_date as 'Start Date', t.deadline as " \
+                            "'Resolution Date', contracts.title as Contract, companies.name as Company, t.description " \
+                            "as Description FROM todos t LEFT JOIN contracts ON contracts.id = t.contract_id LEFT " \
+                            "JOIN companies ON companies.id = t.company_id JOIN todo_status a ON t.status_id=a.id " \
+                            "JOIN severities c on t.severity_id=c.id JOIN priorities b ON t.priority_id=b.id LEFT " \
+                            "JOIN people d ON t.responsible_id=d.id WHERE t.archived=0 AND t.id= " + str(todo_id)
                         db_df = pd.read_sql_query(s, conn)
                         db_df.to_csv(fileName, index=False)
 
@@ -916,11 +1068,22 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         else:
             if contract_id == '': # New contract
                 contract_id = self.next_contract_id()
-                self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, account_reference, status_id, master_contract_id, value, currency_id, term_id, start_date, end_date, review_date, cancel_date, extension_limit, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description))
+                self.run_query("INSERT INTO contracts (title, type_id, category_id, classification_id, reference, "
+                               "account_reference, status_id, master_contract_id, value, currency_id, term_id, "
+                               "start_date, end_date, review_date, cancel_date, extension_limit, description, "
+                               "date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))",
+                               (title,type,category,classification,reference,account,status,master,value,currency,
+                                term, start, end, review, cancel, limit,description))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=1 AND owner_id=? ", (contract_id,))
                 self.run_query("UPDATE people_contracts SET temp=0 WHERE contract_id=?", (contract_id,))
             else: # Edit contract
-                self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, extension_limit=?, description=? WHERE id=?", (title,type,category,classification,reference,account,status,master,value,currency,term, start, end, review, cancel, limit,description, contract_id))
+                self.run_query("UPDATE contracts SET title=?, type_id=?, category_id=?, classification_id=?, "
+                               "reference=?, account_reference=?, status_id=?, master_contract_id=?, value=?, "
+                               "currency_id=?, term_id=?, start_date=?, end_date=?, review_date=?, cancel_date=?, "
+                               "extension_limit=?, description=? WHERE id=?", (title,type,category,classification,
+                                                                               reference,account,status,master,value,
+                                                                               currency,term, start, end, review,
+                                                                               cancel, limit,description, contract_id))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=1 AND owner_id=? ", (contract_id,))
                 self.run_query("UPDATE people_contracts SET temp=0 WHERE contract_id=?", (contract_id,))
             self.confirm_delete()
@@ -951,9 +1114,16 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.message.show()
         else:
             if person_id == '': # New person
-                self.run_query("INSERT INTO people (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax))
+                self.run_query("INSERT INTO people (salutation_id, first, last, gender_id, job, company_id, type, "
+                               "phone, mobile, email, fax, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,"
+                               "strftime('%m/%d/%Y','now'))", (salutation_id, first, last, gender_id, job,
+                                                               company_id, type, phone, mobile, email, fax))
             else: # Edit contract
-                self.run_query("UPDATE people SET salutation_id=?, first=?, last=?, gender_id=?, job=?, company_id=?, type=?, phone=?, mobile=?, email=?, fax=? WHERE id=?", (salutation_id, first, last, gender_id, job, company_id, type, phone, mobile, email, fax, person_id))
+                self.run_query("UPDATE people SET salutation_id=?, first=?, last=?, gender_id=?, job=?, company_id=?, "
+                               "type=?, phone=?, mobile=?, email=?, fax=? WHERE id=?", (salutation_id, first, last,
+                                                                                        gender_id, job, company_id,
+                                                                                        type, phone, mobile, email,
+                                                                                        fax, person_id))
             self.show_people()
 
     def save_company(self):
@@ -981,9 +1151,16 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.message.show()
         else:
             if company_id == '': # New company
-                self.run_query("INSERT INTO companies (name, type_id, address1, address2, city, state, zip, country, segment_id, number, website, email, phone, fax, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, type_id, address1, address2, city, state, zip, country, segment_id, number, website, email, phone, fax))
+                self.run_query("INSERT INTO companies (name, type_id, address1, address2, city, state, zip, country, "
+                               "segment_id, number, website, email, phone, fax, date_created) VALUES(?,?,?,?,?,?,?,?,"
+                               "?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, type_id, address1, address2, city,
+                                                                           state, zip, country, segment_id, number,
+                                                                           website, email, phone, fax))
             else: # Edit company
-                self.run_query("UPDATE companies SET name=?, type_id=?, address1=?, address2=?, city=?, state=?, zip=?, country=?, segment_id=?, number=?, website=?, email=?, phone=?, fax=? WHERE id=?", (name, type_id, address1, address2, city, state, zip, country, segment_id, number, website, email, phone, fax, company_id))
+                self.run_query("UPDATE companies SET name=?, type_id=?, address1=?, address2=?, city=?, state=?, "
+                               "zip=?, country=?, segment_id=?, number=?, website=?, email=?, phone=?, fax=? WHERE "
+                               "id=?", (name, type_id, address1, address2, city, state, zip, country, segment_id,
+                                        number, website, email, phone, fax, company_id))
             self.show_companies()
 
     def save_reminder(self):
@@ -1116,7 +1293,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.message = QMessageBox()
                 self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
                 self.message.setWindowTitle('Contracts')
-                self.message.setText('That contract does not have the Key date you selected. Please review your contract dates first.')
+                self.message.setText('That contract does not have the Key date you selected. Please review your '
+                                     'contract dates first.')
                 self.message.show()
                 return
             else:
@@ -1167,7 +1345,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.run_query("INSERT INTO reminders (name, contract_id, company_id, description, complete, snoozed, "
                            "specific_radio, relative_radio, do_not_recur_radio, recur_radio, "
                            "until_specific_radio, until_key_radio, indefinitely_radio, specific_date, "
-                           "relative_date, time_id, before_after, date_id, recur_id, until_date, until_key_id, deadline, last_recurrence, date_created) "
+                           "relative_date, time_id, before_after, date_id, recur_id, until_date, until_key_id, "
+                           "deadline, last_recurrence, date_created) "
                            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, contract_id, company_id, description,
                                                                    complete, snoozed, specific_radio,
                                                                    relative_radio, do_not_recur_radio,
@@ -1178,10 +1357,12 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.run_query("UPDATE documents SET temp=0 WHERE type_id=2 AND owner_id=? ", (reminder_id,))
             self.run_query("UPDATE people_reminders SET temp=0 WHERE reminder_id=?", (reminder_id,))
         else: # Edit reminder
-            self.run_query("UPDATE reminders SET name=?, contract_id=?, company_id=?, description=?, complete=?, snoozed=?, "
+            self.run_query("UPDATE reminders SET name=?, contract_id=?, company_id=?, description=?, complete=?, "
+                           "snoozed=?, "
                            "specific_radio=?, relative_radio=?, do_not_recur_radio=?, recur_radio=?, "
                            "until_specific_radio=?, until_key_radio=?, indefinitely_radio=?, specific_date=?, "
-                           "relative_date=?, time_id=?, before_after=?, date_id=?, recur_id=?, until_date=?, until_key_id=?, deadline=?, last_recurrence=? WHERE id=?",
+                           "relative_date=?, time_id=?, before_after=?, date_id=?, recur_id=?, until_date=?, "
+                           "until_key_id=?, deadline=?, last_recurrence=? WHERE id=?",
                            (name, contract_id, company_id, description,
                             complete, snoozed, specific_radio,
                             relative_radio, do_not_recur_radio,
@@ -1222,10 +1403,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         else:
             if risk_id == '': # New risk
                 risk_id = self.next_risk_id()
-                self.run_query("INSERT INTO risks (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation, date_created) VALUES(?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation))
+                self.run_query("INSERT INTO risks (name, contract_id, probability_id, impact_id, type_id, end_date, "
+                               "notes, mitigation, date_created) VALUES(?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))",
+                               (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=3 AND owner_id=? ", (risk_id,))
             else: # Edit contract
-                self.run_query("UPDATE risks SET name=?, contract_id=?, probability_id=?, impact_id=?, type_id=?, end_date=?, notes=?, mitigation=? WHERE id=?", (name, contract_id, probability_id, impact_id, type_id, end_date, notes, mitigation, risk_id))
+                self.run_query("UPDATE risks SET name=?, contract_id=?, probability_id=?, impact_id=?, type_id=?, "
+                               "end_date=?, notes=?, mitigation=? WHERE id=?", (name, contract_id, probability_id,
+                                                                                impact_id, type_id, end_date, notes,
+                                                                                mitigation, risk_id))
                 self.run_query("UPDATE documents SET temp=0 WHERE type_id=3 AND owner_id=? ", (risk_id,))
             self.confirm_delete()
             self.show_risks()
@@ -1269,9 +1455,18 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.message.show()
         else:
             if todo_id == '': # New to do
-                self.run_query("INSERT INTO todos (subject, status_id, responsible_id, start_date, deadline, priority_id, severity_id, contract_id, company_id, description, date_created) VALUES(?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (subject, status_id, responsible_id, start_date, deadline, priority_id, severity_id, contract_id, company_id, description))
+                self.run_query("INSERT INTO todos (subject, status_id, responsible_id, start_date, deadline, "
+                               "priority_id, severity_id, contract_id, company_id, description, date_created) VALUES("
+                               "?,?,?,?,?,?,?,?,?,?,strftime('%m/%d/%Y','now'))", (subject, status_id,
+                                                                                   responsible_id, start_date,
+                                                                                   deadline, priority_id,
+                                                                                   severity_id, contract_id,
+                                                                                   company_id, description))
             else: # Edit contract
-                self.run_query("UPDATE todos SET subject=?, status_id=?, responsible_id=?, start_date=?, deadline=?, priority_id=?, severity_id=?, contract_id=?, company_id=?, description=? WHERE id=?", (subject, status_id, responsible_id, start_date, deadline, priority_id, severity_id, contract_id, company_id, description, todo_id))
+                self.run_query("UPDATE todos SET subject=?, status_id=?, responsible_id=?, start_date=?, deadline=?, "
+                               "priority_id=?, severity_id=?, contract_id=?, company_id=?, description=? WHERE id=?",
+                               (subject, status_id, responsible_id, start_date, deadline, priority_id, severity_id,
+                                contract_id, company_id, description, todo_id))
             self.show_todos()
 
     # Edit
@@ -1374,7 +1569,9 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 contract_id = self.ui.contracts_tree.model().itemData(id_index)[0]
                 title_index = self.ui.contracts_tree.selectedIndexes()[1]
                 contract_title = self.ui.contracts_tree.model().itemData(title_index)[0]
-                prompt = 'Are you sure you want to delete ' + contract_title + '?\nAll reminders, risks and to-dos associated  with this contract will be deleted as well!'
+                prompt = 'Are you sure you want to delete ' + contract_title + '?\nAll reminders, risks and to-dos ' \
+                                                                               'associated  with this contract will ' \
+                                                                               'be deleted as well! '
                 buttonReply = QMessageBox.question(self, 'Delete Contract', prompt,
                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if buttonReply != QMessageBox.Yes:
@@ -1415,7 +1612,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 first = self.ui.people_tree.model().itemData(first_index)[0]
                 last_index = self.ui.people_tree.selectedIndexes()[2]
                 last = self.ui.people_tree.model().itemData(last_index)[0]
-                prompt = 'Are you sure you want to delete ' + first + ' ' + last + '?\nAll to-dos assigned to this person will be deleted'
+                prompt = 'Are you sure you want to delete ' + first + ' ' + last + '?\nAll to-dos assigned to this ' \
+                                                                                   'person will be deleted '
                 buttonReply = QMessageBox.question(self, 'Delete person', prompt,
                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if buttonReply != QMessageBox.Yes:
@@ -1438,7 +1636,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 name_index = self.ui.companies_tree.selectedIndexes()[1]
                 name = self.ui.companies_tree.model().itemData(name_index)[0]
 
-                prompt = 'Are you sure you want to delete ' + name + '?\nAll reminders and to-dos associated with this company will be deleted as well!'
+                prompt = 'Are you sure you want to delete ' + name + '?\nAll reminders and to-dos associated with ' \
+                                                                     'this company will be deleted as well! '
                 buttonReply = QMessageBox.question(self, 'Delete company', prompt,
                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if buttonReply != QMessageBox.Yes:
@@ -1949,7 +2148,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             sqliteConnection = sqlite3.connect('data.db')
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
-            query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?, 1)"""
+            query = """INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, 
+            strftime('%m/%d/%Y','now'), ?, 1) """
             record = (name, dir_, 1, contract_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
@@ -2017,7 +2217,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             sqliteConnection = sqlite3.connect('data.db')
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
-            query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?, 1)"""
+            query = """INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, 
+            strftime('%m/%d/%Y','now'), ?, 1) """
             record = (name, dir_, 2, reminder_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
@@ -2085,7 +2286,8 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             sqliteConnection = sqlite3.connect('data.db')
             cursor = sqliteConnection.cursor()
             print('Connected to SQLite')
-            query = """ INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, strftime('%m/%d/%Y','now'), ?, 1)"""
+            query = """INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, 
+            strftime('%m/%d/%Y','now'), ?, 1) """
             record = (name, dir_, 3, risk_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
@@ -2167,13 +2369,18 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         if self.ui.contract_id_lb.text() == "":
             contract_id = self.next_contract_id()
             self.run_query(
-                'INSERT INTO people_contracts(person_id,contract_id,temp) SELECT ?, ?, 1 WHERE NOT EXISTS(SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',
+                'INSERT INTO people_contracts(person_id,contract_id,temp) SELECT ?, ?, 1 WHERE NOT EXISTS(SELECT 1 '
+                'FROM people_contracts WHERE person_id = ? AND contract_id=?);',
                 (person_id, contract_id, person_id, contract_id))
             self.ui.update_parties()
 
         else:
             contract_id = self.ui.contract_id_lb.text()
-            self.run_query('INSERT INTO people_contracts(person_id,contract_id,temp) SELECT ?, ?, 1 WHERE NOT EXISTS(SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',(person_id, contract_id, person_id, contract_id))
+            self.run_query('INSERT INTO people_contracts(person_id,contract_id,temp) SELECT ?, ?, 1 WHERE NOT EXISTS('
+                           'SELECT 1 FROM people_contracts WHERE person_id = ? AND contract_id=?);',(person_id,
+                                                                                                     contract_id,
+                                                                                                     person_id,
+                                                                                                     contract_id))
             self.ui.update_parties(contract_id)
 
     def delete_party(self):
@@ -2208,14 +2415,16 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         if self.ui.reminder_id_lb.text() == "":
             reminder_id = self.next_reminder_id()
             self.run_query(
-                'INSERT INTO people_reminders(person_id,reminder_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM people_reminders WHERE person_id = ? AND reminder_id=?);',
+                'INSERT INTO people_reminders(person_id,reminder_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM '
+                'people_reminders WHERE person_id = ? AND reminder_id=?);',
                 (person_id, reminder_id, person_id, reminder_id))
             self.ui.update_reminder_people()
 
         else:
             reminder_id = self.ui.reminder_id_lb.text()
             self.run_query(
-                'INSERT INTO people_reminders(person_id,reminder_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM people_reminders WHERE person_id = ? AND reminder_id=?);',
+                'INSERT INTO people_reminders(person_id,reminder_id) SELECT ?, ? WHERE NOT EXISTS(SELECT 1 FROM '
+                'people_reminders WHERE person_id = ? AND reminder_id=?);',
                 (person_id, reminder_id, person_id, reminder_id))
             self.ui.update_reminder_people(reminder_id)
 
@@ -2325,6 +2534,7 @@ class PersonDialog(QtWidgets.QWidget, person.Ui_Form):
     def new_person(self):
         self.new_signal.emit()
         self.close()
+
 
 if __name__ == "__main__":
     import sys
