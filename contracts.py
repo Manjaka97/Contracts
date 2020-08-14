@@ -1608,6 +1608,14 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 id_index = self.ui.people_tree.selectedIndexes()[0]
                 person_id = self.ui.people_tree.model().itemData(id_index)[0]
 
+                if person_id == 1:
+                    self.message = QMessageBox()
+                    self.message.setWindowIcon(QtGui.QIcon(":/images/images/icon - black.svg"))
+                    self.message.setWindowTitle('Delete')
+                    self.message.setText('Cannot delete: This person is reserved as yourself.')
+                    self.message.show()
+                    return
+
                 first_index = self.ui.people_tree.selectedIndexes()[1]
                 first = self.ui.people_tree.model().itemData(first_index)[0]
                 last_index = self.ui.people_tree.selectedIndexes()[2]
