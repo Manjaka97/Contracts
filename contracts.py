@@ -16,7 +16,6 @@ import calendarWidget
 import person
 import ui
 
-
 # TODO: Implementing Dashboard, Reports and Archives
 
 class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
@@ -27,21 +26,19 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.setupUi(self)
 
 
-        # Comment out the section below to freeze the app
-        # The line below does not work after freezing the app
+        # Comment out the line below when freezing the app
         # Using dir_ because dir is a reserved keyword
-        self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
+        # self.dir_ = os.path.dirname(os.path.realpath(__file__)) + "\\documents\\"
+
+        # Documents Folder
         if getattr(sys, 'frozen', False):
             # frozen
             self.dir_ = os.path.dirname(sys.executable) + "\\documents\\"
         else:
             # unfrozen
             dir_ = os.path.dirname(os.path.realpath(__file__))
-
-
-        # Comment out the section below to test the unfrozen app
-        # if not os.path.exists(self.dir_):
-        #     os.makedirs(self.dir_)
+        if not os.path.exists(self.dir_):
+            os.makedirs(self.dir_)
 
 
         # Menu Buttons
@@ -1089,7 +1086,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
             self.confirm_delete()
             self.show_contracts()
         if status == 0:
-            print('Status updated')
             self.ui.update_status()
 
     def save_person(self):
@@ -2155,13 +2151,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         try:
             sqliteConnection = sqlite3.connect('data.db')
             cursor = sqliteConnection.cursor()
-            print('Connected to SQLite')
             query = """INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, 
             strftime('%m/%d/%Y','now'), ?, 1) """
             record = (name, dir_, 1, contract_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
-            print('Document added')
             cursor.close()
 
         except sqlite3.Error as error:
@@ -2170,7 +2164,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         finally:
             if sqliteConnection:
                 sqliteConnection.close()
-                print('Closed db')
 
         if self.ui.contract_id_lb.text() == "":
             self.ui.update_contract_attachments()
@@ -2224,13 +2217,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         try:
             sqliteConnection = sqlite3.connect('data.db')
             cursor = sqliteConnection.cursor()
-            print('Connected to SQLite')
             query = """INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, 
             strftime('%m/%d/%Y','now'), ?, 1) """
             record = (name, dir_, 2, reminder_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
-            print('Document added')
             cursor.close()
 
         except sqlite3.Error as error:
@@ -2239,7 +2230,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         finally:
             if sqliteConnection:
                 sqliteConnection.close()
-                print('Closed db')
 
         if self.ui.reminder_id_lb.text() == "":
             self.ui.update_reminder_attachments()
@@ -2293,13 +2283,11 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         try:
             sqliteConnection = sqlite3.connect('data.db')
             cursor = sqliteConnection.cursor()
-            print('Connected to SQLite')
             query = """INSERT INTO documents (name, url, type_id, date_created, owner_id, temp) VALUES (?, ?, ?, 
             strftime('%m/%d/%Y','now'), ?, 1) """
             record = (name, dir_, 3, risk_id)
             cursor.execute(query, record)
             sqliteConnection.commit()
-            print('Document added')
             cursor.close()
 
         except sqlite3.Error as error:
@@ -2308,7 +2296,6 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         finally:
             if sqliteConnection:
                 sqliteConnection.close()
-                print('Closed db')
 
         if self.ui.risk_id_lb.text() == "":
             self.ui.update_risk_attachments()
@@ -2366,6 +2353,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
                 self.run_query("UPDATE documents SET del=1 WHERE id=?", (attachment_id,))
                 self.confirm_delete()
                 self.ui.update_library()
+
     # People
     def party_window(self):
         self.party_window = PersonDialog()

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 from dateutil.relativedelta import relativedelta
-
+import resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
