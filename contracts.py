@@ -182,7 +182,7 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         self.ui.risk_name_search.textChanged.connect(self.ui.search_risk)
         self.ui.risk_type_search.textChanged.connect(self.ui.search_risk)
         self.ui.risk_severity_search.currentIndexChanged.connect(self.ui.search_risk)
-        self.ui.risk_end_search.textChanged.connect(self.ui.search_risk)
+        self.ui.risk_end_search.currentIndexChanged.connect(self.ui.search_risk)
         self.ui.risk_expired_search.textChanged.connect(self.ui.search_risk)
         self.ui.risk_filename_search.textChanged.connect(self.ui.search_risk)
 
@@ -714,19 +714,15 @@ class Main(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     def run_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
-        print('Connected to SQLite')
         cursor.execute(query, values)
         sqliteConnection.commit()
-        print('Query executed')
         cursor.close()
 
     def fetch_query(self, query, values=()):
         sqliteConnection = sqlite3.connect('data.db')
         cursor = sqliteConnection.cursor()
-        print('Connected to SQLite')
         cursor.execute(query, values)
         sqliteConnection.commit()
-        print('Query executed')
         results_tuple = cursor.fetchall()
         results = [item for t in results_tuple for item in t]
         cursor.close()
