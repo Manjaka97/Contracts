@@ -21,10 +21,10 @@
 ## Table of Contents
 
 * [About the Project](#about-the-project)
-  * [Built With](#built-with)
 * [Demo](#demo)
 * [Installation](#installation)
 * [Features](#features)
+* [Built With](#built-with)
 * [License](#license)
 * [Contact](#contact)
 
@@ -38,10 +38,6 @@
 
 Contracts by Elvnosix is a contracts management desktop application that is designed to greatly simplify a company or an individual's administrative duties by providing a fast, easy to use organizing tool for contracts, companies, contacts and risks. Take advantage of automation, quick document storage and retrieval, reminders for regular tasks or contracts key dates, quick search and filtering, and much more. Seamlessly export your data to a spreadsheet for further analysis and sharing. Have a look at a detailed list of features [here](#features).
 
-### Built With
-
-* [PyQt5](https://pypi.org/project/PyQt5/)
-* [SQLite](https://www.sqlite.org/index.html)
 
 <!-- DEMO -->
 ## Demo
@@ -93,6 +89,14 @@ N.B.: You can directly run contracts.py if you do not wish to use a .exe file. T
 * Export any of your data category to a .csv file for printing or analysis.
 * You can export a single selected element or the entire view.
 * You can also export with full details or summarized details depending on your needs.
+
+
+<!-- BUILT WITH -->
+## Built With
+
+* [PyQt5](https://pypi.org/project/PyQt5/)
+* [SQLite](https://www.sqlite.org/index.html)
+
 
 <!-- LICENSE -->
 ## License
